@@ -1,0 +1,51 @@
+body{padding-left:0;background:radial-gradient(ellipse at 84% 1%,#221834 0,transparent 34rem),#080a10}
+.mast{position:sticky;inset:0 0 auto;width:auto;border:0;border-bottom:1px solid #343548;background:#080a10eb}.mast .bar{width:min(100% - 3rem,1400px);margin:auto;padding:.45rem 0;flex-direction:row;align-items:center;justify-content:space-between;gap:1rem}.mast nav{flex-direction:row;align-items:center}.mast nav a{justify-content:center}.mast nav a.active{box-shadow:inset 0 -2px #b6ff36;background:#262034;color:#fff}.brand{font-weight:800}.brand img{filter:drop-shadow(0 0 8px #8b5cf63f)}
+.hero{min-height:355px;grid-template-columns:1.02fr 1fr;background:radial-gradient(ellipse at 76% 55%,#462a78 0%,#1b152d 43%,transparent 71%),linear-gradient(110deg,#151821,#0c1119);overflow:hidden}.hero h1{max-width:12ch}.hero .device::before{content:"";position:absolute;inset:15% 6% 8%;background:radial-gradient(ellipse,#9d60ff48,transparent 68%);pointer-events:none}.hero .device{position:relative}.hero .device img{position:relative}
+#biblioteca,.sim{scroll-margin-top:92px}.tools,.port-controls,.news-filters{background:linear-gradient(140deg,#191b29,#11141d)}.card-meta span{font-variant-numeric:tabular-nums}.columns{grid-template-columns:minmax(0,1.55fr) minmax(260px,1fr)}#ajustes tbody tr:nth-child(even){background:#1c202c}#ajustes td{overflow-wrap:anywhere}
+.lab-page .sim{margin-top:1rem}.lab-page .sim h2{font-size:clamp(2rem,5vw,4rem)}.lab-workbench{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}.sim-indicators{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.45rem;margin:1rem 0 0}.sim-indicators div{padding:.65rem;border:1px solid #343548;border-radius:8px;background:#151821;overflow-wrap:anywhere}.sim-indicators dt{font-size:.73rem;color:#bdafdb}.sim-indicators dd{margin:.22rem 0 0;font-family:var(--heading);font-weight:700}.sim-chart{background:repeating-linear-gradient(90deg,#10131b 0 42px,#171b29 43px 44px)}
+.port-heading{background:radial-gradient(ellipse at 92% 40%,#3a2b61,transparent 68%),#151821}.port-grid .port-cover{aspect-ratio:2/2.9}.port-card p{margin-top:.4rem}.port-panel .profile-grid section{background:#10131b;border:1px solid #343548}
+#news-list .news-card:first-of-type .news-copy{border-top-color:var(--lime)}@media(min-width:1000px){#news-list .news-card:first-of-type{grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#news-list .news-card:first-of-type img{height:100%;max-height:none;min-height:200px}#news-list .news-card:first-of-type .news-copy{border-top:0;border-left:2px solid var(--lime)}}
+@media(max-width:850px){.columns{grid-template-columns:1fr}.sim-indicators{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width: 760px) {
+  .mast .bar { width: calc(100% - 1.5rem); gap: .4rem; }
+  .mast nav { align-items: stretch; }
+  .mast nav a { font-size: .78rem; padding: .35rem .25rem; }
+  .mast nav a span { overflow-wrap: anywhere; }
+
+  .wrap { width: calc(100% - 1.5rem); }
+  .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 1rem; margin: .85rem 0 1.4rem; }
+  .hero h1 { font-size: clamp(2rem, 8vw, 3.25rem); max-width: none; }
+  .hero-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+  .hero-links .btn { text-align: center; }
+  .hero .device { height: auto; }
+  .hero .device img { width: min(82%, 330px); left: auto; max-height: 155px; object-fit: contain; }
+  .hero .device span { width: min(70%, 310px); }
+  #biblioteca, .sim { scroll-margin-top: 130px; }
+
+  .tools { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sort { align-self: stretch; min-height: 47px; }
+  .sort select { flex: 1; min-width: 0; min-height: 44px; }
+  :is(.tools, .sim, .port-controls, .news-filters) :is(input, select) { font-size: 1rem; }
+  .grid .card h3, .port-card h3 { overflow-wrap: anywhere; }
+
+  .columns, .lab-workbench { grid-template-columns: minmax(0, 1fr); }
+  .columns > *, .sim-fields > *, .news-filters > *, .port-controls > * { min-width: 0; }
+  #ajustes { table-layout: fixed; }
+  .sim-status, .sim-snapshot p, .port-main dd { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 520px) {
+  .hero { padding: .95rem; }
+  .hero .device img { max-height: 105px; }
+  .grid, .port-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid .card-body { padding: .65rem; }
+  .grid .card h3, .port-card h3 { font-size: .95rem; line-height: 1.28; }
+  .card-meta { flex-wrap: wrap; }
+  .sim-fields, .sim-pair { grid-template-columns: minmax(0, 1fr); }
+  .sim-bar { grid-template-columns: minmax(0, 1.35fr) minmax(1.5rem, 1fr) minmax(0, .9fr); gap: .4rem; }
+  .sim-bar > * { overflow-wrap: anywhere; }
+  .port-controls, .news-filters { grid-template-columns: minmax(0, 1fr); }
+  #news-list .news-card { grid-template-columns: minmax(0, 1fr); }
+  #news-list .news-card img { height: 125px; min-height: 0; }
+  #news-list .news-copy { padding: .85rem; }
+}

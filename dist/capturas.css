@@ -1,0 +1,80 @@
+.game-captures {
+  margin: 0 0 1.25rem;
+}
+
+.game-captures .capture-main {
+  display: block;
+  width: 100%;
+  max-height: 36rem;
+  aspect-ratio: 16 / 9;
+  margin-top: .75rem;
+  border-radius: .65rem;
+  background: #100e15;
+  object-fit: contain;
+}
+
+.capture-strip {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .5rem .2rem;
+}
+
+.capture-strip button {
+  flex: 0 0 clamp(5.25rem, 15vw, 8rem);
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: .45rem;
+  background: #100e15;
+  cursor: pointer;
+}
+
+.capture-strip button[aria-pressed="true"],
+.capture-strip button:focus-visible {
+  border-color: var(--lime);
+}
+
+.capture-strip img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: .25rem;
+  object-fit: cover;
+}
+
+.capture-video {
+  position: relative;
+}
+
+.capture-play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  color: white;
+  background: #100e15df;
+  font-size: .9rem;
+}
+
+.game-video-frame {
+  margin-top: .75rem;
+}
+
+.game-video-frame iframe,
+.game-video-frame video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: .65rem;
+  background: #100e15;
+}
+
+.game-video-source {
+  display: inline-block;
+  margin-top: .75rem;
+}
