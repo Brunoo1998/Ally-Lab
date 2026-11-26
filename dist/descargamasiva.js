@@ -1,5 +1,7 @@
 import { isBlockedLink } from "./retro-403.js?v=79";
 
+import { retroEmuladores } from './retro-emuladores.js?v=83';
+
 const consoles = document.getElementById('masiva-consoles');
 const details = document.getElementById('details');
 const title = document.getElementById('masiva-title');
@@ -161,6 +163,16 @@ function route() {
   }
   selected = card;
   title.textContent = card.querySelector('strong').textContent;
+  const recommendation = Object.hasOwn(retroEmuladores, key) ? retroEmuladores[key] : null;
+  document.getElementById('retro-emulator').hidden = !recommendation;
+  if (recommendation) {
+    const [name, note, url] = recommendation;
+    document.getElementById('retro-emulator-name').textContent = name;
+    document.getElementById('retro-emulator-note').textContent = note;
+    const link = document.getElementById('retro-emulator-link');
+    link.href = url;
+    link.setAttribute('aria-label', 'Página oficial de ' + name + ' (abre en otra pestaña)');
+  }
   details.querySelector('a').focus();
   loadConsole(key);
 }

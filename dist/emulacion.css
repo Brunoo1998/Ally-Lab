@@ -13,7 +13,6 @@
 .emu-detail a { margin:0 .5rem .5rem 0; }
 .emulation [hidden] { display:none; }
 @media(max-width:760px) {
- .emulation .mast nav { grid-template-columns:repeat(3,minmax(0,1fr)); }
  .emulation .emu-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
  .emulation .emu-card img { height:8rem; }
 }
@@ -40,3 +39,20 @@
 #masiva-consoles .emu-card { padding:1rem; }
 #masiva-consoles .emu-card img { object-fit:contain; }
 @media(max-width:620px) { #masiva-consoles { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.retro-emulator {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1rem;
+  margin-bottom: 1rem;
+  padding: .9rem 1rem;
+  border: 1px solid #594275;
+  border-radius: .7rem;
+  background: #20192c;
+}
+.retro-emulator > div { flex: 1 1 16rem; }
+.retro-emulator h3 { margin: 0 0 .25rem; font-size: .9rem; color: #d7c4ed; }
+.retro-emulator strong { color: #b6ff36; font-size: 1.15rem; }
+.retro-emulator p { margin: .3rem 0 0; }

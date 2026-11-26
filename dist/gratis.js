@@ -7,10 +7,11 @@ const grid = $('free-grid');
 const hour = 3600000;
 const local = './datos/gratis.json';
 const remote = 'https://raw.githubusercontent.com/Brunoo1998/Ally-Lab/promociones/gratis.json';
+const extraRemote = new URL('gratis-otras-tiendas.json', remote).href;
 const date = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'});
 const price = new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const fold = s=>s.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
-let data, games = new Map(), view='active', kind='keep', lastState='';
+let data, otherStores, games = new Map(), view='active', kind='keep', lastState='';
 const now = ()=>Date.now();
 
 function add(parent,tag,text,css){
@@ -76,14 +77,17 @@ function card(offer,state,t,soon){
  const game=games.get(fold(offer.title));
  if(safe(offer.url))link(box,state==='active'?(offer.kind==='trial'?'Probar gratis':'Conseguir gratis'):'Ver ficha oficial',offer.url,'btn');
 }
+function allOffers(){
+ return [...(data?.offers ?? []),...(otherStores?.offers ?? [])];
+}
 function render(){
  if(!data)return;
  const t=now();
- const offers=data.offers.filter(o=>o.region==='ES'&&(o.kind||'keep')===kind);
+ const offers=allOffers().filter(o=>o.region==='ES'&&(o.kind||'keep')===kind);
  const active=offers.filter(o=>status(o,t)==='active');
  $('free-count').textContent=active.length+' '+(kind==='trial'?(active.length===1?'prueba disponible':'pruebas disponibles'):(active.length===1?'juego disponible':'juegos disponibles'));
  const stale=data.stale||!data.checked||t-Date.parse(data.checked)>26*hour||(kind==='trial'&&data.trialsStale);
- $('free-status').textContent=(data.checked?'Último intento de actualización: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'');
+ $('free-status').textContent=(data.checked?'Último intento de actualización: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'')+(kind==='keep'&&otherStores?.checked?' Otras tiendas: '+date.format(new Date(otherStores.checked))+'.':'');
  $('free-description').textContent=kind==='trial'?'Prueba juegos completos o eventos gratuitos por tiempo limitado. Cuando termine la promoción, el juego dejará de ser gratuito.':'Reclama estos juegos antes de que acabe la promoción y consérvalos en tu biblioteca.';
  const results=offers.filter(o=>{
   const s=status(o,t), ending=s==='active'&&Date.parse(o.end)-t<=24*hour;
@@ -103,7 +107,7 @@ function render(){
 }
 function tick(){
  if(!data)return;
- const t=now(), signature=kind+'|'+data.offers.map(o=>status(o,t)+String(Date.parse(o.end)-t<=24*hour)).join('|');
+ const t=now(), signature=kind+'|'+allOffers().map(o=>status(o,t)+String(Date.parse(o.end)-t<=24*hour)).join('|');
  if(lastState!==signature){lastState=signature;render();return}
  for(const el of grid.querySelectorAll('[data-until]'))el.textContent=el.dataset.prefix+countdown(Date.parse(el.dataset.until),t);
 }
@@ -111,7 +115,17 @@ function apply(next){
  if(!Array.isArray(next?.offers))return;
  if(data&&Date.parse(next.checked)<Date.parse(data.checked))return;
  data=next;
- for(const [select,values] of [[platform,next.offers.map(o=>o.platform)],[genre,next.offers.map(o=>o.genre)]]){
+ updateFilters();
+}
+function applyOtherStores(next){
+ if(!Array.isArray(next?.offers)||!Number.isFinite(Date.parse(next.checked)))return;
+ if(otherStores&&Date.parse(next.checked)<Date.parse(otherStores.checked))return;
+ otherStores=next;
+ updateFilters();
+}
+function updateFilters(){
+ const offers=allOffers();
+ for(const [select,values] of [[platform,offers.map(o=>o.platform)],[genre,offers.map(o=>o.genre)]]){
   for(const value of [...new Set(values)].filter(Boolean).sort()){
    if([...select.options].some(o=>o.value===value))continue;
    add(select,'option',value).value=value;
@@ -138,4 +152,9 @@ get(local).then(apply).catch(()=>{$('free-status').textContent='Datos pendientes
 get(remote).then(apply).catch(()=>{});
 get('./datos/catalogo.json').then(c=>{games=new Map(c.games.map(g=>[fold(g.title),g]));render()}).catch(()=>{});
 setInterval(tick,1000);
-setInterval(()=>get(remote).then(apply).catch(()=>render()),5*60000);
+const refreshOtherStores = () => get(extraRemote).then(applyOtherStores).catch(()=>{});
+refreshOtherStores();
+setInterval(()=>{
+ get(remote).then(apply).catch(()=>render());
+ refreshOtherStores();
+},5*60000);
