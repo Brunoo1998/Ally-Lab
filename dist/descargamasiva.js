@@ -1,4 +1,4 @@
-import { blockedLinks } from "./retro-403.js?v=75";
+import { blockedLinks } from "./retro-403.js?v=76";
 
 const consoles = document.getElementById('masiva-consoles');
 const details = document.getElementById('details');
