@@ -177,6 +177,11 @@ function route() {
   loadConsole(key);
 }
 
+document.getElementById('retro-access-close').addEventListener('click', () => {
+  document.getElementById('retro-access-note').hidden = true;
+  document.getElementById('contenido').focus({preventScroll:true});
+});
+
 window.addEventListener('hashchange', route);
 route();
 query.addEventListener('input', () => { page = 0; render(); });

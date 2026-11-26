@@ -56,3 +56,36 @@
 .retro-emulator h3 { margin: 0 0 .25rem; font-size: .9rem; color: #d7c4ed; }
 .retro-emulator strong { color: #b6ff36; font-size: 1.15rem; }
 .retro-emulator p { margin: .3rem 0 0; }
+
+.retro-access-note {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  gap:.6rem;
+  margin:1rem 0;
+  padding:.75rem .75rem .75rem 1rem;
+  border:1px solid #8064b0;
+  border-inline-start:4px solid var(--lime);
+  border-radius:12px;
+  background:linear-gradient(110deg,#2c2041,#171925);
+  color:#f2effa;
+}
+.retro-access-note h2 { margin:0 0 .2rem; font-size:1rem; }
+.retro-access-note p { margin:0; font-size:.9rem; }
+.retro-access-note a { color:var(--lime); text-decoration:underline; text-underline-offset:.18em; }
+.retro-access-close {
+  min-width:44px;
+  min-height:44px;
+  border:1px solid #8064b0;
+  border-radius:8px;
+  background:#211a30;
+  color:#fff;
+  font-size:1.45rem;
+  line-height:1;
+  cursor:pointer;
+}
+.retro-access-close:hover,.retro-access-close:focus-visible { border-color:var(--lime); color:var(--lime); }
+@media (prefers-reduced-motion:no-preference) {
+  .retro-access-note { animation:retro-access-enter .22s ease-out; }
+  @keyframes retro-access-enter { from { opacity:0; transform:translateY(-.35rem); } to { opacity:1; transform:translateY(0); } }
+}
