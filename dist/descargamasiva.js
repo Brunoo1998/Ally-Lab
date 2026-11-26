@@ -1,3 +1,5 @@
+import { blockedLinks } from "./retro-403.js?v=75";
+
 const consoles = document.getElementById('masiva-consoles');
 const details = document.getElementById('details');
 const title = document.getElementById('masiva-title');
@@ -5,7 +7,6 @@ let selected;
 const cache = new Map();
 const query = document.getElementById('masiva-search');
 const status = document.getElementById('masiva-status');
-const provider = document.getElementById('masiva-provider');
 const results = document.getElementById('masiva-games');
 const pager = document.getElementById('masiva-pager');
 const previous = document.getElementById('masiva-prev');
@@ -70,7 +71,7 @@ async function loadConsole(key) {
       const record = JSON.parse(line);
       if (record.type !== 'file' || typeof record.n !== 'string' || !Array.isArray(record.urls)) continue;
       const urls = record.urls.filter(entry => typeof entry?.u === 'string' && /^https?:\/\//i.test(entry.u));
-      if (urls.length) games.push({n: record.n, urls});
+      if (urls.length) games.push({n: record.n, urls: urls.filter(({u}) => !blockedLinks.has(u))});
     }
     games.sort((a, b) => a.n.localeCompare(b.n, 'es', {numeric: true}));
     cache.set(key, games);
@@ -86,7 +87,6 @@ function route() {
   const card = document.getElementById('console-' + key);
   consoles.hidden = Boolean(card);
   details.hidden = !card;
-  provider.hidden = key !== "switch";
   if (!card) {
     request?.abort();
     request = undefined;
