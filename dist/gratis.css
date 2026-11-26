@@ -23,6 +23,5 @@
 .free-clock { font: 700 .95rem var(--mono); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 760px) {
-  .mast nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .free-filters .search { flex-basis: auto; }
 }
