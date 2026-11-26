@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080a10"><title>Juegos gratis de la semana · Ally Lab</title><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./gratis.css?v=47"><script type="module" src="./gratis.js?v=54"></script><script type="module" src="./lab-controls.js?v=62"></script><link rel="icon" href="./assets/ally-mark.svg" type="image/svg+xml"><link rel="stylesheet" href="./mobile-nav.css?v=85"></head><body><a class="skip" href="#contenido">Saltar al contenido</a>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080a10"><title>Juegos gratis y pruebas temporales · Ally Lab</title><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./gratis.css?v=55"><script type="module" src="./gratis.js?v=55"></script><script type="module" src="./lab-controls.js?v=62"></script><link rel="icon" href="./assets/ally-mark.svg" type="image/svg+xml"><link rel="stylesheet" href="./mobile-nav.css?v=85"></head><body><a class="skip" href="#contenido">Saltar al contenido</a>
 <header class="mast"><div class="wrap bar"><a class="brand" href="./index.html"><img src="./assets/ally-mark.svg" width="40" height="40" alt=""><span>ALLY <em>LAB</em></span></a><div id="pad-status" class="pad-status" hidden>
 <span class="pad-status-label" role="status"></span>
 <ul class="pad-legend" aria-label="Controles del mando">
@@ -10,9 +10,14 @@
 </div><nav aria-label="Principal"><a href="./index.html#juegos"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#games"></use></svg><span>Juegos</span></a><a href="./index.html#simulador"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#fps"></use></svg><span>Simulador FPS</span></a><a href="./ports.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#ports"></use></svg><span>Ports y Recompilaciones</span></a><a href="./news.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#news"></use></svg><span>Noticias</span></a><a class="active" aria-current="page" href="./gratis.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#free"></use></svg><span>Juegos gratis</span></a><a href="./emulacion.html"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg?v=71#retro"></use></svg><span>Retro</span></a></nav><span class="model-tag">Z2 EXTREME</span></div></header>
 
 <main class="wrap free-main" id="contenido" tabindex="-1">
-<header class="hero free-hero"><div class="intro"><h1>Juegos gratis <em>de la semana</em></h1><p>Promociones verificadas para PC en España. Reclama el juego durante la oferta y consérvalo en tu biblioteca.</p></div></header>
+<header class="hero free-hero"><div class="intro"><h1>Juegos gratis <em>y pruebas temporales</em></h1><p>Juegos que puedes conservar y juegos de pago que puedes probar gratis durante unos días, sin confundir ambas ofertas.</p></div></header>
 <section aria-labelledby="free-heading">
 <div class="section-head"><h2 id="free-heading">Promociones</h2><span id="free-count" class="count" aria-live="polite">Comprobando ofertas…</span></div>
+<div class="free-kinds" role="group" aria-label="Tipo de acceso gratuito">
+<button class="btn" type="button" data-kind="keep" aria-pressed="true">Para siempre</button>
+<button class="btn" type="button" data-kind="trial" aria-pressed="false">Pruebas temporales</button>
+</div>
+<p id="free-description" class="free-kind-note">Reclama estos juegos antes de que acabe la promoción y consérvalos en tu biblioteca.</p>
 <div class="free-tabs" role="group" aria-label="Estado de las promociones">
 <button class="btn" type="button" data-view="active" aria-pressed="true">Disponibles</button><button class="btn" type="button" data-view="upcoming" aria-pressed="false">Próximos</button><button class="btn" type="button" data-view="ending" aria-pressed="false">A punto de finalizar</button><button class="btn" type="button" data-view="history" aria-pressed="false">Historial</button>
 </div>

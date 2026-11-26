@@ -25,3 +25,12 @@
 @media (max-width: 760px) {
   .free-filters .search { flex-basis: auto; }
 }
+
+/* Diferenciar los regalos que se conservan de las pruebas que caducan. */
+.free-kinds { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: .65rem; }
+.free-kinds .btn { font-weight: 700; cursor: pointer; border-radius: 999px; padding-inline: 1.2rem; }
+.free-kinds [aria-pressed="true"] { background: var(--accent, #b6ff36); color: #101513; border-color: var(--accent, #b6ff36); }
+.free-kind-note { margin: 0 0 1.2rem; color: var(--mid); }
+.free-trial-note { padding: .65rem .8rem; border: 1px solid rgba(255,190,93,.4); border-radius: .65rem; color: #f5c785; font-size: .9rem; }
+.free-empty { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; }
+.free-empty p { margin: 0; }

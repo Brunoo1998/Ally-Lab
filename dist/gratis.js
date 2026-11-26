@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 const fields = ['query','platform','genre','order'].map(key=>$('free-'+key));
 const [query,platform,genre,order] = fields;
 const tabs = [...document.querySelectorAll('[data-view]')];
+const kinds = [...document.querySelectorAll('[data-kind]')];
 const grid = $('free-grid');
 const hour = 3600000;
 const local = './datos/gratis.json';
@@ -9,7 +10,7 @@ const remote = 'https://raw.githubusercontent.com/Brunoo1998/Ally-Lab/promocione
 const date = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'});
 const price = new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const fold = s=>s.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
-let data, games = new Map(), view='active', lastState='';
+let data, games = new Map(), view='active', kind='keep', lastState='';
 const now = ()=>Date.now();
 
 function add(parent,tag,text,css){
@@ -48,11 +49,17 @@ function card(offer,state,t,soon){
  if(safe(offer.cover)){const img=add(cover,'img');img.src=offer.cover;img.alt='';img.loading='lazy'}
  else add(cover,'span',offer.title.slice(0,2).toUpperCase());
  const box=add(item,'div',null,'card-body free-copy');
- add(box,'p',offer.platform+(soon?' · Termina pronto':state==='active'&&t-Date.parse(offer.added)<24*hour?' · Nuevo':''),'card-meta free-badge');
+ add(box,'p',offer.platform+(offer.kind==='trial'?' · Prueba temporal':' · Para siempre')+(soon?' · Termina pronto':state==='active'&&t-Date.parse(offer.added)<24*hour?' · Nuevo':''),'card-meta free-badge');
  add(box,'h3',offer.title);
  if(offer.description&&offer.description!==offer.title)add(box,'p',offer.description);
  add(box,'p',(offer.genre||'Género sin confirmar')+' · '+(offer.rating!=null?offer.rating+'/5':'Valoración sin confirmar'),'free-muted');
- const prices=add(box,'div',null,'free-prices');add(prices,'del',price.format(offer.original));add(prices,'strong',price.format(0));
+ if(offer.kind==='trial'){
+  add(box,'p','Acceso gratuito solo durante el período indicado. Al finalizar, necesitarás comprar el juego para seguir jugando.','free-trial-note');
+ }else{
+  const prices=add(box,'div',null,'free-prices');
+  if(typeof offer.original==='number')add(prices,'del',price.format(offer.original));
+  add(prices,'strong',price.format(0));
+ }
  add(box,'p',date.format(new Date(offer.start))+' → '+date.format(new Date(offer.end))+' · hora peninsular','free-muted');
  if(state!=='history'){
   const counter=add(box,'p',null,'free-clock');
@@ -67,16 +74,17 @@ function card(offer,state,t,soon){
   });
  }
  const game=games.get(fold(offer.title));
- if(safe(offer.url))link(box,state==='active'?'Conseguir gratis':'Ver ficha oficial',offer.url,'btn');
+ if(safe(offer.url))link(box,state==='active'?(offer.kind==='trial'?'Probar gratis':'Conseguir gratis'):'Ver ficha oficial',offer.url,'btn');
 }
 function render(){
  if(!data)return;
  const t=now();
- const offers=data.offers.filter(o=>o.region==='ES');
+ const offers=data.offers.filter(o=>o.region==='ES'&&(o.kind||'keep')===kind);
  const active=offers.filter(o=>status(o,t)==='active');
- $('free-count').textContent=active.length+' '+(active.length===1?'juego disponible':'juegos disponibles');
- const stale=data.stale||!data.checked||t-Date.parse(data.checked)>2*hour;
- $('free-status').textContent=(data.checked?'Última comprobación válida: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Datos pendientes de actualizar.':'');
+ $('free-count').textContent=active.length+' '+(kind==='trial'?(active.length===1?'prueba disponible':'pruebas disponibles'):(active.length===1?'juego disponible':'juegos disponibles'));
+ const stale=data.stale||!data.checked||t-Date.parse(data.checked)>26*hour||(kind==='trial'&&data.trialsStale);
+ $('free-status').textContent=(data.checked?'Última comprobación: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'');
+ $('free-description').textContent=kind==='trial'?'Prueba juegos completos o eventos gratuitos por tiempo limitado. Cuando termine la promoción, el juego dejará de ser gratuito.':'Reclama estos juegos antes de que acabe la promoción y consérvalos en tu biblioteca.';
  const results=offers.filter(o=>{
   const s=status(o,t), ending=s==='active'&&Date.parse(o.end)-t<=24*hour;
   return (s===view||(view==='ending'&&ending))&&(!platform.value||o.platform===platform.value)
@@ -86,12 +94,16 @@ function render(){
  results.sort(order.value==='added'?(a,b)=>Date.parse(b.added)-Date.parse(a.added):order.value==='rating'?(a,b)=>(b.rating??-1)-(a.rating??-1)||byEnd(a,b):byEnd);
  grid.replaceChildren();
  for(const offer of results)card(offer,status(offer,t),t,Date.parse(offer.end)-t<=24*hour);
- if(!results.length)add(grid,'p','No hay promociones verificadas para esta selección.','free-muted');
+ if(!results.length){
+  const empty=add(grid,'div',null,'free-empty');
+  add(empty,'p',kind==='trial'?'No hay pruebas temporales confirmadas para esta selección.':'No hay promociones verificadas para esta selección.','free-muted');
+  if(kind==='trial')link(empty,'Consultar fines de semana gratis en SteamDB','https://steamdb.info/upcoming/free/','btn');
+ }
  tick();
 }
 function tick(){
  if(!data)return;
- const t=now(), signature=data.offers.map(o=>status(o,t)+String(Date.parse(o.end)-t<=24*hour)).join('|');
+ const t=now(), signature=kind+'|'+data.offers.map(o=>status(o,t)+String(Date.parse(o.end)-t<=24*hour)).join('|');
  if(lastState!==signature){lastState=signature;render();return}
  for(const el of grid.querySelectorAll('[data-until]'))el.textContent=el.dataset.prefix+countdown(Date.parse(el.dataset.until),t);
 }
@@ -107,6 +119,15 @@ function apply(next){
  }
  render();
 }
+for(const button of kinds)button.onclick=()=>{
+ kind=button.dataset.kind;
+ view='active';
+ for(const other of kinds)other.setAttribute('aria-pressed',String(other===button));
+ for(const other of tabs)other.setAttribute('aria-pressed',String(other.dataset.view==='active'));
+ platform.value='';
+ genre.value='';
+ render();
+};
 for(const button of tabs)button.onclick=()=>{
  view=button.dataset.view;
  for(const other of tabs)other.setAttribute('aria-pressed',String(other===button));

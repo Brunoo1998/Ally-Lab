@@ -1,5 +1,6 @@
 """Actualiza promociones de PC verificadas para España."""
 import argparse
+import html
 import json
 import os
 import re
@@ -12,6 +13,7 @@ from urllib.request import Request, urlopen
 
 GP = 'https://www.gamerpower.com/api/giveaways?type=game'
 EPIC = 'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=es-ES&country=ES&allowCountries=ES'
+STEAM_FEATURED = 'https://store.steampowered.com/api/featuredcategories/?cc=es&l=english'
 OUTPUT = Path('dist/datos/gratis.json')
 
 def request(url):
@@ -77,7 +79,7 @@ def collect(gamerpower, epic, now, check=valid_page):
                     cover = next((i['url'] for i in images if i['type']=='OfferImageTall'), None)
                     gp_url = (gp or {}).get('gamerpower_url')
                     gp_image = (gp or {}).get('image')
-                    entry = dict(id='epic:'+game['id']+':'+start.isoformat(),title=game['title'],platform='Epic Games Store',
+                    entry = dict(id='epic:'+game['id']+':'+start.isoformat(),kind='keep',title=game['title'],platform='Epic Games Store',
                                  description=(gp or {}).get('description') or game.get('description'),start=start.isoformat(),
                                  end=end.isoformat(),url=url,original=price['originalPrice']/(10**price['currencyInfo']['decimals']),
                                  region='ES',cover=cover or (gp_image if safe(gp_image,{'www.gamerpower.com'}) else None),
@@ -86,16 +88,79 @@ def collect(gamerpower, epic, now, check=valid_page):
                     results[(key(entry['title']),start.isoformat())] = entry
     return list(results.values())
 
+
+def collect_trials(now):
+    """Detecta únicamente fines de semana gratis anunciados por Steam con horas verificables."""
+    catalog = read(STEAM_FEATURED)
+    if not isinstance(catalog, dict) or catalog.get('status') != 1:
+        raise ValueError('No se pudo consultar la portada de Steam')
+    found = {}
+    for section in catalog.values():
+        if not isinstance(section, dict) or section.get('id') != 'cat_spotlight':
+            continue
+        for spotlight in section.get('items', []):
+            if not re.search(r'free weekend|play for free|fin de semana gratis|juega gratis', spotlight.get('name', ''), re.I):
+                continue
+            match = re.search(r'/app/(\d+)/', spotlight.get('url', ''))
+            if not match:
+                continue
+            appid = match.group(1)
+            url = f'https://store.steampowered.com/app/{appid}/?cc=es&l=english'
+            with request(url) as response:
+                if not safe(response.url, {'store.steampowered.com'}):
+                    continue
+                page = html.unescape(response.read(3_000_000).decode('utf-8', 'replace'))
+            # Steam publica free_weekend con fechas Unix; un descuento por sí solo NO prueba acceso gratis.
+            match_event = re.search(r'["\\]free_weekend["\\]\s*:\s*\{([^{}]{1,1500})\}', page, re.I)
+            if not match_event:
+                continue
+            payload = match_event.group(1).replace('\\\"', '"')
+            start = re.search(r'"start_time"\s*:\s*(\d{10})', payload)
+            end = re.search(r'"end_time"\s*:\s*(\d{10})', payload)
+            if not (start and end):
+                continue
+            start_date = datetime.fromtimestamp(int(start.group(1)), timezone.utc)
+            end_date = datetime.fromtimestamp(int(end.group(1)), timezone.utc)
+            if not start_date < end_date or not start_date <= now < end_date:
+                continue
+            details = read(f'https://store.steampowered.com/api/appdetails?appids={appid}&cc=es&l=spanish')
+            game = (details.get(appid) or {}).get('data') or {}
+            if game.get('type') != 'game' or not game.get('platforms', {}).get('windows'):
+                continue
+            title = game.get('name')
+            if not isinstance(title, str) or not title.strip():
+                continue
+            cover = game.get('header_image')
+            if not safe(cover, {'shared.akamai.steamstatic.com', 'cdn.akamai.steamstatic.com', 'store.akamai.steamstatic.com'}):
+                cover = None
+            item = dict(
+                id=f'steam-trial:{appid}:{start_date.isoformat()}',
+                kind='trial', title=title, platform='Steam',
+                description='Prueba gratuita por tiempo limitado en Steam.',
+                start=start_date.isoformat(), end=end_date.isoformat(),
+                url=f'https://store.steampowered.com/app/{appid}/',
+                original=None, region='ES', cover=cover, gallery=[],
+                source=url, seenActive=True,
+            )
+            found[item['id']] = item
+    return list(found.values())
+
 def refresh(previous, now):
     found = collect(read(GP), read(EPIC), now)
     old = {item['id']:item for item in previous.get('offers', [])}
+    trials_stale = False
+    try:
+        found.extend(collect_trials(now))
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(f'Pruebas temporales sin verificar: {exc}')
+        trials_stale = True
     offers = [dict(item, added=old.get(item['id'],{}).get('added', now.isoformat())) for item in found]
     # Solo promociones observadas como activas entran en el historial.
     for item in offers:
         item['seenActive'] = parsed(item['start']) <= now or old.get(item['id'],{}).get('seenActive',False)
     ids = {item['id'] for item in offers}
     history = sorted((i for k,i in old.items() if k not in ids and i.get('seenActive') and parsed(i['end'])<=now),key=lambda i:i['end'],reverse=True)
-    return dict(checked=now.isoformat(),stale=False,offers=offers+history[:100])
+    return dict(checked=now.isoformat(),stale=False,trialsStale=trials_stale,offers=offers+history[:100])
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
