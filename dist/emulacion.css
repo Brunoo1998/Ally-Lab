@@ -28,3 +28,6 @@
 .emu-source th,.emu-source td { padding:.55rem .25rem; text-align:left; border-bottom:1px solid var(--line); }
 .emu-source td:nth-child(2) { font-variant-numeric:tabular-nums; }
 .emu-source a { display:inline-flex; align-items:center; min-height:44px; color:var(--lime); overflow-wrap:anywhere; }
+.masiva-games { list-style:none; padding:0; }
+.masiva-games li { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem 1rem; border-bottom:1px solid var(--line); padding:.3rem 0; overflow-wrap:anywhere; }
+.masiva-games strong { flex:1 1 14rem; min-width:0; }
