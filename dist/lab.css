@@ -71,24 +71,3 @@ input:is([type=search],[type=text]),select,.sim-fields select{min-height:44px;ba
   outline: 3px solid var(--lime, #c5fc69);
   outline-offset: 3px;
 }
-.pad-keyboard {
-  width: min(34rem, calc(100% - 2rem));
-  padding: 1rem;
-  border: 1px solid var(--line, #525571);
-  border-radius: 12px;
-  background: #171723;
-  color: var(--ink, #fff);
-}
-.pad-keyboard::backdrop { background: rgb(0 0 0 / 70%); }
-.pad-keyboard p { margin: 0 0 .75rem; overflow-wrap: anywhere; }
-.pad-keyboard-letters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .45rem; }
-.pad-keyboard-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
-.pad-keyboard button {
-  min-height: 42px;
-  padding: .35rem;
-  border: 1px solid #62647c;
-  border-radius: 6px;
-  background: #27283b;
-  color: inherit;
-  font: inherit;
-}
