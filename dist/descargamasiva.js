@@ -9,7 +9,7 @@ const results = document.getElementById('masiva-games');
 const pager = document.getElementById('masiva-pager');
 const previous = document.getElementById('masiva-prev');
 const next = document.getElementById('masiva-next');
-const limit = 24;
+const limit = 48;
 let games = [];
 let page = 0;
 let request;
