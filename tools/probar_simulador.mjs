@@ -56,6 +56,17 @@ for(const game of games){
   }
  }
  if(game.title==='Cyberpunk 2077'){
+  for(const id of ['texture','shadow']){
+   const from=model.evaluate({...model.initial,[id]:'low'});
+   const to=model.evaluate({...model.initial,[id]:'ultra'});
+   assert.ok(from.center>to.center,id);
+   assert.equal(to.confidence,'Baja');
+  }
+  const baseline=model.evaluate({...model.initial,q:'high'});
+  assert.ok(model.evaluate({...model.initial,q:'high',texture:'low'}).center>baseline.center);
+  assert.ok(model.evaluate({...model.initial,q:'high',shadow:'low'}).center>baseline.center);
+ }
+ if(game.title==='Cyberpunk 2077'){
   assert.equal(original.low,40.5);
   assert.deepEqual(qualities.map(q=>model.evaluate({...model.initial,q}).low),[49.5,40.5,31.9,28]);
   assert.equal(model.evaluate({...model.initial,w:21}).type,'Interpolación');

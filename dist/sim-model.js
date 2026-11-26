@@ -91,11 +91,13 @@ export const qualities = ['low','medium','high','ultra'];
 export const resolutions = [720,900,1080];
 export const kinds = {off:'FPS renderizados',on:'FPS mostrados con FG','?':'FPS sin desglose'};
 export const qualityFields={
- texture:['Texturas',/^(?:textures?(?: quality| resolution| detail)?|texturas|calidad de texturas)$/i,.035],
- shadow:['Sombras',/^(?:shadows?(?: quality| resolution| detail)?|sombras|calidad de sombras)$/i,.08]
+ texture:['Calidad de texturas',/^(?:textures?(?: quality| resolution| detail)?|texturas|calidad de texturas)$/i,.035],
+ shadow:['Calidad de sombras',/^(?:shadows?(?: quality| resolution| detail)?|sombras|calidad de sombras)$/i,.08],
+ effects:['Calidad de efectos',/^(?:effects quality|calidad de efectos)$/i,.06],
+ lighting:['Calidad de iluminación',/^(?:lighting quality|global illumination quality|calidad de iluminación)$/i,.07]
 };
 const levels={low:0,medium:1,high:2,ultra:3};
-const key = ({profile,r,w,q,scale,gen,texture,shadow}) => [profile,r,w,q,scale,gen,texture,shadow].join('|');
+const key = t => ['profile','r','w','q','scale','gen',...Object.keys(qualityFields)].map(id=>t[id]).join('|');
 const notebookcheck = 'https://www.notebookcheck.net/Full-screen-Xbox-experience-for-gaming-handhelds-Asus-ROG-Xbox-Ally-X-review.1139045.0.html';
 // 1080p results grouped by matching test conditions and by sustained TDP.
 const benchmarkSuites = {
@@ -228,7 +230,7 @@ export function createModel(game, detail, verifiedPoints) {
   return Object.fromEntries(Object.entries(qualityFields).flatMap(([id,[,pattern]])=>{
    const value=base.rows.find(([name])=>pattern.test(name.trim()))?.[1];
    const preset=qualityNames[value?.trim().toLowerCase()];
-   return preset?[[id,preset]]:[];
+   return preset||id==='texture'||id==='shadow'?[[id,preset||null]]:[];
   }));
  }
  function calculate(t){
@@ -236,13 +238,17 @@ export function createModel(game, detail, verifiedPoints) {
   if(!base||!selectable(base).includes(t.q))return null;
   const available=adjustable(base);
   const simulatedPreset=t.q!==base.q&&!base.suite?.includes(t.q);
-  const changes=Object.entries(available).filter(([id,from])=>qualities.includes(t[id])&&from!==t[id]);
+  const presetChanged=t.q!==base.q;
+  const changes=Object.entries(available).flatMap(([id,documented])=>{
+   const from=(presetChanged?t.q:documented)||base.q;
+   return qualities.includes(t[id])&&(levels[from]??1)!==levels[t[id]]?[[id,levels[from]??1]]:[];
+  });
   if(!simulatedPreset&&!changes.length)return calculateBase(t);
   const source=calculateBase({...t,q:simulatedPreset?base.q:t.q});
   if(!source)return null;
   const from=levels[base.q]??1;
   const presetDelta=simulatedPreset?(from-levels[t.q])*.14:0;
-  const detailDelta=changes.reduce((sum,[id,previous])=>sum+(levels[simulatedPreset?t.q:previous]-levels[t[id]])*qualityFields[id][2],0);
+  const detailDelta=changes.reduce((sum,[id,previous])=>sum+(previous-levels[t[id]])*qualityFields[id][2],0);
   const factor=Math.exp(presetDelta+detailDelta);
   const low=Math.max(1,Math.floor(source.low*factor*.88));
   const high=Math.max(low+1,Math.ceil((source.high??source.low*1.2)*factor*1.12));

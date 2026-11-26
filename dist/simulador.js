@@ -1,4 +1,4 @@
-import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=52';
+import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=55';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
 
 import {campoES,valorES} from './idioma.js?v=20261121';
@@ -69,8 +69,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const controls=add(layout,'section',null,'fps-panel fps-controls');
  heading(controls,'Configuración');
  const form=add(controls,'div',null,'fps-fields');
- function field(title,action,iconType){
-  const wrap=add(form,'label');
+ function field(title,action,iconType,parent=form){
+  const wrap=add(parent,'label');
   const label=add(wrap,'span',null,'fps-field-label');
   if(iconType)icon(label,iconType);
   label.append(title);
@@ -104,7 +104,10 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const slider=add(powerControl,'input');slider.type='range';slider.min=7;slider.max=35;
  slider.oninput=()=>{w.value=slider.value;manual()};
  const scale=field(names.scale,manual,'scale'),gen=field(names.gen,manual,'gen');
- const overrides=Object.fromEntries(Object.entries(qualityFields).map(([id,[name]])=>[id,field(name,manual,'q')]));
+ const individual=add(controls,'fieldset',null,'fps-individual');
+ add(individual,'legend','Ajustes gráficos individuales');
+ const individualFields=add(individual,'div',null,'fps-fields');
+ const overrides=Object.fromEntries(Object.entries(qualityFields).map(([id,[name]])=>[id,field(name,manual,'q',individualFields)]));
  const notes=add(controls,'details',null,'fps-values');
  add(notes,'summary','Ajustes de partida de la ficha');
  const rows=add(notes,'dl',null,'fps-value-list');
@@ -158,7 +161,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const methods=add(sim,'details',null,'fps-methods');
  add(methods,'summary','Metodología, límites y pruebas');
  add(methods,'p','El TDP indica la potencia configurada de la APU. La fiabilidad describe la calidad de la referencia, y el rango orientativo no es un intervalo estadístico.');
- add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Si faltan mediciones comparables, el simulador usa cifras de la ficha o una horquilla de otros títulos del catálogo. Estas aproximaciones tienen confianza baja. Los cambios de preajuste, texturas o sombras sin ensayos equivalentes usan una sensibilidad genérica. Los ajustes individuales aparecen cuando la ficha registra un nivel compatible.');
+ add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Si faltan mediciones comparables, el simulador usa cifras de la ficha o una horquilla de otros títulos del catálogo. Estas aproximaciones tienen confianza baja. Los cambios de preajuste, texturas o sombras sin ensayos equivalentes usan una sensibilidad genérica. Si la ficha no documenta el nivel de texturas o sombras, el modelo toma como base el preajuste seleccionado o Media si el preajuste es personalizado.');
  add(methods,'p','Con Frame Generation se muestra el total publicado. Los FPS renderizados con FG activo requieren una medición separada.');
  for(const note of detail.notes||[]) add(methods,'p',note);
  source(methods,game.source);
@@ -180,10 +183,9 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   profile.value=target.profile;
   const options=model.options(target.profile);
   for(const [id,node] of Object.entries(overrides)){
-   const base=options.adjustable[id];
-   node.parentElement.hidden=!base;
-   node.parentElement.style.display=base?'':'none';
-   setOptions(node,base?[['','Base: '+labels[base]],...qualities.map(v=>[v,labels[v]])]:[]);
+   const available=Object.hasOwn(options.adjustable,id);
+   node.parentElement.hidden=!available;
+   setOptions(node,available?[['','Heredar del preajuste'],...qualities.map(v=>[v,labels[v]])]:[]);
    node.value=target[id]||'';
   }
   setOptions(q,options.qualities.map(v=>[v,display('q',v,target.profile)]));
@@ -203,6 +205,13 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   status.textContent='';
   current=read();
   result=model.evaluate(current);
+  const base=model.profiles[current.profile];
+  for(const [id,node] of Object.entries(overrides)){
+   if(node.parentElement.hidden)continue;
+   const documented=current.q===base.q?model.options(current.profile).adjustable[id]:null;
+   const inherited=documented||(qualities.includes(current.q)?current.q:null);
+   node.options[0].textContent=documented?'Ficha: '+labels[documented]:inherited?'Heredar: '+labels[inherited]:'Automático (referencia Media)';
+  }
   slider.disabled=!current.w;
   if(current.w)slider.value=current.w;
   powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
