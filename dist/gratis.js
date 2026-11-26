@@ -67,7 +67,6 @@ function card(offer,state,t,soon){
   });
  }
  const game=games.get(fold(offer.title));
- if(!game?.fps)add(box,'p','Rendimiento en Ally X sin datos verificados.','free-muted');
  if(safe(offer.url))link(box,state==='active'?'Conseguir gratis':'Ver ficha oficial',offer.url,'btn');
 }
 function render(){
