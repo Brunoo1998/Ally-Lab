@@ -130,6 +130,13 @@ function scan(){
  const pad=pads.find(isAlly)||pads[0];
  if(!pad){held='';return}
  const {buttons,axes}=pad;
+ const scrollAxis=axes[3]||0;
+ const tilt=Math.abs(scrollAxis);
+ const deadZone=.2;
+ if(tilt>deadZone&&!picker?.open){
+  const strength=(tilt-deadZone)/(1-deadZone);
+  window.scrollBy({top:Math.sign(scrollAxis)*strength**2*40,behavior:'instant'});
+ }
  const keys=Object.keys(directions), horizontal=axes[0]||0,vertical=axes[1]||0;
  const arrow=keys.find(k=>buttons[k]?.pressed)||(Math.max(Math.abs(horizontal),Math.abs(vertical))>.58?(Math.abs(horizontal)>Math.abs(vertical)?(horizontal<0?'14':'15'):(vertical<0?'12':'13')):'');
  const key=buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':buttons[2]?.pressed?'X':arrow;
