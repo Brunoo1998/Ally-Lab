@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emulación · Ally Lab</title><link rel="icon" href="./assets/ally-mark.svg">
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./emulacion.css">
+<script type="module" src="./lab-controls.js?v=62"></script><script type="module" src="./emulacion.js"></script></head>
+<body class="emulation"><a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="mast"><div class="wrap bar"><a class="brand" href="./index.html"><img src="./assets/ally-mark.svg" width="40" height="40" alt=""><span>ALLY <em>LAB</em></span></a><div id="pad-status" class="pad-status" hidden>
+<span class="pad-status-label" role="status"></span>
+<ul class="pad-legend" aria-label="Controles del mando">
+<li><kbd>A</kbd> Aceptar</li>
+<li><kbd>B</kbd><kbd class="pad-generic" aria-label="Círculo">○</kbd> Volver</li>
+<li><kbd>Y</kbd><kbd class="pad-generic" aria-label="Triángulo">△</kbd> Buscar</li>
+</ul>
+</div><nav aria-label="Principal"><a href="./index.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#games"></use></svg><span>Juegos</span></a><a href="./index.html#juego/world-of-warcraft-forever-rog-xbox-ally-x-game-settings?sim=1"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#fps"></use></svg><span>Simulador FPS</span></a><a href="./ports.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#ports"></use></svg><span>Ports y Recompilaciones</span></a><a href="./news.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#news"></use></svg><span>Noticias</span></a><a href="./gratis.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#free"></use></svg><span>Juegos gratis</span></a><a href="./emulacion.html" class="active" aria-current="page"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg#games"></use></svg><span>Emulación</span></a></nav><span class="model-tag">Z2 EXTREME</span></div></header>
+<main class="wrap" id="contenido" tabindex="-1">
+<header class="port-heading"><h1>Emulación</h1><p>Juegos en español con descarga oficial para emular en Windows.</p></header>
+<div id="emu-browser">
+<div class="tools emu-tools"><label for="emu-search">Buscar en todas las consolas</label><input id="emu-search" type="search" placeholder="Título o consola" autocomplete="off"><details id="emu-keys"><summary>Escribir con el mando</summary><div class="emu-keys"></div></details></div>
+<section aria-labelledby="emu-consoles-title"><h2 id="emu-consoles-title">Consolas</h2><div id="emu-consoles" class="emu-grid"></div></section>
+<section id="emu-results" aria-labelledby="emu-results-title" hidden><div class="emu-row"><h2 id="emu-results-title" tabindex="-1">Juegos</h2><button id="emu-reset" class="btn" type="button">Todas las consolas</button></div><p id="emu-count" role="status"></p><div id="emu-games" class="emu-grid"></div><nav class="pager emu-row" id="emu-pages" aria-label="Páginas de juegos" hidden><button class="btn" id="emu-prev" type="button">Anterior</button><span id="emu-page"></span><button class="btn" id="emu-next" type="button">Siguiente</button></nav></section>
+<p id="emu-status" role="status">Cargando catálogo…</p>
+</div>
+<article id="details" class="emu-detail" hidden><a class="btn" href="#catalogo">Volver al catálogo</a><div id="emu-detail"></div></article>
+<noscript><p>Activa JavaScript para consultar el catálogo.</p></noscript>
+</main>
+<footer class="wrap foot"><span>Fotografías de consolas de Evan-Amos, dominio público.</span></footer>
+</body></html>

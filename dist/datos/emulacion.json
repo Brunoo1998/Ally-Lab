@@ -1,0 +1,44 @@
+{
+  "systems": {
+    "gb": {
+      "name": "Game Boy",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Game-Boy-Original.png/330px-Game-Boy-Original.png",
+      "emulator": "mGBA",
+      "emulatorUrl": "https://mgba.io/downloads.html",
+      "setup": "Configuración inicial para tu Ally X: selecciona modo Mando en Armoury Crate, configura la cruceta y botones en mGBA para Windows x64, y usa escalado entero para mantener los píxeles nítidos. Ajustes de partida, sin mediciones en la consola."
+    },
+    "gbc": {
+      "name": "Game Boy Color",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Game-Boy-Color-Purple.png/330px-Game-Boy-Color-Purple.png",
+      "emulator": "mGBA",
+      "emulatorUrl": "https://mgba.io/downloads.html",
+      "setup": "Configuración inicial para tu Ally X: selecciona modo Mando en Armoury Crate, configura la cruceta y botones en mGBA para Windows x64, y usa escalado entero para mantener los píxeles nítidos. Ajustes de partida, sin mediciones en la consola."
+    }
+  },
+  "games": [
+    {
+      "id": "fun-video-store",
+      "system": "gbc",
+      "title": "FUN VIDEO STORE",
+      "edition": "Demo",
+      "language": "Español e inglés",
+      "size": "512 kB",
+      "format": "ROM .gbc",
+      "download": "https://elrosso.itch.io/fun-video-store",
+      "cover": "https://img.itch.zone/aW1nLzIyODY4MDg5LnBuZw==/original/Nlr0Qz.png",
+      "setup": "Abre FUNVIDEOSTORE_DEMO_jam.gbc en mGBA. Asigna cruceta para mover el cursor, A para ejecutar la acción y B para cambiar de verbo."
+    },
+    {
+      "id": "gb-wordyl",
+      "system": "gb",
+      "title": "GB-Wordyl",
+      "edition": "Juego completo",
+      "language": "Español (ROM ES incluida en el ZIP)",
+      "size": "211 kB (ZIP completo)",
+      "format": "ZIP con ROM .gb",
+      "download": "https://bbbbbr.itch.io/gb-wordyl",
+      "cover": "https://img.itch.zone/aW1nLzE4MzkwODcxLnBuZw==/original/WrL6qW.png",
+      "setup": "Descarga el ZIP GameBoy_32k_nosave, extráelo y abre la ROM con sufijo ES en mGBA. Usa la cruceta para el teclado del juego, A/B para añadir o borrar letras y START para enviar la palabra."
+    }
+  ]
+}
