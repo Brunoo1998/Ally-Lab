@@ -1,6 +1,6 @@
 import { unmountGameVideo } from './videos.js?v=41';
 import { mountCaptures } from './capturas.js?v=41';
-import { mountSim } from './simulador.js?v=39';
+import { mountSim } from './simulador.js?v=48';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
 const id = name => document.getElementById(name);
@@ -271,7 +271,10 @@ function route(initial=false){
   unmountGameVideo();
   const token=++routeId, wasDetail=inDetail;
   let [path,raw='']=location.hash.slice(1).split('?');
-  if(path==='simulador'){path='juego/'+catalog.games[0].id;raw='sim=1'}
+  if(path==='simulador'){
+    const demo=catalog.games.find(g=>g.id==='cyberpunk-2077-rog-xbox-ally-x')||catalog.games[0];
+    path='juego/'+demo.id;raw='sim=1';
+  }
   const params=new URLSearchParams(raw), standalone=path.startsWith('juego/')&&params.has('sim');
   document.querySelector('.mast a[href="#juegos"]').classList.toggle('active',!standalone);
   id('sim-link').classList.toggle('active',standalone);

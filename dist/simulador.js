@@ -1,234 +1,287 @@
-import {referencias,proyectar,aproximar} from './proyeccion.js?v=39';
-// Cada tupla enlaza una lectura de la nota publicada con su tabla, potencia y estado de FG.
-// El indicador "?" conserva la incertidumbre cuando la fuente no desglosa el contador.
-const evidence = {
- 'world-of-warcraft-forever-rog-xbox-ally-x-game-settings':[[0,35,'?',60],[1,18,'?',60],[2,15,'?',40,'>']],
- 'nierautomata-rog-xbox-ally-x-game':[[0,18,'?',60],[0,20,'?',60],[1,15,'?',60]],
- 'the-outlast-trials-rog-xbox-ally-x-game-settings':[[0,35,'?',90,'>'],[0,20,'?',60,'>'],[0,18,'?',60,'>'],[0,15,'?',40,'>']],
- 'payday-3-rog-xbox-ally-x-game-settings':[[0,35,'?',60,'>']],
- 'void-breaker-rog-xbox-ally-x-game-settings':[[0,35,'?',60,'≈']],
- 'psychonauts-2-rog-xbox-ally-x-game-settings':[[0,35,'?',60,'>'],[1,20,'?',60,'≈'],[1,18,'?',60,'≈'],[1,15,'?',40,'>']],
- 'tape-to-tape-rog-xbox-ally-x-game-settings':[[0,7,'?',80,'>'],[0,10,'?',120]],
- 'metro-last-light-redux-rog-xbox-ally-x-game-settings':[[0,18,'?',60,'>'],[0,20,'?',60,'>'],[0,35,'?',60,'>'],[1,15,'?',50,'>']],
- 'borderlands-4-rog-xbox-ally-x':[[0,35,'off',50,'>'],[1,35,'off',40,'>']],
- 'the-legend-of-khiimori-rog-xbox-ally-x':[[1,35,'off',30,45],[1,35,'on',60,'>']],
- 'death-stranding-2-on-the-beach-xbox':[[1,35,'off',30,45],[1,35,'on',50,75]]
-};
-const labels={guide:'Según la ficha',off:'Desactivada',on:'Activada','?':'Sin documentar',low:'Bajo',medium:'Medio',high:'Alto',ultra:'Ultra'};
-const qualityNames = {low:'low', bajo:'low', baja:'low', medium:'medium', medio:'medium', media:'medium', high:'high', alto:'high', alta:'high', ultra:'ultra'};
-const scaleModes = {native:'Nativo', quality:'Calidad', balanced:'Equilibrado', performance:'Rendimiento', 'ultra-performance':'Ultra rendimiento'};
-function quality(p){
- const pair=p.rows.find(([k])=>/^(graphics preset|quality preset|graphics quality preset|overall quality|graphics quality|preset graphics|preset|calidad gráfica)$/i.test(k.trim()));
- return qualityNames[pair?.[1].trim().toLowerCase()] || 'guide';
-}
-function resolution(p){
- const name=p.name.match(/\b(720|900|1080)p\b/i);
- if(name)return +name[1];
- const setting=p.rows.find(([k])=>/^(resolution|screen resolution|display resolution|output resolution|resolución)$/i.test(k));
- const height=setting?.[1].match(/(?:[x×]\s*|\b)(720|900|1080)(?:p\b|\s*$)/i);
- return height ? +height[1] : 0;
-}
-function powers(p){
- return (p.name.match(/\b(\d{1,2}(?:\s*\/\s*\d{1,2})*)\s*W\b/i)?.[1] || '')
-  .split('/').map(Number).filter(w=>w>=7 && w<=35);
-}
-function scaling(p){
- const settings=p.rows.filter(([k,v])=>!/generat|sharp|dynamic/i.test(k)&&
-  /upscal|super resolution|anti.alias|^FSR/i.test(k)&&!/^(off|disabled|unsupported|no)$/i.test(v.trim()));
- const techs=[...new Set(settings.flatMap(([k,v])=>{
-  const tech=v.match(/\b(?:FSR|XeSS|TSR|TAAU|RSR)\b(?:\s*\d+(?:\.\d+)*)?/i)||
-   k.match(/\b(?:FSR|XeSS|TSR|TAAU|RSR)\b(?:\s*\d+(?:\.\d+)*)?/i);
-  return tech ? [tech[0].toUpperCase()] : [];
- }))];
- // Un campo específico del modo puede mencionar FSR sin repetir la versión.
- const technologies=techs.filter(t=>!techs.some(other=>other.startsWith(t+' ')));
- if(technologies.length!==1)return 'guide';
- const modes=[...new Set(settings.flatMap(([,v])=>{
-  const mode=v.trim().toLowerCase().match(/(?:native aa|ultra performance|quality|balanced|performance)\s*$/)?.[0];
-  return mode&&!/\bor\b|\//i.test(v) ? [mode==='native aa'?'native':mode.replace(' ','-')] : [];
- }))];
- return technologies[0]+(modes.length===1?':'+modes[0]:'');
-}
-function scaleLabel(value){
- const [tech,mode]=value.split(':');
- return tech==='guide' ? 'Sin detallar en la ficha' : [tech,scaleModes[mode]].filter(Boolean).join(' · ');
-}
-function fg(p){
- const v=p.rows.find(([k])=>/frame gen|generación de fotogramas/i.test(k))?.[1]||'';
- return /^(off|disabled|desactivad[oa])$/i.test(v)?'off':/\bor\b/i.test(v)?'?':/^(on|enabled|activad[oa]|amd|fsr|2x|3x)/i.test(v)?'on':'?';
-}
-function readings(game,d){
- if(evidence[game.id])return evidence[game.id];
- // Solo asignar la media global si resolución, potencia, tabla y cifra son inequívocas.
- const p=d.profiles[0], metrics=Object.fromEntries(d.metrics);
- if(d.profiles.length!==1||!/^\d+W$/i.test(metrics['TESTED TDP']||'')||!/^\d+$/.test(metrics['AVERAGE FPS']||''))return [];
- const w=parseInt(metrics['TESTED TDP']), n=Number(metrics['AVERAGE FPS']);
- if(!new RegExp('^'+w+'W\\s').test(p.name)||!/(720|900|1080)p/i.test(p.name)||!n)return [];
- if(d.notes.some(s=>/generación|con el mod|sin el mod|al activar|al desactivar/i.test(s)))return [];
- return [[0,w,fg(p),n]];
-}
-function publicSource(value) {
- try {
-  const url=new URL(value);
-  const host=url.hostname.replace(/^www\./,'');
-  if(url.protocol==='https:'&&!/(^|\.)(rogallylife|recomplauncher|recompstore)\.com$/i.test(host))return url.href;
- } catch {}
- return null;
-}
-export function mountSim(host,games,game,d,choose,verifiedPoints=null){
- const make=(tag,txt,cls)=>{const e=document.createElement(tag);if(txt!=null)e.textContent=txt;if(cls)e.className=cls;return e};
- const append=(parent,tag,txt,cls)=>{const e=make(tag,txt,cls);parent.append(e);return e};
- const sim=append(host,'section',null,'sim');sim.id='simulador';
- append(sim,'h2','Simulador de FPS');append(sim,'p','ROG Xbox Ally X · Ryzen Z2 Extreme','sim-device');
- const layout=append(sim,'div',null,'lab-workbench');
- const bench=append(layout,'div',null,'lab-inputs');
- const output=append(layout,'div',null,'lab-output');
- const form=append(bench,'div',null,'sim-fields');
- function field(title,items,fn){
-  const l=append(form,'label');append(l,'span',title);const s=append(l,'select');
-  for(const [v,t] of items){const o=append(s,'option',t);o.value=v}
-  s.onchange=fn;return s;
- }
- const opts=a=>a.map(v=>[v,labels[v]||v]);
- const gameSelect=field('Juego',games.slice().sort((a,b)=>a.title.localeCompare(b.title,'es')).map(g=>[g.id,g.title]),()=>choose(gameSelect.value));gameSelect.value=game.id;
- const profiles=d.profiles, points=verifiedPoints||readings(game,d), resolutions=profiles.map(resolution);
- const refs=verifiedPoints ? [] : referencias(game,d);
- const profileSettings=profiles.map((p,profile)=>({profile,r:resolutions[profile],w:powers(p)[0]||0,q:quality(p),scale:scaling(p),gen:fg(p)}));
- const anchors=points.map(t=>({...profileSettings[t[0]],gen:t[2],w:t[1],low:t[3],
-  high:typeof t[4]==='number'?t[4]:t[3],limit:t[4],text:null,url:game.source}));
- const pick=field('Configuración de partida',profiles.map((p,i)=>[i,(p.gameTitle?p.gameTitle+' · ':'')+p.name+' · '+(i+1)]),()=>apply(+pick.value));
- const res=field('Resolución',[720,900,1080].map(n=>[n,n+'p']),manual);
- const q=field('Calidad gráfica',opts(['guide','low','medium','high','ultra']),manual);
- const w=field('Potencia (TDP)',Array.from({length:29},(_,i)=>[i+7,(i+7)+' W']),manual);
- const sliderLabel=append(form,'label',null,'tdp-slider');
- const sliderText=append(sliderLabel,'span','Ajustar TDP');
- const slider=append(sliderLabel,'input');slider.type='range';slider.min='7';slider.max='35';
- slider.addEventListener('input',()=>{w.value=slider.value;manual()});
+import {createModel,kinds,labels,publicSource,qualities,resolutions,scaleLabel} from './sim-model.js?v=48';
+import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
 
- const documentedScales=[...new Set(profileSettings.map(p=>p.scale))];
- const scale=field('Reescalado',documentedScales.map(value=>[value,scaleLabel(value)]),manual);
- scale.disabled=documentedScales.every(value=>value==='guide');
- const hasFG=profiles.some(p=>p.rows.some(([k,v])=>/frame gen|generación de fotogramas/i.test(k)&&!/not supported|unsupported|no compatible|unavailable/i.test(v)))||points.some(p=>p[2]==='on'||p[2]==='off');
- const gen=field('Frame Generation',opts(hasFG?['?','off','on']:['?']),manual);gen.disabled=!hasFG;
- const actions=append(bench,'div',null,'sim-actions');const status=append(bench,'p',null,'sim-status');status.setAttribute('role','status');
- const result=append(output,'div',null,'sim-reading');result.setAttribute('aria-live','polite');
- const compare=append(output,'section',null,'sim-compare');
- const pin=append(compare,'button','Guardar para comparar','btn');pin.type='button';
- const remove=append(compare,'button','Quitar comparación','btn');remove.type='button';remove.hidden=true;
- const comparisons=append(compare,'div',null,'sim-pair');
- let saved,current;
- function showComparison(){
-  comparisons.replaceChildren();
-  if(!saved)return;
-  for(const [name,value] of [['Guardada',saved],['Actual',current]]){
-   const column=append(comparisons,'div',null,'sim-snapshot');
-   append(column,'small',name+' · '+value.type);
-   append(column,'strong',value.number);
-   append(column,'p',value.settings);
+const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
+const powers=[7,13,17,25,30,35];
+const axisOptions={w:['TDP','Potencia de la APU (W)'],r:['Resolución','Resolución de salida (p)'],q:['Calidad','Preajuste gráfico']};
+const glyphs={
+ fps:'M4 17a8 8 0 1 1 16 0M12 16l4-5M3 19h18',
+ r:'M3 5h18v12H3zM8 21h8m-4-4v4',
+ w:'m13 2-8 12h6l-1 8 9-12h-6z',
+ q:'m12 3 9 5-9 5-9-5zm-9 9 9 5 9-5M3 16l9 5 9-5',
+ scale:'M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 16l8-8',
+ gen:'M3 5h13v13H3zm5 0V2h13v13h-5',
+ source:'M6 3h8l4 4v14H6zm3 9h6m-6 4h6'
+};
+function icon(parent,type){
+ const ns='http://www.w3.org/2000/svg', svg=document.createElementNS(ns,'svg');
+ svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.classList.add('fps-icon');
+ const path=document.createElementNS(ns,'path');path.setAttribute('d',glyphs[type]);svg.append(path);parent.append(svg);
+}
+function setting(k,value){
+ if(k==='r')return value?value+'p':'Sin indicar';
+ if(k==='w')return value?value+' W':'Sin indicar';
+ if(k==='scale')return scaleLabel(value);
+ return labels[value]||'Sin indicar';
+}
+function heading(parent,title,sub){
+ const head=add(parent,'header',null,'fps-panel-head');
+ add(head,'h3',title);
+ if(sub)add(head,'p',sub);
+ return head;
+}
+function source(parent,url){
+ const href=publicSource(url);
+ if(href){const link=add(parent,'a','Consultar prueba');link.href=href;link.target='_blank';link.rel='noopener noreferrer'}
+}
+
+export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
+ const model=createModel(game,detail,verifiedPoints);
+ const sim=add(host,'section',null,'sim fps-lab');
+ sim.id='simulador';
+ const banner=add(sim,'header',null,'fps-banner');
+ const title=add(banner,'div');
+ add(title,'h2','Simulador FPS');
+ add(title,'p','Xbox ROG Ally X · AMD Ryzen Z2 Extreme');
+ const layout=add(sim,'div',null,'fps-layout');
+ const controls=add(layout,'section',null,'fps-panel fps-controls');
+ heading(controls,'Configuración');
+ const form=add(controls,'div',null,'fps-fields');
+ function field(title,action,iconType){
+  const wrap=add(form,'label');
+  const label=add(wrap,'span',null,'fps-field-label');
+  if(iconType)icon(label,iconType);
+  label.append(title);
+  const node=add(wrap,'select');
+  node.setAttribute('aria-label',title);
+  node.onchange=action;
+  return node;
+ }
+ function setOptions(node,items){
+  node.replaceChildren();
+  for(const [id,name] of items){
+   const option=add(node,'option',name);
+   option.value=id;
+  }
+  node.disabled=items.length<=1;
+ }
+ const gameSelect=field('Juego',()=>choose(gameSelect.value));
+ setOptions(gameSelect,games.slice().sort((a,b)=>a.title.localeCompare(b.title,'es')).map(g=>[g.id,g.title]));
+ gameSelect.value=game.id;
+ const profile=field('Configuración de partida',()=>apply(model.profiles[+profile.value]));
+ gameSelect.parentElement.classList.add('fps-wide-field');
+ profile.parentElement.classList.add('fps-wide-field');
+ setOptions(profile,model.profiles.map(p=>[p.profile,p.name]));
+ const res=field(names.r,manual,'r'),q=field(names.q,manual,'q');
+ const w=field('Potencia de la APU (TDP)',manual,'w');
+ setOptions(res,[[0,'Sin indicar'],...resolutions.map(n=>[n,setting('r',n)])]);
+ setOptions(w,[[0,'Sin indicar'],...Array.from({length:29},(_,i)=>[i+7,setting('w',i+7)])]);
+ const powerControl=add(form,'label',null,'fps-slider');
+ const powerCaption=add(powerControl,'span','Ajustar TDP');
+ powerControl.classList.add('fps-wide-field');
+ const slider=add(powerControl,'input');slider.type='range';slider.min=7;slider.max=35;
+ slider.oninput=()=>{w.value=slider.value;manual()};
+ const scale=field(names.scale,manual,'scale'),gen=field(names.gen,manual,'gen');
+ const notes=add(controls,'details',null,'fps-values');
+ add(notes,'summary','Ajustes de partida de la ficha');
+ const rows=add(notes,'dl',null,'fps-value-list');
+ const buttons=add(controls,'div',null,'fps-actions');
+ const status=add(controls,'p',null,'fps-status');
+ status.setAttribute('role','status');
+ const output=add(layout,'div',null,'fps-output');
+ const primary=add(output,'section',null,'fps-panel fps-primary');
+ const gauge=add(primary,'div',null,'fps-gauge');
+ const dial=add(gauge,'div',null,'fps-dial');
+ const reading=add(dial,'div',null,'fps-reading');
+ reading.setAttribute('aria-live','polite');
+ const numeric=add(reading,'strong');
+ const unit=add(reading,'span','FPS');
+ const diagnostic=add(primary,'div',null,'fps-diagnostic');
+ const type=add(diagnostic,'p',null,'fps-type');
+ const headline=add(diagnostic,'h3');
+ const context=add(diagnostic,'p');
+ const provenance=add(diagnostic,'p',null,'fps-source');
+ const goals=add(diagnostic,'div',null,'fps-segments');
+ goals.setAttribute('role','group');goals.setAttribute('aria-label','Objetivo de FPS');
+ const goalButtons=[30,60,120].map(n=>button(goals,n+' FPS','',()=>{goal=n;renderPrimary()}));
+ const stats=add(output,'dl',null,'fps-stats');
+ const statNodes=[['fps','Rendimiento'],['r',names.r],['w','Potencia (TDP)'],['q',names.q],['scale',names.scale],['gen',names.gen],['source','Fiabilidad']].map(([key,label])=>{
+  const panel=add(stats,'div',null,'fps-stat');
+  const labelNode=add(panel,'dt',null,'fps-field-label');icon(labelNode,key);labelNode.append(label);
+  return add(panel,'dd');
+ });
+ const linePanel=add(output,'section',null,'fps-panel');
+ const analysisHead=heading(linePanel,'Curva de rendimiento','Cambia una variable y mantiene los demás ajustes.');
+ const axes=add(analysisHead,'div',null,'fps-segments');
+ axes.setAttribute('role','group');axes.setAttribute('aria-label','Variable de la gráfica');
+ const axisButtons=Object.entries(axisOptions).map(([id,[label]])=>button(axes,label,'',()=>{axis=id;drawChart()}));
+ const chart=add(linePanel,'div',null,'fps-line');
+ const caption=add(linePanel,'p',null,'fps-point-detail');
+ const legend=add(linePanel,'p','● Medición publicada　◇ Modelo　┆ Objetivos de 30 y 60 FPS','fps-legend');
+ const qualityPanel=add(output,'section',null,'fps-panel');
+ heading(qualityPanel,'Comparativa de calidades','Misma potencia, resolución, reescalado y generación de fotogramas.');
+ const bars=add(qualityPanel,'div',null,'fps-bars');
+ const compare=add(output,'section',null,'fps-panel fps-compare');
+ heading(compare,'Comparar configuraciones');
+ const comparisonActions=add(compare,'div',null,'fps-segments');
+ const slot='ally-lab:fps-snapshot:'+game.id;
+ let saved=null;
+ try{const value=JSON.parse(localStorage.getItem(slot));if(model.profiles[value?.profile]&&Object.keys(names).every(k=>typeof value[k]===(['r','w'].includes(k)?'number':'string')))saved=value}catch{}
+ function store(value){
+  saved=value;
+  try{if(value)localStorage.setItem(slot,JSON.stringify(value));else localStorage.removeItem(slot)}catch{}
+  renderComparison();
+ }
+ const pin=button(comparisonActions,'Guardar para comparar','',()=>store({...current}));
+ const remove=button(comparisonActions,'Quitar comparación','',()=>{store(null);pin.focus()});
+ const comparison=add(compare,'div',null,'fps-comparison');
+ const methods=add(sim,'details',null,'fps-methods');
+ add(methods,'summary','Metodología, límites y pruebas');
+ add(methods,'p','El TDP indica la potencia configurada de la APU. La fiabilidad describe la calidad de la referencia, y el rango orientativo no es un intervalo estadístico.');
+ add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Sin mediciones comparables, el simulador indica que faltan datos. La VRAM, las sombras, las texturas, el trazado de rayos y el modo de alimentación solo se reflejan cuando forman parte de la ficha o del ensayo.');
+ add(methods,'p','Con Frame Generation se muestra el total publicado. Los FPS renderizados con FG activo requieren una medición separada.');
+ for(const note of detail.notes||[]) add(methods,'p',note);
+ source(methods,game.source);
+ if(model.anchors.length){
+  const observations=add(sim,'details',null,'fps-methods');
+  add(observations,'summary','Seleccionar una medición publicada');
+  const picks=add(observations,'div',null,'fps-segments');
+  for(const anchor of model.anchors){
+   const label=[setting('r',anchor.r),setting('w',anchor.w),setting('q',anchor.q),
+    formatFPS(model.evaluate(anchor))+' '+kinds[anchor.gen]].join(' · ');
+   button(picks,label,'',()=>{apply(anchor);profile.focus()});
   }
  }
- pin.onclick=()=>{saved=current;remove.hidden=false;showComparison()};
- remove.onclick=()=>{saved=null;remove.hidden=true;showComparison()};
- const chart=append(output,'div',null,'sim-chart');
- const indicators=append(output,'dl',null,'sim-indicators');
- const format=([,,,n,hi])=>typeof hi==='number'?n+'–'+hi:(hi||'')+n;
- const kind=f=>f==='on'?'Mostrados con FG':f==='off'?'Renderizados':'Contador sin desglose';
- function manual(){status.textContent='';draw()}
- function apply(i,pt,power){
-  const base=profileSettings[i];
-  pick.value=i;res.value=base.r||'';w.value=pt?.[1]??power??(base.w||'');
-  q.value=base.q;scale.value=base.scale;gen.value=pt?.[2]??base.gen;manual();
- }
- function evaluate(target){
-  const base=profileSettings[target.profile];
-  const sameSettings=ref=>ref.profile===target.profile&&ref.r===target.r&&
-   ref.q===target.q&&ref.scale===target.scale&&ref.gen===target.gen;
-  const exact=anchors.filter(sameSettings);
-  const measured=exact.find(ref=>ref.w===target.w&&ref.r);
-  if(measured)return {hit:points[anchors.indexOf(measured)]};
-  const samples=exact.filter(ref=>ref.r&&ref.limit===undefined).sort((a,b)=>a.w-b.w);
-  const lower=samples.filter(ref=>ref.w<target.w).pop(), upper=samples.find(ref=>ref.w>target.w);
-  if(lower&&upper)return {estimate:Math.round(lower.low+(upper.low-lower.low)*(target.w-lower.w)/(upper.w-lower.w))};
-  // Los mínimos publicados no son medias y no se extrapolan como si lo fueran.
-  const compatible=anchors.filter(ref=>ref.gen===target.gen&&ref.limit!=='>'&&ref.r&&ref.w);
-  const hasGenericReference=target.gen==='?'&&base.gen==='?';
-  const referencePool=anchors.length ? compatible : hasGenericReference ? refs : [];
-  return {guess:(!verifiedPoints && proyectar(referencePool,target,base)) || aproximar([...anchors,...refs],target,base)};
- }
- function draw(){
-  const i=+pick.value,p=profiles[i];
-  slider.disabled=!w.value;if(w.value)slider.value=w.value;sliderText.textContent=w.value?'Ajustar TDP · '+w.value+' W':'Selecciona una potencia';
-  const target={profile:i,r:+res.value,w:+w.value,q:q.value==='guide'?profileSettings[i].q:q.value,scale:scale.value,gen:gen.value};
-  const {hit,estimate,guess}=evaluate(target);
-  const qualityLabel=q.selectedOptions[0]?.textContent;
-  const scaleName=scale.selectedOptions[0]?.textContent;
-  current={type:hit?'Medición de referencia':guess?.approximate?'Estimación aproximada':'Estimación',
-   number:hit?format(hit)+' FPS':estimate!==undefined?'≈'+estimate+' FPS':guess.low+'–'+guess.high+' FPS',
-   settings:[res.value&&res.value+'p',w.value&&w.value+' W',kind(gen.value),qualityLabel,scaleName,p.name].filter(Boolean).join(' · ')};
-  indicators.replaceChildren();
-  for(const [label,value] of [['Potencia',w.value&&w.value+' W'],['Resolución',res.value&&res.value+'p'],['Calidad',q.selectedOptions[0]?.textContent],['Reescalado',scale.selectedOptions[0]?.textContent]]){
-   const cell=append(indicators,'div');
-   append(cell,'dt',label);
-   append(cell,'dd',value||'Sin indicar');
+ let current,result,goal=60,axis='w';
+ const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value});
+ const evaluations=(key,items)=>items.map(id=>({id,label:setting(key,id),value:model.evaluate({...current,[key]:id})}));
+ function apply(target){
+  profile.value=target.profile;
+  const options=model.options(target.profile);
+  setOptions(q,options.qualities.map(v=>[v,setting('q',v)]));
+  setOptions(scale,options.scales.map(v=>[v,setting('scale',v)]));
+  setOptions(gen,options.generation.map(v=>[v,setting('gen',v)]));
+  res.value=target.r;w.value=target.w;q.value=target.q;scale.value=target.scale;gen.value=target.gen;
+  rows.replaceChildren();
+  const base=model.profiles[target.profile];
+  if(!base.rows.length)add(rows,'dd','Consulta las condiciones publicadas en la prueba enlazada.');
+  for(const [label,value] of base.rows){
+   const row=add(rows,'div');
+   add(row,'dt',label);add(row,'dd',value);
   }
-  result.replaceChildren();
-  append(result,'small',current.type);
-  append(result,'strong',current.number);
-  showComparison();
-  if(hit){
-   append(result,'p',kind(hit[2])+' · Referencia medida con estos ajustes. El rendimiento puede variar según la escena.');
-  }else if(estimate!==undefined){
-   append(result,'p',kind(gen.value)+' · Interpolación entre dos potencias medidas con la misma configuración.');
-  }else{
-   const {ref}=guess;
-   append(result,'p',kind(gen.value)+' · Intervalo orientativo calculado por Ally Lab.');
-   const detail=ref.text||[ref.low===ref.high?(ref.limit==='≈'?'≈':'')+ref.low+' FPS':ref.low+'–'+ref.high+' FPS',ref.r+'p',ref.w+' W',labels[ref.q],scaleLabel(ref.scale)].filter(Boolean).join(' · ');
-   const base=append(result,'p','Referencia: '+detail+' ');
-   const href=publicSource(ref.url);
-   if(href){const link=append(base,'a','Ver fuente');link.href=href;link.target='_blank';link.rel='noopener noreferrer';}
-   if(guess.changedScale)append(result,'small','La estimación de FSR 3 usa la resolución interna de los modos comparados.');
-   const meter=append(result,'meter');meter.min=0;meter.max=Math.max(120,guess.high);meter.value=(guess.low+guess.high)/2;meter.setAttribute('aria-label','Punto medio del intervalo estimado');
-   if(guess.approximate)append(result,'small',guess.catalogue
-    ?'Confianza baja · Rango de otros juegos del catálogo ajustado a tu selección.'
-    :'Confianza baja · El cálculo usa supuestos para los ajustes que la prueba no detalla.');
-  }
-  if(hit?.[2]==='on')append(result,'p','La cifra incluye fotogramas generados. La prueba no separa cuántos se renderizaron mientras FG estaba activo.');
+  manual();
  }
- function recommend(mode){
-  if(!points.length && mode!=='60'){
-   const settings=profiles.flatMap((p,i)=>{
-    const match=p.name.match(/(\d+(?:\/\d+)*)W/i);
-    return match&&resolutions[i]?match[1].split('/').map(power=>({i,w:Number(power),r:Number(resolutions[i])})):[];});
-   if(settings.length&&mode!=='speed'){
-    const best=settings.sort((a,b)=>mode==='quality'?b.r-a.r||b.w-a.w:a.w-b.w||b.r-a.r)[0];
-    apply(best.i);w.value=best.w;draw();status.textContent='Ajustes de la ficha seleccionados por '+(mode==='quality'?'resolución.':'menor potencia.');return;
+ function manual(){
+  status.textContent='';
+  current=read();
+  result=model.evaluate(current);
+  slider.disabled=!current.w;
+  if(current.w)slider.value=current.w;
+  powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
+  renderPrimary();
+  drawChart();
+  renderBars(bars,evaluations('q',qualities).map(p=>({...p,label:({low:'Baja',medium:'Media',high:'Alta',ultra:'Ultra'})[p.id],
+   active:p.id===current.q,missing:model.options(current.profile).qualities.includes(p.id)?'Datos insuficientes':'Sin documentar'})));
+  renderComparison();
+ }
+ function renderPrimary(){
+  const value=formatFPS(result);
+  numeric.textContent=result?value:'—';
+  unit.textContent=kinds[current.gen];
+  const max=Math.max(120,goal,result?.center||0);
+  dial.style.setProperty('--fill',Math.min(360,(result?.center||0)/max*360)+'deg');
+  dial.style.setProperty('--threshold',goal/max*360+'deg');
+  type.textContent=result?result.type+' · Confianza '+result.confidence.toLowerCase():'Datos insuficientes';
+  const supportsGoal=result&&result.low>=goal;
+  const couldReach=result&&(result.high===null||result.high>=goal);
+  headline.textContent=!result?'Sin referencia para esta selección':supportsGoal?(result.confidence==='Baja'?'El modelo sitúa la selección sobre '+goal+' FPS':'Dentro del objetivo de '+goal+' FPS'):couldReach?'Objetivo de '+goal+' FPS incierto':'Por debajo de '+goal+' FPS';
+  context.textContent=!result?'Prueba una configuración documentada o consulta los ajustes de la ficha.'
+   :[result.why,result.limit==='>'?'La prueba publica un mínimo, representado como umbral.':result.high!==result.low&&result.type==='Medición publicada'?'Intervalo observado en la prueba.':'',
+      current.gen==='on'?'Incluye fotogramas generados.':current.gen==='?'?'La prueba no separa el tipo de fotogramas.':''].filter(Boolean).join(' ');
+  provenance.replaceChildren();if(result)source(provenance,result.source);
+  goalButtons.forEach((b,i)=>b.setAttribute('aria-pressed',String([30,60,120][i]===goal)));
+  const values=[result?value+' FPS':'Datos insuficientes',...Object.keys(names).map(k=>setting(k,current[k])),
+   result?result.type+' · '+result.confidence:'Sin referencia'];
+  statNodes.forEach((node,i)=>node.textContent=values[i]);
+ }
+ function drawChart(){
+  const values=axis==='w'?[...new Set([...powers,...model.anchors.filter(a=>a.profile===current.profile&&a.q===current.q&&a.gen===current.gen).map(a=>a.w),...(current.w?[current.w]:[])])].sort((a,b)=>a-b)
+   :axis==='r'?resolutions:qualities;
+  const series=evaluations(axis,values);
+  legend.hidden=!series.some(p=>p.value);
+  renderLine(chart,caption,series,...axisOptions[axis],current[axis]);
+  axisButtons.forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(axisOptions)[i]===axis)));
+ }
+ function renderComparison(){
+  comparison.replaceChildren();
+  remove.hidden=!saved;
+  if(!saved){add(comparison,'p','Guarda la selección y modifica los ajustes para compararlos.');return}
+  const before=model.evaluate(saved),pair=add(comparison,'div',null,'fps-comparison-pair');
+  for(const [label,config,value] of [['Guardada',saved,before],['Actual',current,result]]){
+   const card=add(pair,'div',null,'fps-snapshot');
+   add(card,'h4',label);
+   add(card,'strong',value?formatFPS(value)+' FPS':'Datos insuficientes');
+   add(card,'p',[kinds[config.gen],value?.type,value?'Confianza '+value.confidence.toLowerCase():null].filter(Boolean).join(' · '));
+   const list=add(card,'dl',null,'fps-value-list');
+   for(const k of Object.keys(names)){
+    const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',setting(k,config[k]));
    }
   }
-  let choices=points.slice();
-  if(mode==='60')choices=choices.filter(t=>t[3]>=60&&t[2]==='off'&&t[4]!=='≈');
-  const rank=(a,b)=>mode==='quality'?+resolutions[b[0]]-resolutions[a[0]]||b[3]-a[3]:mode==='speed'?b[3]-a[3]||a[1]-b[1]:a[1]-b[1]||b[3]-a[3];
-  const best=choices.sort(rank)[0];
-  if(!best){
-   const candidates=profileSettings.flatMap(base=>(base.w?powers(profiles[base.profile]):[20]).map(power=>{
-    const {guess,estimate,hit}=evaluate({...base,w:power});
-    return {i:base.profile,power,low:guess?.low??estimate??hit?.[3]};
-   })).filter(candidate=>candidate.low!==undefined).sort((a,b)=>b.low-a.low||a.power-b.power);
-   const candidate=candidates[0];
-   if(candidate){
-    apply(candidate.i,undefined,candidate.power);
-    status.textContent=mode==='60'?(candidate.low>=60?'Objetivo plausible según el modelo.':'Mejor previsión entre los perfiles publicados. Puede quedar por debajo de 60 FPS.'):'Perfil con mejor previsión.';
-   }else status.textContent='La recomendación se basa en la estimación aproximada del perfil actual.';
-   return;
+  const comparable=saved.gen===current.gen&&(saved.gen!=='?'||saved.profile===current.profile);
+  const delta=add(comparison,'p',null,'fps-delta');
+  renderBars(add(comparison,'div',null,'fps-bars'),[{label:'Guardada',value:before},{label:'Actual',value:result,active:true}]);
+  if(!comparable){delta.textContent='Los contadores no son directamente comparables. Para calcular una diferencia, usa el mismo estado conocido de Frame Generation.';return}
+  if(!before||!result||before.limit==='>'||result.limit==='>'){
+   delta.textContent='El cálculo de diferencias necesita dos valores comparables, más allá de un mínimo publicado.';return;
   }
-  apply(best[0],best);status.textContent=mode==='60'?'Referencia de 60 FPS o más. '+kind(best[2])+'.':({quality:'Mayor resolución documentada.',speed:'Mayor cifra de FPS documentada.',battery:'Menor potencia documentada.'})[mode];
+  const diff=result.center-before.center,percent=100*diff/before.center;
+  const signed=n=>(Math.round(n*10)>0?'+':'')+formatNumber.format(n);
+  const range=before.low!==before.high||result.low!==result.high;
+  const uncertain=range||before.type!=='Medición publicada'||result.type!=='Medición publicada'||before.limit||result.limit;
+  delta.textContent=(uncertain?'Diferencia orientativa':'Diferencia')+' · '+signed(diff)+' FPS ('+signed(percent)+' %)'
+   +(range?' · Calculada con los puntos medios.':'')+(range&&result.low<=before.high&&before.low<=result.high?' Los intervalos se solapan.':'');
  }
- for(const [key,name] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
-  const b=append(actions,'button',name,'btn');b.type='button';b.onclick=()=>recommend(key);
+ function recommend(mode){
+  if(mode==='60')goal=60;
+  const candidates=[...model.anchors];
+  for(const p of model.profiles){
+   candidates.push(p);
+   for(const quality of model.options(p.profile).qualities)for(const r of resolutions){
+    candidates.push({...p,q:quality,r,w:current.w||p.w});
+   }
+  }
+  const evaluated=candidates.map(t=>({t,value:model.evaluate(t)})).filter(x=>x.value);
+  let options=evaluated;
+  if(mode==='60'){
+   const rendered=evaluated.filter(({t})=>t.gen==='off');
+   const unknown=evaluated.filter(({t})=>t.gen==='?');
+   options=rendered.length?rendered:unknown.length?unknown:evaluated;
+  }
+  const reliable=({t,value})=>t.gen==='off'&&value.low>=60&&value.confidence!=='Baja'&&value.limit!=='≈';
+  const score=({value})=>value.low;
+  const rank=(a,b)=>{
+   if(mode==='quality')return b.t.r-a.t.r||score(b)-score(a);
+   if(mode==='battery')return a.t.w-b.t.w||score(b)-score(a);
+   if(mode==='60')return Number(reliable(b))-Number(reliable(a))||(reliable(a)?a.t.w-b.t.w:score(b)-score(a));
+   return score(b)-score(a)||a.t.w-b.t.w;
+  };
+  const best=options.sort(rank)[0];
+  if(mode==='60'&&!best&&current.gen==='on'){
+   status.textContent='Se necesita una referencia comparable para recomendar 60 FPS renderizados.';return;
+  }
+  const fallback=mode==='quality'||mode==='battery'
+   ?model.profiles.filter(p=>p.r&&p.w).sort((a,b)=>mode==='quality'?b.r-a.r:a.w-b.w)[0]:null;
+  const next=best?.t||fallback;
+  if(!next){renderPrimary();status.textContent='No hay una configuración respaldada para este objetivo.';return}
+  const changed=Object.keys(names).filter(k=>next[k]!==current[k]).map(k=>names[k]+' a '+setting(k,next[k]));
+  if(next.profile!==current.profile)changed.unshift(model.profiles[next.profile].name);
+  apply(next);
+  const outcome=mode==='60'?(reliable(best)?'La referencia alcanza 60 FPS renderizados.':'Mejor alternativa disponible. No hay respaldo suficiente para garantizar 60 FPS renderizados.'):'Perfil aplicado.';
+  status.textContent=[outcome,result?formatFPS(result)+' '+kinds[current.gen]+' · Confianza '+result.confidence.toLowerCase()+'.':'Sin cifra respaldada.',
+   changed.length?'Cambios: '+changed.join(', ')+'.':'La selección ya coincide.'].join(' ');
  }
- append(chart,'h3','Rendimiento medido');if(points.length){
-  const max=Math.max(...points.map(t=>typeof t[4]==='number'?t[4]:t[3]));
-  for(const t of points){const row=append(chart,'div',null,'sim-bar');append(row,'span',resolutions[t[0]]+'p · '+t[1]+' W · '+kind(t[2]));const bar=append(row,'i');bar.style.width=(100*t[3]/max)+'%';append(row,'b',format(t)+' FPS')}
- }else append(chart,'p','Consulta la previsión de la selección y su referencia arriba.');
- const notes=append(sim,'details');append(notes,'summary','Pruebas y condiciones de la guía');for(const n of d.notes)append(notes,'p',n);const href=publicSource(game.source);if(href){const a=append(notes,'a','Consultar prueba original');a.href=href;a.target='_blank';a.rel='noopener noreferrer';}
- apply(points[0]?.[0]??0,points[0]);
+ for(const [id,label] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
+  button(buttons,label,id==='60'?'fps-optimize':'',()=>recommend(id));
+ }
+ apply(model.initial);
 }

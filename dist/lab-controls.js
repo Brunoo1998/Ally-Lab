@@ -21,6 +21,10 @@ function move(dx,dy){
 const indicator=document.getElementById('pad-status');
 let held='',next=0,timer,editing;
 function changeOption(select,step){
+ if(select.matches('input[type=range]')){
+  if(step<0)select.stepDown();else select.stepUp();
+  select.dispatchEvent(new Event('input',{bubbles:true}));return;
+ }
  const options=[...select.options];
  for(let i=select.selectedIndex+step;i>=0&&i<options.length;i+=step){
   if(options[i].disabled)continue;
@@ -44,7 +48,7 @@ function scan(){
    else if(arrow)move(...directions[arrow]);
    else if(key==='A'){
     const el=document.activeElement;
-    if(el?.tagName==='SELECT')editing=editing?undefined:el;
+    if(el?.matches('select,input[type=range]'))editing=editing?undefined:el;
     else if(el?.matches(focusable))el.click();
    }else if(editing)editing=undefined;
    else if(document.activeElement?.matches('input,select'))document.activeElement.blur();
