@@ -32,6 +32,19 @@ function move(dx,dy){
  if(target){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'})}
 }
 const indicator=document.getElementById('pad-status');
+const statusLabel=indicator?.querySelector('.pad-status-label');
+function connectedPads(){
+ return Array.from(navigator.getGamepads?.()||[]).filter(p=>p?.mapping==='standard');
+}
+function updatePadStatus(){
+ const pads=connectedPads();
+ if(indicator)indicator.hidden=pads.length===0;
+ if(statusLabel){
+  const label=pads.some(p=>/\b(?:rog|asus)\b.*\bally\b/i.test(p.id))?'ROG Ally conectada':'Mando conectado';
+  if(statusLabel.textContent!==label)statusLabel.textContent=label;
+ }
+ return pads.length>0;
+}
 let held='',next=0,timer,editing;
 
 function activateSearch(field){
@@ -52,14 +65,13 @@ function changeOption(select,step){
 }
 function scan(){
  if(document.hidden){held='';return}
- const pad=Array.from(navigator.getGamepads?.()||[]).find(p=>p?.mapping==='standard');
+ const pad=connectedPads()[0];
  if(!pad){held='';return}
  const {buttons,axes}=pad;
  const keys=Object.keys(directions), horizontal=axes[0]||0,vertical=axes[1]||0;
  const arrow=keys.find(k=>buttons[k]?.pressed)||(Math.max(Math.abs(horizontal),Math.abs(vertical))>.58?(Math.abs(horizontal)>Math.abs(vertical)?(horizontal<0?'14':'15'):(vertical<0?'12':'13')):'');
  const key=buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':arrow;
  if(key){
-  if(indicator)indicator.hidden=false;
   if(key!==held||(key===arrow&&performance.now()>=next)){
    document.documentElement.classList.add('pad-navigation');
    next=performance.now()+(key===held?130:340);
@@ -87,6 +99,16 @@ document.addEventListener('keydown',event=>{
  activateSearch(event.target);
 });
 document.addEventListener('pointerdown',()=>document.documentElement.classList.remove('pad-navigation'));
-window.addEventListener('gamepadconnected',()=>{if(!timer)timer=setInterval(scan,42)});
-window.addEventListener('gamepaddisconnected',()=>{if(!Array.from(navigator.getGamepads?.()||[]).some(Boolean)){clearInterval(timer);timer=undefined;held='';editing=undefined;if(indicator)indicator.hidden=true}});
-if(Array.from(navigator.getGamepads?.()||[]).some(Boolean))timer=setInterval(scan,42);
+function syncGamepads(){
+ if(updatePadStatus()){
+  if(!timer)timer=setInterval(scan,42);
+ }else{
+  clearInterval(timer);
+  timer=undefined;
+  held='';
+  editing=undefined;
+ }
+}
+window.addEventListener('gamepadconnected',syncGamepads);
+window.addEventListener('gamepaddisconnected',syncGamepads);
+syncGamepads();
