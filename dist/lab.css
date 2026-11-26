@@ -66,3 +66,29 @@ input:is([type=search],[type=text]),select,.sim-fields select{min-height:44px;ba
 @media(min-width:1100px){.mast{position:fixed;inset:0 auto 0 0;width:218px;border-right:1px solid var(--line);border-bottom:0}.mast .bar{width:auto;padding:1.4rem 1rem;align-items:stretch;justify-content:flex-start;flex-direction:column;gap:1.4rem}.mast nav{align-items:stretch;flex-direction:column}.mast nav a{justify-content:flex-start;white-space:normal}.model-tag{padding-left:.8rem}body{padding-left:218px}#biblioteca,.sim{scroll-margin-top:20px}}
 @media(max-width:950px){#news-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){#news-list{grid-template-columns:1fr}}
+
+.pad-navigation :focus {
+  outline: 3px solid var(--lime, #c5fc69);
+  outline-offset: 3px;
+}
+.pad-keyboard {
+  width: min(34rem, calc(100% - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--line, #525571);
+  border-radius: 12px;
+  background: #171723;
+  color: var(--ink, #fff);
+}
+.pad-keyboard::backdrop { background: rgb(0 0 0 / 70%); }
+.pad-keyboard p { margin: 0 0 .75rem; overflow-wrap: anywhere; }
+.pad-keyboard-letters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .45rem; }
+.pad-keyboard-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.pad-keyboard button {
+  min-height: 42px;
+  padding: .35rem;
+  border: 1px solid #62647c;
+  border-radius: 6px;
+  background: #27283b;
+  color: inherit;
+  font: inherit;
+}
