@@ -1,4 +1,4 @@
-import {mountSim} from './simulador.js?v=48';
+import {mountSim} from './simulador.js?v=49';
 const $=id=>document.getElementById(id), mk=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e};
 const add=(parent,tag,text,cls)=>{const e=mk(tag,text,cls);parent.append(e);return e};
 const fold=s=>String(s||'').normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();

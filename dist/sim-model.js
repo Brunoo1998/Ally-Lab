@@ -112,6 +112,38 @@ function internalHeight(r, scale) {
 }
 const round = n => Math.round(n*10)/10;
 
+// Cuartiles de 224 lecturas del catálogo normalizadas a 1080p y 20 W.
+const catalogue = {low:31,high:55,r:1080,w:20,gen:'?',origin:'catalogue'};
+
+function contextReadings(game,detail){
+ const rows=[];
+ for(const note of detail.notes||[]){
+  for(const clause of note.split(/[.!?;]+\s*/)){
+   if(!/\b(?:observaron|registraron|obtuvieron|alcanzaron|superaron|midieron|observó|registró|obtuvo|alcanzó|superó|midió|de media)\b/i.test(clause))continue;
+   const m=clause.match(/(?:(\d{1,3})\s*[–-]\s*)?(\d{1,3})\s*FPS\b/i);
+   if(!m||/\b(?:límite|limitador|objetivo|hasta|ca[ií]das?|perdi[oó]|aument[oó]|mejora)\b/i.test(clause.slice(0,m.index)))continue;
+   const low=Number(m[1]||m[2]), high=Number(m[2]);
+   if(low<5||low>high||high>240)continue;
+   const prefix=clause.slice(0,m.index);
+   const limits=/\bsuper(?:ó|aron)\b|más de/i.test(prefix);
+   const resolutions=[...new Set([...clause.matchAll(/\b(720|900|1080)p\b/gi)].map(x=>+x[1]))];
+   const powers=[...new Set([...clause.matchAll(/\b(\d{1,2})\s*W\b/gi)].map(x=>+x[1]))];
+   const off=/sin (?:FG|generación de fotogramas)/i.test(clause);
+   const on=/con (?:FG|generación de fotogramas)|al activarla|FPS mostrados/i.test(clause);
+   const ambiguous=/(?:FPS[^.]*\by\b[^.]*FPS|sin generación[^.]*\by\b[^.]*(?:con ella|al activarla))/i.test(clause);
+   if(ambiguous)continue;
+   rows.push({low,high:limits?Math.max(high,Math.round(low*1.2)):high,r:resolutions.length===1?resolutions[0]:0,
+    w:powers.length===1&&powers[0]>=7&&powers[0]<=35?powers[0]:0,
+    gen:off?'off':on?'on':'?',origin:'note',url:game.source});
+  }
+ }
+ const metrics=Object.fromEntries(detail.metrics||[]);
+ const average=Number(metrics['AVERAGE FPS']);
+ const power=metrics['TESTED TDP']?.match(/^\s*(\d{1,2})\s*W\s*$/i);
+ if(average>=5&&average<=240)rows.push({low:average,high:average,r:0,w:power?+power[1]:0,gen:'?',origin:'average',url:game.source});
+ return rows;
+}
+
 export function createModel(game, detail, verifiedPoints) {
  const profiles=detail.profiles.map((p,profile)=>({
   profile,name:(p.gameTitle?p.gameTitle+' · ':'')+p.name,rows:p.rows,r:resolution(p),
@@ -123,7 +155,7 @@ export function createModel(game, detail, verifiedPoints) {
   return [{...base,w,gen,low,high:typeof limit==='number'?limit:limit==='>'?null:low,
    limit:typeof limit==='string'?limit:null,url:game.source}];
  });
- let initial=anchors[0]||profiles[0];
+ let initial=anchors[0]||profiles.find(p=>p.r&&p.w)||profiles[0];
  const suite=verifiedPoints?null:benchmarkSuites[game.id];
  if(suite){
   const available=Object.keys(suite.presets);
@@ -135,6 +167,7 @@ export function createModel(game, detail, verifiedPoints) {
   });
   initial=profile;
  }
+ if(!verifiedPoints&&initial)initial={...initial,r:initial.r||1080,w:initial.w||20};
  const cache=new Map();
  const result=(type,confidence,source,low,high,limit=null,why='')=>({
   type,confidence,source,low,high,limit,why,center:high===null?low:round((low+high)/2)
@@ -148,18 +181,55 @@ export function createModel(game, detail, verifiedPoints) {
   const value=round(lower.low+(upper.low-lower.low)*(w-lower.w)/(upper.w-lower.w));
   return result('Interpolación','Media',lower.url,value,value,null,'Entre mediciones a '+lower.w+' y '+upper.w+' W.');
  }
+ const context=verifiedPoints?[]:contextReadings(game,detail);
+ if(!verifiedPoints&&initial?.gen==='on'&&![...anchors,...context].some(a=>a.gen==='on'))initial={...initial,gen:'?'};
+ const generationFor=base=>[...new Set([base.gen,...anchors.filter(a=>a.profile===base.profile).map(a=>a.gen),
+  ...(!verifiedPoints&&base.gen==='on'&&!anchors.some(a=>a.profile===base.profile&&a.gen==='on')?['?']:[])])];
+ function approximate(t,base){
+  const sameGame=[
+   ...anchors.map(a=>({...a,high:a.high??Math.round(a.low*1.2),origin:'anchor'})),
+   ...context
+  ].filter(a=>t.gen==='on'?a.gen==='on':t.gen==='off'?a.gen==='off':a.gen!=='on');
+  if(t.gen==='on'&&!sameGame.length)return null;
+  const distance=a=>(a.profile!==undefined&&a.profile!==t.profile?0.4:0)
+   +(a.q&&a.q!==t.q?0.35:0)+(a.scale&&a.scale!==t.scale?0.35:0)
+   +(a.r?Math.abs(Math.log(a.r/t.r)):.43)+(a.w?Math.abs(Math.log(a.w/t.w)):.45)
+   +(a.origin==='average'?.25:0);
+  const ref=sameGame.reduce((best,a)=>!best||distance(a)<distance(best)?a:best,null)
+   ??(verifiedPoints?null:catalogue);
+  if(!ref)return null;
+  const r=ref.r||base.r||t.r,w=ref.w||base.w||t.w;
+  const nativeFrom=ref.scale&&internalHeight(r,ref.scale);
+  const nativeTo=internalHeight(t.r,t.scale);
+  const pixels=nativeFrom&&nativeTo?nativeFrom/nativeTo:r/t.r;
+  const power=t.w/w;
+  // Escenarios conservadores: sensibilidad parcial a resolución y potencia.
+  const factor=pixels**.7 * power**.35;
+  const indirect=ref.origin==='catalogue';
+  const spread=indirect?.35:Math.min(.55,.17+distance(ref)*.2);
+  const step=indirect?5:1;
+  const low=Math.max(1,Math.floor(ref.low*factor*(1-spread)/step)*step);
+  const high=Math.max(low+step,Math.ceil(ref.high*factor*(1+spread)/step)*step);
+  const reference=indirect?'Cuartiles de otros juegos del catálogo, normalizados a 1080p y 20 W.'
+   :ref.origin==='average'?'Media global de la ficha del juego con condiciones incompletas.'
+   :'Rendimiento observado del mismo juego en condiciones diferentes o incompletas.';
+  return result(indirect?'Estimación por catálogo':'Estimación del juego','Baja',ref.url,low,high,null,
+   reference+' La horquilla aplica un ajuste aproximado por resolución y TDP. '+(indirect?'Sin referencia específica para esta configuración.':''));
+ }
+
  function calculate(t){
   const base=profiles[t.profile];
-  if(!base||!t.w||!t.r||!(base.suite||[base.q]).includes(t.q))return null;
+  if(!base||!t.w||!t.r||!(base.suite||[base.q]).includes(t.q)||
+    !generationFor(base).includes(t.gen))return null;
   const same=anchors.filter(a=>a.profile===t.profile&&a.q===t.q&&a.gen===t.gen);
   const direct=atPower(same.filter(a=>a.r===t.r&&a.scale===t.scale),t.w);
   if(direct)return direct;
-  if(t.gen==='on')return null;
+  if(t.gen==='on')return approximate(t,base);
   // For resolution or documented FSR 3 changes, bracket two idealized scenarios:
   // fixed frame time (CPU-bound) and frame time proportional to pixel count.
   // Never infer a TDP curve, preset, or FG uplift from other titles.
   const requested=internalHeight(t.r,t.scale);
-  if(!requested)return null;
+  if(!requested)return approximate(t,base);
   const refs=same.filter(a=>!a.limit&&a.low===a.high&&(
    a.scale===t.scale || a.scale.split(':')[0]===t.scale.split(':')[0]
   )&&internalHeight(a.r,a.scale));
@@ -183,7 +253,7 @@ export function createModel(game, detail, verifiedPoints) {
      'Escenarios de carga fija y carga proporcional a píxeles. El rango es orientativo y no incorpora un límite de FPS ni costes del juego sin medir.')
    });
   }
-  return possible.sort((a,b)=>a.distance-b.distance)[0]?.value||null;
+  return possible.sort((a,b)=>a.distance-b.distance)[0]?.value||approximate(t,base);
  }
  return {
   profiles,anchors,initial,
@@ -193,7 +263,7 @@ export function createModel(game, detail, verifiedPoints) {
    // Offer only combinations documented in this test/profile. For FG, an explicit
    // state is evidence for that state, not for the other one.
    return {qualities:p.suite||[p.q],scales:[...new Set([p.scale,...samples.map(a=>a.scale)])],
-    generation:[...new Set([p.gen,...samples.map(a=>a.gen)])]};
+    generation:generationFor(p)};
   }
  };
 }

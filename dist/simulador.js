@@ -1,4 +1,4 @@
-import {createModel,kinds,labels,publicSource,qualities,resolutions,scaleLabel} from './sim-model.js?v=48';
+import {createModel,kinds,labels,publicSource,qualities,resolutions,scaleLabel} from './sim-model.js?v=49';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
 
 const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
@@ -138,7 +138,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const methods=add(sim,'details',null,'fps-methods');
  add(methods,'summary','Metodología, límites y pruebas');
  add(methods,'p','El TDP indica la potencia configurada de la APU. La fiabilidad describe la calidad de la referencia, y el rango orientativo no es un intervalo estadístico.');
- add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Sin mediciones comparables, el simulador indica que faltan datos. La VRAM, las sombras, las texturas, el trazado de rayos y el modo de alimentación solo se reflejan cuando forman parte de la ficha o del ensayo.');
+ add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Si faltan mediciones comparables, el simulador usa cifras de la ficha o una horquilla de otros títulos del catálogo. Estas aproximaciones tienen confianza baja. La VRAM, las sombras, las texturas, el trazado de rayos y el modo de alimentación solo se reflejan cuando forman parte de la ficha o del ensayo.');
  add(methods,'p','Con Frame Generation se muestra el total publicado. Los FPS renderizados con FG activo requieren una medición separada.');
  for(const note of detail.notes||[]) add(methods,'p',note);
  source(methods,game.source);
@@ -161,7 +161,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   setOptions(q,options.qualities.map(v=>[v,setting('q',v)]));
   setOptions(scale,options.scales.map(v=>[v,setting('scale',v)]));
   setOptions(gen,options.generation.map(v=>[v,setting('gen',v)]));
-  res.value=target.r;w.value=target.w;q.value=target.q;scale.value=target.scale;gen.value=target.gen;
+  res.value=target.r||(!verifiedPoints?current?.r||1080:0);w.value=target.w||(!verifiedPoints?current?.w||20:0);q.value=target.q;scale.value=target.scale;gen.value=target.gen;
   rows.replaceChildren();
   const base=model.profiles[target.profile];
   if(!base.rows.length)add(rows,'dd','Consulta las condiciones publicadas en la prueba enlazada.');
@@ -227,9 +227,10 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
     const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',setting(k,config[k]));
    }
   }
-  const comparable=saved.gen===current.gen&&(saved.gen!=='?'||saved.profile===current.profile);
+  const comparable=before?.type!=='Estimación por catálogo'&&result?.type!=='Estimación por catálogo'&&saved.gen===current.gen&&(saved.gen!=='?'||saved.profile===current.profile);
   const delta=add(comparison,'p',null,'fps-delta');
   renderBars(add(comparison,'div',null,'fps-bars'),[{label:'Guardada',value:before},{label:'Actual',value:result,active:true}]);
+  if(before?.type==='Estimación por catálogo'||result?.type==='Estimación por catálogo'){delta.textContent='La horquilla del catálogo sirve de orientación general y no permite cuantificar la mejora de este juego.';return}
   if(!comparable){delta.textContent='Los contadores no son directamente comparables. Para calcular una diferencia, usa el mismo estado conocido de Frame Generation.';return}
   if(!before||!result||before.limit==='>'||result.limit==='>'){
    delta.textContent='El cálculo de diferencias necesita dos valores comparables, más allá de un mínimo publicado.';return;
@@ -259,10 +260,11 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   }
   const reliable=({t,value})=>t.gen==='off'&&value.low>=60&&value.confidence!=='Baja'&&value.limit!=='≈';
   const score=({value})=>value.low;
+  const evidenceRank=({value})=>value.type==='Estimación por catálogo'?0:value.confidence==='Baja'?1:2;
   const rank=(a,b)=>{
    if(mode==='quality')return b.t.r-a.t.r||score(b)-score(a);
    if(mode==='battery')return a.t.w-b.t.w||score(b)-score(a);
-   if(mode==='60')return Number(reliable(b))-Number(reliable(a))||(reliable(a)?a.t.w-b.t.w:score(b)-score(a));
+   if(mode==='60')return Number(reliable(b))-Number(reliable(a))||(reliable(a)?a.t.w-b.t.w:evidenceRank(b)-evidenceRank(a)||score(b)-score(a));
    return score(b)-score(a)||a.t.w-b.t.w;
   };
   const best=options.sort(rank)[0];

@@ -9,13 +9,15 @@ const {createModel,resolutions,qualities}=await import('data:text/javascript;bas
 const games=json('catalogo').games;
 const months=new Map();
 let combinations=0,available=0,catalogueWithData=0;
+const coverage={};
 for(const game of games){
  const month=game.published.slice(0,7);
  if(!months.has(month)) months.set(month,json(month));
  const model=createModel(game,months.get(month)[game.id]);
  const original=model.evaluate(model.initial);
  if(model.anchors.length)catalogueWithData++;
- assert.ok(model.initial);
+ assert.ok(original,game.title);
+ coverage[original.type]=(coverage[original.type]||0)+1;
  for(const anchor of model.anchors){
   const result=model.evaluate(anchor);
   assert.equal(result.type,'Medición publicada',game.title);
@@ -45,13 +47,13 @@ for(const game of games){
   assert.equal(model.evaluate({...model.initial,w:21}).type,'Interpolación');
   assert.equal(model.evaluate({...model.initial,w:21}).center,35.3);
   assert.equal(model.evaluate({...model.initial,r:900}).confidence,'Baja');
-  assert.equal(model.evaluate({...model.initial,w:7}),null);
+  assert.equal(model.evaluate({...model.initial,w:7}).confidence,'Baja');
   assert.equal(model.evaluate({...model.initial,gen:'on'}),null);
  }
  if(game.id==='death-stranding-2-on-the-beach-xbox'){
   assert.equal(original.low,30);
   assert.equal(model.evaluate({...model.initial,gen:'on'}).high,75);
-  assert.equal(model.evaluate({...model.initial,gen:'on',w:34}),null);
+  assert.equal(model.evaluate({...model.initial,gen:'on',w:34}).type,'Estimación del juego');
  }
 }
 const ports=json('ports');
@@ -62,4 +64,4 @@ for(const [id,test] of Object.entries(ports.tests)){
  assert.ok(model.evaluate(model.initial));
  embedded++;
 }
-console.log(JSON.stringify({juegos:games.length,perfilesConReferencia:catalogueWithData,combinaciones:combinations,conResultado:available,simuladoresDePorts:embedded}));
+console.log(JSON.stringify({juegos:games.length,perfilesConReferencia:catalogueWithData,combinaciones:combinations,conResultado:available,simuladoresDePorts:embedded,coverage}));
