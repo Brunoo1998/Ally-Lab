@@ -19,10 +19,11 @@ function list(){
  const items=groups.flatMap(g=>{const matches=g.ps.filter(p=>(!platform||p.platform===platform)&&(!type||p.type===type)&&(!onlyFav||favs.has(p.id))&&(!onlyExp||experimental(p))&&query.every(t=>p.search.includes(t)||fold(g.game).includes(t)));return matches.length?[{...g,ps:matches,last:matches.map(p=>p.date||'').sort().at(-1)}]:[]});
  items.sort((a,b)=>($('sort').value==='recent'?(b.last||'').localeCompare(a.last||''):0)||a.game.localeCompare(b.game,'es'));
  press('all',!platform&&!onlyFav&&!onlyExp&&!type&&!query.length);press('sw1',platform===switchName(false));press('sw2',platform===switchName(true));press('favs',onlyFav);press('experimental',onlyExp);
- const pages=Math.max(1,Math.ceil(items.length/24));page=Math.min(page,pages);
+ const pages=Math.max(1,Math.min(20,Math.ceil(items.length/24)));page=Math.min(page,pages);
+ const start=Math.ceil((page-1)*items.length/pages), end=Math.ceil(page*items.length/pages);
  $('count').textContent=items.length+' fichas de juegos · '+new Set(items.flatMap(g=>g.ps.map(p=>p.id))).size+' proyectos';
  const cards=$('cards');cards.replaceChildren();
- for(const g of items.slice((page-1)*24,page*24)){const a=add(cards,'a',undefined,'port-card');a.href='#'+encodeURIComponent(g.group)+'/'+encodeURIComponent(g.ps[0].id);img(a,g);add(a,'h3',g.game);const badges=add(a,'div',undefined,'platform-tags');for(const platform of new Set(g.ps.map(p=>p.platform)))add(badges,'span',platform);add(a,'p',g.ps.length+(g.ps.length===1?' proyecto':' proyectos'))}
+ for(const g of items.slice(start,end)){const a=add(cards,'a',undefined,'port-card');a.href='#'+encodeURIComponent(g.group)+'/'+encodeURIComponent(g.ps[0].id);img(a,g);add(a,'h3',g.game);const badges=add(a,'div',undefined,'platform-tags');for(const platform of new Set(g.ps.map(p=>p.platform)))add(badges,'span',platform);add(a,'p',g.ps.length+(g.ps.length===1?' proyecto':' proyectos'))}
  if(!items.length)add(cards,'p','No hay coincidencias con estos filtros.');
  const nav=$('pages');nav.replaceChildren();if(page>1)button(nav,'Anterior',()=>move(page-1));if(pages>1){const lab=add(nav,'label','Página ');const sel=add(lab,'select');sel.setAttribute('aria-label','Elegir página');for(let i=1;i<=pages;i++)option(sel,i,i+' de '+pages);sel.value=page;sel.onchange=()=>move(+sel.value)}if(page<pages)button(nav,'Siguiente',()=>move(page+1));
 }
