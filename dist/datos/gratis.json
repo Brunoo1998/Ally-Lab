@@ -1,0 +1,54 @@
+{
+  "checked": "2026-11-26T09:59:50.410154+00:00",
+  "stale": false,
+  "offers": [
+    {
+      "id": "epic:f0a333114190492c84a9decd2bb43875:2026-11-26T16:00:00+00:00",
+      "title": "Bread and Fred",
+      "platform": "Epic Games Store",
+      "description": "Grab your best bud for help in this new co-op challenge to help two adorable penguins, Bread and Fred, reach the top of the snowy summit. Time your jumps, cling to walls and swing across gaps to see how far you can make it before you tumble all the way back down the mountain.",
+      "start": "2026-11-26T16:00:00+00:00",
+      "end": "2026-12-03T16:00:00+00:00",
+      "url": "https://store.epicgames.com/es-ES/p/bread-and-fred-1db362",
+      "original": 13.49,
+      "region": "ES",
+      "cover": "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-pr4o2.jpg",
+      "gallery": [
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-2iqd8.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-1ebrw.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-afbf0.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-1nw27.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-d6d69.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-thiq7.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-11yjz.jpg",
+        "https://cdn1.epicgames.com/spt-assets/545b4dd8bb364c12b719268198a93ef3/bread-and-fred-5fyzc.jpg"
+      ],
+      "source": null,
+      "added": "2026-11-26T09:59:50.410154+00:00",
+      "seenActive": false
+    },
+    {
+      "id": "epic:1f9a12b06b4f437790b6913ad136a08c:2026-11-19T16:00:00+00:00",
+      "title": "Mark of the Deep",
+      "platform": "Epic Games Store",
+      "description": "Score Mark of the Deep for free on Epic Games Store! Mark of the Deep is a pirate-themed adventure game with elements from Metroidvania and Souls-Like games.",
+      "start": "2026-11-19T16:00:00+00:00",
+      "end": "2026-11-26T16:00:00+00:00",
+      "url": "https://store.epicgames.com/es-ES/p/mark-of-the-deep-f7dc08",
+      "original": 19.5,
+      "region": "ES",
+      "cover": "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-1lope.png",
+      "gallery": [
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-1k2bg.png",
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-1aw2l.png",
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-1dac0.png",
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-een94.png",
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-1522q.png",
+        "https://cdn1.epicgames.com/spt-assets/83a240506a884c10ad8fb99694e57a0d/mark-of-the-deep-iq37n.png"
+      ],
+      "source": "https://www.gamerpower.com/mark-of-the-deep-epic-games-giveaway",
+      "added": "2026-11-26T09:59:50.410154+00:00",
+      "seenActive": true
+    }
+  ]
+}

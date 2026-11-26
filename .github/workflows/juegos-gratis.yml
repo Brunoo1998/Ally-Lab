@@ -1,0 +1,38 @@
+name: Actualizar juegos gratis
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['tools/sincronizar_gratis.py', '.github/workflows/juegos-gratis.yml']
+permissions:
+  contents: write
+concurrency:
+  group: juegos-gratis
+  cancel-in-progress: false
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actualizar rama de datos sin redesplegar la web
+        shell: bash
+        run: |
+          set -euo pipefail
+          temp=$(mktemp -d)
+          if git ls-remote --exit-code --heads origin promociones; then
+            git fetch origin promociones
+            git worktree add --detach "$temp/data" FETCH_HEAD
+          else
+            git worktree add --detach "$temp/data" HEAD
+            git -C "$temp/data" checkout --orphan promociones
+            git -C "$temp/data" rm -rf .
+            cp dist/datos/gratis.json "$temp/data/gratis.json"
+          fi
+          python3 -B tools/sincronizar_gratis.py --output "$temp/data/gratis.json"
+          git -C "$temp/data" add gratis.json
+          if git -C "$temp/data" diff --cached --quiet; then exit 0; fi
+          git -C "$temp/data" -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Actualizar promociones verificadas'
+          git -C "$temp/data" push origin HEAD:refs/heads/promociones
