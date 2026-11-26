@@ -1,6 +1,6 @@
 import { unmountGameVideo } from './videos.js?v=41';
 import { mountCaptures } from './capturas.js?v=41';
-import { mountSim } from './simulador.js?v=49';
+import { mountSim } from './simulador.js?v=50';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
 const id = name => document.getElementById(name);

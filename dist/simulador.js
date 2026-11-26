@@ -118,9 +118,6 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const chart=add(linePanel,'div',null,'fps-line');
  const caption=add(linePanel,'p',null,'fps-point-detail');
  const legend=add(linePanel,'p','● Medición publicada　◇ Modelo　┆ Objetivos de 30 y 60 FPS','fps-legend');
- const qualityPanel=add(output,'section',null,'fps-panel');
- heading(qualityPanel,'Comparativa de calidades','Misma potencia, resolución, reescalado y generación de fotogramas.');
- const bars=add(qualityPanel,'div',null,'fps-bars');
  const compare=add(output,'section',null,'fps-panel fps-compare');
  heading(compare,'Comparar configuraciones');
  const comparisonActions=add(compare,'div',null,'fps-segments');
@@ -180,8 +177,6 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
   renderPrimary();
   drawChart();
-  renderBars(bars,evaluations('q',qualities).map(p=>({...p,label:({low:'Baja',medium:'Media',high:'Alta',ultra:'Ultra'})[p.id],
-   active:p.id===current.q,missing:model.options(current.profile).qualities.includes(p.id)?'Datos insuficientes':'Sin documentar'})));
   renderComparison();
  }
  function renderPrimary(){
