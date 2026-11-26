@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Emulación · Ally Lab</title><link rel="icon" href="./assets/ally-mark.svg">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./emulacion.css?v=67">
-<script type="module" src="./lab-controls.js?v=62"></script><script type="module" src="./emulacion.js?v=65"></script><script type="module" src="./descargamasiva.js?v=67"></script></head>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./emulacion.css?v=68">
+<script type="module" src="./lab-controls.js?v=62"></script><script type="module" src="./descargamasiva.js?v=68"></script></head>
 <body class="emulation"><a class="skip" href="#contenido">Saltar al contenido</a>
 <header class="mast"><div class="wrap bar"><a class="brand" href="./index.html"><img src="./assets/ally-mark.svg" width="40" height="40" alt=""><span>ALLY <em>LAB</em></span></a><div id="pad-status" class="pad-status" hidden>
 <span class="pad-status-label" role="status"></span>
@@ -13,25 +13,28 @@
 </ul>
 </div><nav aria-label="Principal"><a href="./index.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#games"></use></svg><span>Juegos</span></a><a href="./index.html#juego/world-of-warcraft-forever-rog-xbox-ally-x-game-settings?sim=1"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#fps"></use></svg><span>Simulador FPS</span></a><a href="./ports.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#ports"></use></svg><span>Ports y Recompilaciones</span></a><a href="./news.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#news"></use></svg><span>Noticias</span></a><a href="./gratis.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#free"></use></svg><span>Juegos gratis</span></a><a href="./emulacion.html" class="active" aria-current="page"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg#games"></use></svg><span>Emulación</span></a></nav><span class="model-tag">Z2 EXTREME</span></div></header>
 <main class="wrap" id="contenido" tabindex="-1">
-<header class="port-heading"><h1>Emulación</h1><p>Juegos con descarga oficial para emular en Windows.</p><a class="btn" id="emu-source-jump" href="#descargamasiva">Ver listas de Arley4d</a></header>
-<div id="emu-browser">
-<div class="tools emu-tools"><label for="emu-search">Buscar en todas las consolas</label><input id="emu-search" type="search" placeholder="Título o consola" autocomplete="off"><details id="emu-keys"><summary>Escribir con el mando</summary><div class="emu-keys"></div></details></div>
-<section aria-labelledby="emu-consoles-title"><h2 id="emu-consoles-title">Consolas</h2><div id="emu-consoles" class="emu-grid"></div></section>
-<section id="emu-results" aria-labelledby="emu-results-title" hidden><div class="emu-row"><h2 id="emu-results-title" tabindex="-1">Juegos</h2><button id="emu-reset" class="btn" type="button">Todas las consolas</button></div><p id="emu-count" role="status"></p><div id="emu-games" class="emu-grid"></div><nav class="pager emu-row" id="emu-pages" aria-label="Páginas de juegos" hidden><button class="btn" id="emu-prev" type="button">Anterior</button><span id="emu-page"></span><button class="btn" id="emu-next" type="button">Siguiente</button></nav></section>
-<section id="descargamasiva" class="box emu-source" aria-labelledby="emu-source-title">
-<h2 id="emu-source-title">Listas de Arley4d</h2>
-<p>Selecciona una consola para ver los archivos y los enlaces publicados por Arley4d.</p>
+<header class="port-heading"><h1>Emulación</h1><p>Elige una consola para consultar sus juegos y enlaces.</p></header>
+<div id="masiva-consoles" class="emu-grid">
+<a class="card emu-card" id="console-nes" href="#consola/nes"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/NES-Console-Set.jpg/330px-NES-Console-Set.jpg" alt="" loading="lazy"><strong>NES</strong><span>4.695 entradas</span></a>
+<a class="card emu-card" id="console-snes" href="#consola/snes"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/SNES-Console.jpg/330px-SNES-Console.jpg" alt="" loading="lazy"><strong>Super Nintendo</strong><span>8.673 entradas</span></a>
+<a class="card emu-card" id="console-n64" href="#consola/n64"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/N64-Console-Set.jpg/330px-N64-Console-Set.jpg" alt="" loading="lazy"><strong>Nintendo 64</strong><span>947 entradas</span></a>
+<a class="card emu-card" id="console-gb" href="#consola/gb"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Game-Boy-Original.png/330px-Game-Boy-Original.png" alt="" loading="lazy"><strong>Game Boy</strong><span>1.041 entradas</span></a>
+<a class="card emu-card" id="console-gbc" href="#consola/gbc"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Game-Boy-Color-Purple.png/330px-Game-Boy-Color-Purple.png" alt="" loading="lazy"><strong>Game Boy Color</strong><span>495 entradas</span></a>
+<a class="card emu-card" id="console-gba" href="#consola/gba"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Nintendo-Game-Boy-Advance-Purple-FL.png/330px-Nintendo-Game-Boy-Advance-Purple-FL.png" alt="" loading="lazy"><strong>Game Boy Advance</strong><span>1.666 entradas</span></a>
+<a class="card emu-card" id="console-psx" href="#consola/psx"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/PlayStation-with-DualShock.png/330px-PlayStation-with-DualShock.png" alt="" loading="lazy"><strong>PlayStation</strong><span>10.622 entradas</span></a>
+<a class="card emu-card" id="console-ps2" href="#consola/ps2"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/PS2-Slim-Console-Set.jpg/330px-PS2-Slim-Console-Set.jpg" alt="" loading="lazy"><strong>PlayStation 2</strong><span>7.543 entradas</span></a>
+<a class="card emu-card" id="console-dreamcast" href="#consola/dreamcast"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Dreamcast-Console-Set.jpg/330px-Dreamcast-Console-Set.jpg" alt="" loading="lazy"><strong>Dreamcast</strong><span>1.491 entradas</span></a>
+</div>
+<section id="details" class="box emu-source" aria-labelledby="masiva-title" hidden>
+<a class="btn" href="#consolas">Volver a las consolas</a>
+<h2 id="masiva-title"></h2>
 <div class="tools emu-tools">
-<label for="masiva-console">Consola</label><select id="masiva-console"><option value="">Elige una consola</option><option value="nes">NES · 4.695</option><option value="snes">Super Nintendo · 8.673</option><option value="n64">Nintendo 64 · 947</option><option value="gb">Game Boy · 1.041</option><option value="gbc">Game Boy Color · 495</option><option value="gba">Game Boy Advance · 1.666</option><option value="psx">PlayStation · 10.622</option><option value="ps2">PlayStation 2 · 7.543</option><option value="dreamcast">Dreamcast · 1.491</option></select>
-<label for="masiva-search">Buscar en la consola seleccionada</label><input id="masiva-search" type="search" autocomplete="off" disabled>
+<label for="masiva-search">Buscar juegos</label><input id="masiva-search" type="search" autocomplete="off" disabled>
 </div>
 <p id="masiva-status" role="status"></p>
 <ul id="masiva-games" class="masiva-games"></ul>
 <div class="emu-row" id="masiva-pager" hidden><button id="masiva-prev" class="btn" type="button">Anterior</button><button id="masiva-next" class="btn" type="button">Siguiente</button></div>
 </section>
-<p id="emu-status" role="status">Cargando catálogo…</p>
-</div>
-<article id="details" class="emu-detail" hidden><a class="btn" href="#catalogo">Volver al catálogo</a><div id="emu-detail"></div></article>
 <noscript><p>Activa JavaScript para consultar el catálogo.</p></noscript>
 </main>
 <footer class="wrap foot"><span>Fotografías de consolas de Evan-Amos, dominio público.</span></footer>

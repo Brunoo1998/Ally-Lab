@@ -1,4 +1,8 @@
-const platform = document.getElementById('masiva-console');
+const consoles = document.getElementById('masiva-consoles');
+const details = document.getElementById('details');
+const title = document.getElementById('masiva-title');
+let selected;
+const cache = new Map();
 const query = document.getElementById('masiva-search');
 const status = document.getElementById('masiva-status');
 const results = document.getElementById('masiva-games');
@@ -35,7 +39,7 @@ function render() {
   status.textContent = pages ? `${matches.length.toLocaleString('es-ES')} entradas · Página ${page + 1} de ${pages}` : 'No hay resultados.';
 }
 
-platform.addEventListener('change', async () => {
+async function loadConsole(key) {
   request?.abort();
   const current = new AbortController();
   request = current;
@@ -46,9 +50,13 @@ platform.addEventListener('change', async () => {
   results.replaceChildren();
   pager.hidden = true;
   status.textContent = '';
-  const key = platform.value;
-  if (!/^(nes|snes|n64|gb|gbc|gba|psx|ps2|dreamcast)$/.test(key)) return;
   status.textContent = 'Cargando juegos…';
+  if (cache.has(key)) {
+    games = cache.get(key);
+    query.disabled = false;
+    render();
+    return;
+  }
   try {
     const response = await fetch('https://raw.githubusercontent.com/Arley4d/DescargaMasiva/main/' + key + '.jsonl', {signal: current.signal});
     if (!response.ok) throw new Error('Catálogo no disponible');
@@ -61,12 +69,35 @@ platform.addEventListener('change', async () => {
       const urls = record.urls.filter(entry => typeof entry?.u === 'string' && /^https?:\/\//i.test(entry.u));
       if (urls.length) games.push({n: record.n, urls});
     }
+    games.sort((a, b) => a.n.localeCompare(b.n, 'es', {numeric: true}));
+    cache.set(key, games);
     query.disabled = false;
     render();
   } catch {
-    if (request === current && !current.signal.aborted) status.textContent = 'No se pudo cargar la lista. Selecciona de nuevo la consola para reintentar.';
+    if (request === current && !current.signal.aborted) status.textContent = 'No se pudo cargar la lista. Vuelve a las consolas y abre de nuevo esta lista.';
   }
-});
+}
+
+function route() {
+  const key = location.hash.startsWith('#consola/') ? location.hash.slice(9) : '';
+  const card = document.getElementById('console-' + key);
+  consoles.hidden = Boolean(card);
+  details.hidden = !card;
+  if (!card) {
+    request?.abort();
+    request = undefined;
+    selected?.focus();
+    selected = undefined;
+    return;
+  }
+  selected = card;
+  title.textContent = card.querySelector('strong').textContent;
+  details.querySelector('a').focus();
+  loadConsole(key);
+}
+
+window.addEventListener('hashchange', route);
+route();
 query.addEventListener('input', () => { page = 0; render(); });
 for (const [button, offset] of [[previous, -1], [next, 1]]) {
   button.addEventListener('click', () => {
