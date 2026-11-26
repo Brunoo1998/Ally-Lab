@@ -1,5 +1,7 @@
-import {createModel,kinds,labels,publicSource,qualities,resolutions,scaleLabel} from './sim-model.js?v=49';
+import {createModel,kinds,labels,publicSource,qualities,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=51';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
+
+import {campoES,valorES} from './idioma.js?v=20261121';
 
 const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
 const powers=[7,13,17,25,30,35];
@@ -18,7 +20,19 @@ function icon(parent,type){
  svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.classList.add('fps-icon');
  const path=document.createElementNS(ns,'path');path.setAttribute('d',glyphs[type]);svg.append(path);parent.append(svg);
 }
-function setting(k,value){
+function setting(k,value,rows=[]){
+ if(value==='guide'&&(k==='q'||k==='scale')){
+  const preset=k==='q'&&qualityPreset(rows);
+  if(preset)return valorES(preset.trim());
+  const fields=k==='q'
+   ?[/^(?:texture(?: quality| resolution| detail)?|textures(?: quality)?|texturas|calidad de texturas)$/i,
+     /^(?:shadow(?:s)?(?: quality| resolution| detail)?|sombras|calidad de sombras)$/i,
+     /^(?:effects quality|lighting quality|calidad de efectos|calidad de iluminación)$/i]
+   :[/^(?:(?:resolution )?upscal(?:ing|e|er)(?: (?:method|type|technology|technique))?|super resolution|reescalado)$/i,
+     /^(?:upscal(?:ing|e|er) (?:mode|quality(?: mode)?)|(?:amd )?fsr(?: [0-9.]+)? (?:mode|quality|preset)|modo de reescalado)$/i];
+  const settings=fields.map(pattern=>rows.find(([name,val])=>pattern.test(name.trim())&&val.trim())).filter(Boolean);
+  if(settings.length)return settings.slice(0,2).map(([name,val])=>campoES(name.trim())+' '+valorES(val.trim())).join(' · ');
+ }
  if(k==='r')return value?value+'p':'Sin indicar';
  if(k==='w')return value?value+' W':'Sin indicar';
  if(k==='scale')return scaleLabel(value);
@@ -144,19 +158,20 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   add(observations,'summary','Seleccionar una medición publicada');
   const picks=add(observations,'div',null,'fps-segments');
   for(const anchor of model.anchors){
-   const label=[setting('r',anchor.r),setting('w',anchor.w),setting('q',anchor.q),
+   const label=[setting('r',anchor.r),setting('w',anchor.w),setting('q',anchor.q,model.profiles[anchor.profile]?.rows),
     formatFPS(model.evaluate(anchor))+' '+kinds[anchor.gen]].join(' · ');
    button(picks,label,'',()=>{apply(anchor);profile.focus()});
   }
  }
  let current,result,goal=60,axis='w';
  const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value});
+ const display=(key,value,profile)=>setting(key,value,model.profiles[profile]?.rows);
  const evaluations=(key,items)=>items.map(id=>({id,label:setting(key,id),value:model.evaluate({...current,[key]:id})}));
  function apply(target){
   profile.value=target.profile;
   const options=model.options(target.profile);
-  setOptions(q,options.qualities.map(v=>[v,setting('q',v)]));
-  setOptions(scale,options.scales.map(v=>[v,setting('scale',v)]));
+  setOptions(q,options.qualities.map(v=>[v,display('q',v,target.profile)]));
+  setOptions(scale,options.scales.map(v=>[v,display('scale',v,target.profile)]));
   setOptions(gen,options.generation.map(v=>[v,setting('gen',v)]));
   res.value=target.r||(!verifiedPoints?current?.r||1080:0);w.value=target.w||(!verifiedPoints?current?.w||20:0);q.value=target.q;scale.value=target.scale;gen.value=target.gen;
   rows.replaceChildren();
@@ -195,7 +210,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
       current.gen==='on'?'Incluye fotogramas generados.':current.gen==='?'?'La prueba no separa el tipo de fotogramas.':''].filter(Boolean).join(' ');
   provenance.replaceChildren();if(result)source(provenance,result.source);
   goalButtons.forEach((b,i)=>b.setAttribute('aria-pressed',String([30,60,120][i]===goal)));
-  const values=[result?value+' FPS':'Datos insuficientes',...Object.keys(names).map(k=>setting(k,current[k])),
+  const values=[result?value+' FPS':'Datos insuficientes',...Object.keys(names).map(k=>display(k,current[k],current.profile)),
    result?result.type+' · '+result.confidence:'Sin referencia'];
   statNodes.forEach((node,i)=>node.textContent=values[i]);
  }
@@ -219,7 +234,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    add(card,'p',[kinds[config.gen],value?.type,value?'Confianza '+value.confidence.toLowerCase():null].filter(Boolean).join(' · '));
    const list=add(card,'dl',null,'fps-value-list');
    for(const k of Object.keys(names)){
-    const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',setting(k,config[k]));
+    const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',display(k,config[k],config.profile));
    }
   }
   const comparable=before?.type!=='Estimación por catálogo'&&result?.type!=='Estimación por catálogo'&&saved.gen===current.gen&&(saved.gen!=='?'||saved.profile===current.profile);
@@ -270,7 +285,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    ?model.profiles.filter(p=>p.r&&p.w).sort((a,b)=>mode==='quality'?b.r-a.r:a.w-b.w)[0]:null;
   const next=best?.t||fallback;
   if(!next){renderPrimary();status.textContent='No hay una configuración respaldada para este objetivo.';return}
-  const changed=Object.keys(names).filter(k=>next[k]!==current[k]).map(k=>names[k]+' a '+setting(k,next[k]));
+  const changed=Object.keys(names).filter(k=>next[k]!==current[k]).map(k=>names[k]+' a '+display(k,next[k],next.profile));
   if(next.profile!==current.profile)changed.unshift(model.profiles[next.profile].name);
   apply(next);
   const outcome=mode==='60'?(reliable(best)?'La referencia alcanza 60 FPS renderizados.':'Mejor alternativa disponible. No hay respaldo suficiente para garantizar 60 FPS renderizados.'):'Perfil aplicado.';

@@ -14,12 +14,14 @@ const evidence = {
  'the-legend-of-khiimori-rog-xbox-ally-x':[[1,35,'off',30,45],[1,35,'on',60,'>']],
  'death-stranding-2-on-the-beach-xbox':[[1,35,'off',30,45],[1,35,'on',50,75]]
 };
-export const labels={guide:'Según la ficha',off:'Desactivada',on:'Activada','?':'Sin documentar',low:'Bajo',medium:'Medio',high:'Alto',ultra:'Ultra'};
+export const labels={guide:'Preajuste no indicado',off:'Desactivada',on:'Activada','?':'Sin documentar',low:'Bajo',medium:'Medio',high:'Alto',ultra:'Ultra'};
 const qualityNames = {low:'low', bajo:'low', baja:'low', medium:'medium', medio:'medium', media:'medium', high:'high', alto:'high', alta:'high', ultra:'ultra'};
 const scaleModes = {native:'Nativo', quality:'Calidad', balanced:'Equilibrado', performance:'Rendimiento', 'ultra-performance':'Ultra rendimiento'};
+export function qualityPreset(rows){
+ return rows.find(([k,v])=>/^(graphics preset|quality preset|graphics quality preset|overall quality|graphics quality|preset graphics|preset|calidad gráfica)$/i.test(k.trim()) && v.trim())?.[1];
+}
 function quality(p){
- const pair=p.rows.find(([k])=>/^(graphics preset|quality preset|graphics quality preset|overall quality|graphics quality|preset graphics|preset|calidad gráfica)$/i.test(k.trim()));
- return qualityNames[pair?.[1].trim().toLowerCase()] || 'guide';
+ return qualityNames[qualityPreset(p.rows)?.trim().toLowerCase()] || 'guide';
 }
 function resolution(p){
  const name=p.name.match(/\b(720|900|1080)p\b/i);
