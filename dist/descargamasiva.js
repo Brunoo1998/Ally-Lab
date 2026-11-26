@@ -5,6 +5,7 @@ let selected;
 const cache = new Map();
 const query = document.getElementById('masiva-search');
 const status = document.getElementById('masiva-status');
+const provider = document.getElementById('masiva-provider');
 const results = document.getElementById('masiva-games');
 const pager = document.getElementById('masiva-pager');
 const previous = document.getElementById('masiva-prev');
@@ -27,6 +28,8 @@ function render() {
     for (const [index, {u}] of game.urls.entries()) {
       const link = document.createElement('a');
       link.href = u;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
       link.textContent = game.urls.length === 1 ? 'Abrir enlace' : 'Abrir enlace ' + (index + 1);
       link.setAttribute('aria-label', link.textContent + ' de ' + game.n);
       row.append(link);
@@ -83,6 +86,7 @@ function route() {
   const card = document.getElementById('console-' + key);
   consoles.hidden = Boolean(card);
   details.hidden = !card;
+  provider.hidden = key !== "switch";
   if (!card) {
     request?.abort();
     request = undefined;
