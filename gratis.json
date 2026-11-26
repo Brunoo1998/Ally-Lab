@@ -1,6 +1,6 @@
 {
-  "checked": "2026-11-26T09:59:50.410154+00:00",
-  "stale": true,
+  "checked": "2026-11-26T22:05:32.411Z",
+  "stale": false,
   "offers": [
     {
       "id": "epic:f0a333114190492c84a9decd2bb43875:2026-11-26T16:00:00+00:00",
@@ -25,7 +25,7 @@
       ],
       "source": null,
       "added": "2026-11-26T09:59:50.410154+00:00",
-      "seenActive": false
+      "seenActive": true
     },
     {
       "id": "epic:1f9a12b06b4f437790b6913ad136a08c:2026-11-19T16:00:00+00:00",
