@@ -90,7 +90,12 @@ export function publicSource(value) {
 export const qualities = ['low','medium','high','ultra'];
 export const resolutions = [720,900,1080];
 export const kinds = {off:'FPS renderizados',on:'FPS mostrados con FG','?':'FPS sin desglose'};
-const key = ({profile,r,w,q,scale,gen}) => [profile,r,w,q,scale,gen].join('|');
+export const qualityFields={
+ texture:['Texturas',/^(?:textures?(?: quality| resolution| detail)?|texturas|calidad de texturas)$/i,.035],
+ shadow:['Sombras',/^(?:shadows?(?: quality| resolution| detail)?|sombras|calidad de sombras)$/i,.08]
+};
+const levels={low:0,medium:1,high:2,ultra:3};
+const key = ({profile,r,w,q,scale,gen,texture,shadow}) => [profile,r,w,q,scale,gen,texture,shadow].join('|');
 const notebookcheck = 'https://www.notebookcheck.net/Full-screen-Xbox-experience-for-gaming-handhelds-Asus-ROG-Xbox-Ally-X-review.1139045.0.html';
 // 1080p results grouped by matching test conditions and by sustained TDP.
 const benchmarkSuites = {
@@ -219,7 +224,34 @@ export function createModel(game, detail, verifiedPoints) {
    reference+' La horquilla aplica un ajuste aproximado por resolución y TDP. '+(indirect?'Sin referencia específica para esta configuración.':''));
  }
 
+ function adjustable(base){
+  return Object.fromEntries(Object.entries(qualityFields).flatMap(([id,[,pattern]])=>{
+   const value=base.rows.find(([name])=>pattern.test(name.trim()))?.[1];
+   const preset=qualityNames[value?.trim().toLowerCase()];
+   return preset?[[id,preset]]:[];
+  }));
+ }
  function calculate(t){
+  const base=profiles[t.profile];
+  if(!base||!selectable(base).includes(t.q))return null;
+  const available=adjustable(base);
+  const simulatedPreset=t.q!==base.q&&!base.suite?.includes(t.q);
+  const changes=Object.entries(available).filter(([id,from])=>qualities.includes(t[id])&&from!==t[id]);
+  if(!simulatedPreset&&!changes.length)return calculateBase(t);
+  const source=calculateBase({...t,q:simulatedPreset?base.q:t.q});
+  if(!source)return null;
+  const from=levels[base.q]??1;
+  const presetDelta=simulatedPreset?(from-levels[t.q])*.14:0;
+  const detailDelta=changes.reduce((sum,[id,previous])=>sum+(levels[simulatedPreset?t.q:previous]-levels[t[id]])*qualityFields[id][2],0);
+  const factor=Math.exp(presetDelta+detailDelta);
+  const low=Math.max(1,Math.floor(source.low*factor*.88));
+  const high=Math.max(low+1,Math.ceil((source.high??source.low*1.2)*factor*1.12));
+  return result(source.type==='Estimación por catálogo'?source.type:'Estimación de calidad','Baja',source.source,low,high,null,
+   'Ajuste orientativo por calidad con una sensibilidad genérica. '+(source.type==='Estimación por catálogo'?'La base procede de otros juegos del catálogo.':'La base procede de una referencia del juego.'));
+ }
+ const selectable=base=>verifiedPoints?(base.suite||[base.q]):[...new Set([base.q,...qualities])];
+
+ function calculateBase(t){
   const base=profiles[t.profile];
   if(!base||!t.w||!t.r||!(base.suite||[base.q]).includes(t.q)||
     !generationFor(base).includes(t.gen))return null;
@@ -264,7 +296,7 @@ export function createModel(game, detail, verifiedPoints) {
    const p=profiles[profile], samples=anchors.filter(a=>a.profile===profile);
    // Offer only combinations documented in this test/profile. For FG, an explicit
    // state is evidence for that state, not for the other one.
-   return {qualities:p.suite||[p.q],scales:[...new Set([p.scale,...samples.map(a=>a.scale)])],
+   return {qualities:selectable(p),adjustable:adjustable(p),scales:[...new Set([p.scale,...samples.map(a=>a.scale)])],
     generation:generationFor(p)};
   }
  };

@@ -41,6 +41,20 @@ for(const game of games){
    }
   }
  }
+ const active=model.options(model.initial.profile);
+ const low=model.evaluate({...model.initial,q:'low'});
+ const ultra=model.evaluate({...model.initial,q:'ultra'});
+ if(low&&ultra)assert.ok(low.center>=ultra.center,game.title);
+ if(game.id==='death-stranding-2-on-the-beach-xbox'){
+  assert.ok(active.qualities.includes('ultra'));
+  assert.notEqual(low.center,ultra.center);
+  assert.equal(ultra.confidence,'Baja');
+  for(const [id,level] of Object.entries(active.adjustable)){
+   assert.deepEqual(model.evaluate({...model.initial,[id]:level}),original);
+   const changed=model.evaluate({...model.initial,[id]:level==='ultra'?'low':'ultra'});
+   assert.equal(changed.type,'Estimación de calidad');
+  }
+ }
  if(game.title==='Cyberpunk 2077'){
   assert.equal(original.low,40.5);
   assert.deepEqual(qualities.map(q=>model.evaluate({...model.initial,q}).low),[49.5,40.5,31.9,28]);

@@ -1,4 +1,4 @@
-import {createModel,kinds,labels,publicSource,qualities,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=51';
+import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=52';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
 
 import {campoES,valorES} from './idioma.js?v=20261121';
@@ -96,6 +96,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const slider=add(powerControl,'input');slider.type='range';slider.min=7;slider.max=35;
  slider.oninput=()=>{w.value=slider.value;manual()};
  const scale=field(names.scale,manual,'scale'),gen=field(names.gen,manual,'gen');
+ const overrides=Object.fromEntries(Object.entries(qualityFields).map(([id,[name]])=>[id,field(name,manual,'q')]));
  const notes=add(controls,'details',null,'fps-values');
  add(notes,'summary','Ajustes de partida de la ficha');
  const rows=add(notes,'dl',null,'fps-value-list');
@@ -149,7 +150,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const methods=add(sim,'details',null,'fps-methods');
  add(methods,'summary','Metodología, límites y pruebas');
  add(methods,'p','El TDP indica la potencia configurada de la APU. La fiabilidad describe la calidad de la referencia, y el rango orientativo no es un intervalo estadístico.');
- add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Si faltan mediciones comparables, el simulador usa cifras de la ficha o una horquilla de otros títulos del catálogo. Estas aproximaciones tienen confianza baja. La VRAM, las sombras, las texturas, el trazado de rayos y el modo de alimentación solo se reflejan cuando forman parte de la ficha o del ensayo.');
+ add(methods,'p','La interpolación usa pruebas del mismo juego y de la misma configuración. Si faltan mediciones comparables, el simulador usa cifras de la ficha o una horquilla de otros títulos del catálogo. Estas aproximaciones tienen confianza baja. Los cambios de preajuste, texturas o sombras sin ensayos equivalentes usan una sensibilidad genérica. Los ajustes individuales aparecen cuando la ficha registra un nivel compatible.');
  add(methods,'p','Con Frame Generation se muestra el total publicado. Los FPS renderizados con FG activo requieren una medición separada.');
  for(const note of detail.notes||[]) add(methods,'p',note);
  source(methods,game.source);
@@ -164,12 +165,19 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   }
  }
  let current,result,goal=60,axis='w';
- const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value});
+ const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value,...Object.fromEntries(Object.entries(overrides).map(([id,node])=>[id,node.value]))});
  const display=(key,value,profile)=>setting(key,value,model.profiles[profile]?.rows);
  const evaluations=(key,items)=>items.map(id=>({id,label:setting(key,id),value:model.evaluate({...current,[key]:id})}));
  function apply(target){
   profile.value=target.profile;
   const options=model.options(target.profile);
+  for(const [id,node] of Object.entries(overrides)){
+   const base=options.adjustable[id];
+   node.parentElement.hidden=!base;
+   node.parentElement.style.display=base?'':'none';
+   setOptions(node,base?[['','Base: '+labels[base]],...qualities.map(v=>[v,labels[v]])]:[]);
+   node.value=target[id]||'';
+  }
   setOptions(q,options.qualities.map(v=>[v,display('q',v,target.profile)]));
   setOptions(scale,options.scales.map(v=>[v,display('scale',v,target.profile)]));
   setOptions(gen,options.generation.map(v=>[v,setting('gen',v)]));
@@ -235,6 +243,9 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    const list=add(card,'dl',null,'fps-value-list');
    for(const k of Object.keys(names)){
     const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',display(k,config[k],config.profile));
+   }
+   for(const [id,[name]] of Object.entries(qualityFields)){
+    if(config[id]){const row=add(list,'div');add(row,'dt',name);add(row,'dd',labels[config[id]]);}
    }
   }
   const comparable=before?.type!=='Estimación por catálogo'&&result?.type!=='Estimación por catálogo'&&saved.gen===current.gen&&(saved.gen!=='?'||saved.profile===current.profile);
