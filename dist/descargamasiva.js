@@ -1,4 +1,4 @@
-import { blockedLinks } from "./retro-403.js?v=77";
+import { isBlockedLink } from "./retro-403.js?v=78";
 
 const consoles = document.getElementById('masiva-consoles');
 const details = document.getElementById('details');
@@ -71,7 +71,7 @@ async function loadConsole(key) {
       const record = JSON.parse(line);
       if (record.type !== 'file' || typeof record.n !== 'string' || !Array.isArray(record.urls)) continue;
       const urls = record.urls.filter(entry => typeof entry?.u === 'string' && /^https?:\/\//i.test(entry.u));
-      if (urls.length) games.push({n: record.n, urls: urls.filter(({u}) => !blockedLinks.has(u))});
+      if (urls.length) games.push({n: record.n, urls: urls.filter(({u}) => !isBlockedLink(u))});
     }
     games.sort((a, b) => a.n.localeCompare(b.n, 'es', {numeric: true}));
     cache.set(key, games);

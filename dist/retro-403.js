@@ -1,4 +1,4 @@
-export const blockedLinks = new Set([
+const blockedLinks = new Set([
   "https://archive.org/download/GameboyAdvanceRomCollectionByGhostware/Crushed%20Baseball.zip",
   "https://archive.org/download/PS2-EU-part1-CHD-Arquivista/007%20-%20Agent%20Under%20Fire%20%28EU%29.chd",
   "https://archive.org/download/PS2-EU-part1-CHD-Arquivista/007%20-%20Everything%20or%20Nothing%20%28EU%29.chd",
@@ -169,6 +169,8 @@ export const blockedLinks = new Set([
   "https://archive.org/download/ndsfull/Nintendo%20DS%206001-6619.zip/6384%20-%20Lera%20Glaciale%204%20Continenti%20alla%20Deriva%20Giochi%20Polari%20%28I%29%28EXiMiUS%29.nds",
   "https://archive.org/download/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip/%2796%20Zenkoku%20Koukou%20Soccer%20Senshuken%20%28Japan%29.zip",
   "https://archive.org/download/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip/101%20Dalmatas%20%28USA%29%20%28Pirate%29.zip",
+  "https://archive.org/download/ps2-redump-usa-chd-part-Y/Yakuza%20%28USA%29.chd",
+  "https://archive.org/download/sony-playstation-vita-usa-full-set-nonpdrm-format/%E2%88%9ALetter%20%5BPCSE00963%5D%20%5BUSA%5D%20%5BNoNpDRM%5D.zip",
   "https://archive.org/download/sony-playstation-vita-usa-full-set-nonpdrm-format/Defender%27s%20Quest%20%5BPCSE01136%5D%20%5BUSA%5D%20%5BNoNpDRM%5D.zip",
   "https://archive.org/download/sony-playstation-vita-usa-full-set-nonpdrm-format/Paint%20Park%20Plus%20%5BPCSA00111%5D%20%5BUSA%5D%20%5BNoNpDRM%5D.zip",
   "https://archive.org/download/sony-playstation-vita-usa-full-set-nonpdrm-format/Ring%20Run%20%5BPCSE00548%5D%20%5BUSA%5D%20%5BNoNpDRM%5D.zip",
@@ -416,3 +418,19 @@ export const blockedLinks = new Set([
   "https://www.mediafire.com/file/zmw1tez9ebrwnqq/Persona+4+Golden+%281.0%29.nsp",
   "https://www.mediafire.com/file/zynvcmo7pn4yb6i/Moon+Hunters+1.0.2.nsp"
 ]);
+
+// Archive indexes mark these ZIPs private, and a member in each returned HTTP 403.
+const restrictedArchives = [
+  "https://archive.org/download/ndsfull/Nintendo%20DS%200001-1000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%201001-2000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%202001-3000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%203001-4000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%204001-5000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%205001-6000.zip/",
+  "https://archive.org/download/ndsfull/Nintendo%20DS%206001-6619.zip/",
+  "https://archive.org/download/ni-roms/roms/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System.zip/"
+];
+
+export function isBlockedLink(url) {
+  return blockedLinks.has(url) || restrictedArchives.some(prefix => url.startsWith(prefix));
+}
