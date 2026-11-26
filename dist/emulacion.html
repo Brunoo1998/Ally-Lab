@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Emulación · Ally Lab</title><link rel="icon" href="./assets/ally-mark.svg">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./emulacion.css?v=65">
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./lab.css?v=61"><link rel="stylesheet" href="./dashboard.css?v=47"><link rel="stylesheet" href="./emulacion.css?v=66">
 <script type="module" src="./lab-controls.js?v=62"></script><script type="module" src="./emulacion.js?v=65"></script></head>
 <body class="emulation"><a class="skip" href="#contenido">Saltar al contenido</a>
 <header class="mast"><div class="wrap bar"><a class="brand" href="./index.html"><img src="./assets/ally-mark.svg" width="40" height="40" alt=""><span>ALLY <em>LAB</em></span></a><div id="pad-status" class="pad-status" hidden>
@@ -13,11 +13,27 @@
 </ul>
 </div><nav aria-label="Principal"><a href="./index.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#games"></use></svg><span>Juegos</span></a><a href="./index.html#juego/world-of-warcraft-forever-rog-xbox-ally-x-game-settings?sim=1"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#fps"></use></svg><span>Simulador FPS</span></a><a href="./ports.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#ports"></use></svg><span>Ports y Recompilaciones</span></a><a href="./news.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#news"></use></svg><span>Noticias</span></a><a href="./gratis.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#free"></use></svg><span>Juegos gratis</span></a><a href="./emulacion.html" class="active" aria-current="page"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg#games"></use></svg><span>Emulación</span></a></nav><span class="model-tag">Z2 EXTREME</span></div></header>
 <main class="wrap" id="contenido" tabindex="-1">
-<header class="port-heading"><h1>Emulación</h1><p>Juegos con descarga oficial para emular en Windows.</p></header>
+<header class="port-heading"><h1>Emulación</h1><p>Juegos con descarga oficial para emular en Windows.</p><a class="btn" id="emu-source-jump" href="#descargamasiva">Ver listas de Arley4d</a></header>
 <div id="emu-browser">
 <div class="tools emu-tools"><label for="emu-search">Buscar en todas las consolas</label><input id="emu-search" type="search" placeholder="Título o consola" autocomplete="off"><details id="emu-keys"><summary>Escribir con el mando</summary><div class="emu-keys"></div></details></div>
 <section aria-labelledby="emu-consoles-title"><h2 id="emu-consoles-title">Consolas</h2><div id="emu-consoles" class="emu-grid"></div></section>
 <section id="emu-results" aria-labelledby="emu-results-title" hidden><div class="emu-row"><h2 id="emu-results-title" tabindex="-1">Juegos</h2><button id="emu-reset" class="btn" type="button">Todas las consolas</button></div><p id="emu-count" role="status"></p><div id="emu-games" class="emu-grid"></div><nav class="pager emu-row" id="emu-pages" aria-label="Páginas de juegos" hidden><button class="btn" id="emu-prev" type="button">Anterior</button><span id="emu-page"></span><button class="btn" id="emu-next" type="button">Siguiente</button></nav></section>
+<section id="descargamasiva" class="box emu-source" aria-labelledby="emu-source-title">
+<h2 id="emu-source-title">Listas de Arley4d</h2>
+<p>37.173 entradas de archivo en DescargaMasiva, incluidas distintas ediciones de un mismo juego. Los enlaces llevan a las listas originales en GitHub. La disponibilidad y el permiso de distribución de cada archivo están pendientes de verificar.</p>
+<table><thead><tr><th scope="col">Consola</th><th scope="col">Entradas</th><th scope="col">Lista original</th></tr></thead>
+<tbody>
+<tr><th scope="row">NES</th><td>4.695</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/nes.jsonl" aria-label="Lista de NES en GitHub">nes.jsonl</a></td></tr>
+<tr><th scope="row">Super Nintendo</th><td>8.673</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/snes.jsonl" aria-label="Lista de Super Nintendo en GitHub">snes.jsonl</a></td></tr>
+<tr><th scope="row">Nintendo 64</th><td>947</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/n64.jsonl" aria-label="Lista de Nintendo 64 en GitHub">n64.jsonl</a></td></tr>
+<tr><th scope="row">Game Boy</th><td>1.041</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/gb.jsonl" aria-label="Lista de Game Boy en GitHub">gb.jsonl</a></td></tr>
+<tr><th scope="row">Game Boy Color</th><td>495</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/gbc.jsonl" aria-label="Lista de Game Boy Color en GitHub">gbc.jsonl</a></td></tr>
+<tr><th scope="row">Game Boy Advance</th><td>1.666</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/gba.jsonl" aria-label="Lista de Game Boy Advance en GitHub">gba.jsonl</a></td></tr>
+<tr><th scope="row">PlayStation</th><td>10.622</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/psx.jsonl" aria-label="Lista de PlayStation en GitHub">psx.jsonl</a></td></tr>
+<tr><th scope="row">PlayStation 2</th><td>7.543</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/ps2.jsonl" aria-label="Lista de PlayStation 2 en GitHub">ps2.jsonl</a></td></tr>
+<tr><th scope="row">Dreamcast</th><td>1.491</td><td><a href="https://github.com/Arley4d/DescargaMasiva/blob/main/dreamcast.jsonl" aria-label="Lista de Dreamcast en GitHub">dreamcast.jsonl</a></td></tr>
+</tbody></table>
+</section>
 <p id="emu-status" role="status">Cargando catálogo…</p>
 </div>
 <article id="details" class="emu-detail" hidden><a class="btn" href="#catalogo">Volver al catálogo</a><div id="emu-detail"></div></article>

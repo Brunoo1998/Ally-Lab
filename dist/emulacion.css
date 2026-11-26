@@ -22,3 +22,9 @@
 .emu-keys .btn { min-width:2.75rem; }
 .emu-tools summary { cursor:pointer; min-height:44px; align-content:center; }
 .emu-download { display:inline-flex; align-items:center; margin:0 .8rem .8rem; padding:0 .65rem; }
+
+.emu-source { margin-block:1.5rem; padding:clamp(.65rem,2vw,1.25rem); scroll-margin-top:10rem; }
+.emu-source table { width:100%; border-collapse:collapse; }
+.emu-source th,.emu-source td { padding:.55rem .25rem; text-align:left; border-bottom:1px solid var(--line); }
+.emu-source td:nth-child(2) { font-variant-numeric:tabular-nums; }
+.emu-source a { display:inline-flex; align-items:center; min-height:44px; color:var(--lime); overflow-wrap:anywhere; }
