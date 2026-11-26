@@ -15,6 +15,7 @@ const limit = 48;
 let games = [];
 let page = 0;
 let request;
+const additionalCoverBase = "https://images.launchbox-app.com/";
 
 async function recoverCover(image) {
   if (image.src.startsWith('https://raw.githubusercontent.com/')) {
@@ -51,18 +52,26 @@ function render() {
     cover.className = 'retro-cover';
     cover.setAttribute('aria-hidden', 'true');
     cover.textContent = 'Sin carátula';
+    const info = document.createElement('div');
+    info.className = 'retro-game-info';
+    info.append(title);
     if (game.cover) {
       const image = document.createElement('img');
       image.alt = '';
       image.loading = 'lazy';
       image.decoding = 'async';
       image.addEventListener('error', () => recoverCover(image), {once:true});
+      if (game.approximateCover) {
+        image.addEventListener('load', () => {
+          const label = document.createElement('small');
+          label.className = 'retro-cover-label';
+          label.textContent = 'Carátula aproximada';
+          title.append(label);
+        }, {once:true});
+      }
       image.src = game.cover;
       cover.append(image);
     }
-    const info = document.createElement('div');
-    info.className = 'retro-game-info';
-    info.append(title);
     row.append(cover, info);
     for (const [index, {u}] of game.urls.entries()) {
       const link = document.createElement('a');
@@ -83,7 +92,7 @@ function render() {
 
 async function loadCoverIndex(key, signal) {
   try {
-    const response = await fetch('./datos/retro-caratulas/' + key + '.json.gz', {signal});
+    const response = await fetch('./datos/retro-caratulas/' + key + '.json.gz?v=81', {signal});
     if (!response.ok) return ['', {}];
     const data = new Uint8Array(await response.arrayBuffer());
     if (data[0] !== 31 || data[1] !== 139) return JSON.parse(new TextDecoder().decode(data));
@@ -115,7 +124,7 @@ async function loadConsole(key) {
     const coverIndex = loadCoverIndex(key, current.signal);
     const response = await fetch('https://raw.githubusercontent.com/Arley4d/DescargaMasiva/main/' + key + '.jsonl', {signal: current.signal});
     if (!response.ok) throw new Error('Catálogo no disponible');
-    const [data, [coverBase, covers]] = await Promise.all([response.text(), coverIndex]);
+    const [data, [coverBase, covers, extraCovers = {}]] = await Promise.all([response.text(), coverIndex]);
     if (request !== current) return;
     for (const line of data.split(/\r?\n/)) {
       if (!line.trim()) continue;
@@ -124,8 +133,10 @@ async function loadConsole(key) {
       const urls = record.urls.filter(entry => typeof entry?.u === 'string' && /^https?:\/\//i.test(entry.u));
       if (!urls.length) continue;
       const image = Object.hasOwn(covers, record.n) ? covers[record.n] : '';
-      const cover = image && (coverBase ? coverBase + encodeURIComponent(image) : image);
-      games.push({n: record.n, cover, urls: urls.filter(({u}) => !isBlockedLink(u))});
+      const [extraImage, approximateCover] = Object.hasOwn(extraCovers, record.n) ? extraCovers[record.n] : [];
+      const cover = image ? (coverBase ? coverBase + encodeURIComponent(image) : image)
+        : extraImage ? additionalCoverBase + encodeURIComponent(extraImage) : '';
+      games.push({n: record.n, cover, approximateCover, urls: urls.filter(({u}) => !isBlockedLink(u))});
     }
     games.sort((a, b) => a.n.localeCompare(b.n, 'es', {numeric: true}));
     cache.set(key, games);

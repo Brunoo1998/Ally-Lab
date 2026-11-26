@@ -33,6 +33,7 @@
 .retro-cover { display:grid; place-items:center; position:relative; aspect-ratio:1; padding:.3rem; background:#10131c; border-radius:6px; text-align:center; color:var(--muted); font-size:.65rem; }
 .retro-cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#10131c; border-radius:inherit; }
 .retro-game-info { display:flex; flex-wrap:wrap; align-items:center; gap:0 .75rem; }
+.retro-cover-label { display:block; color:var(--muted); font-size:.68rem; font-weight:400; }
 .retro-game-info strong { flex:1 1 14rem; min-width:0; }
 #masiva-consoles { grid-template-columns:repeat(3,minmax(0,1fr)); }
 #masiva-consoles[hidden] { display:none; }
