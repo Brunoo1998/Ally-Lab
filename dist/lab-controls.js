@@ -7,7 +7,12 @@ function move(dx,dy){
  const items=controls(), active=document.activeElement;
  if(!items.includes(active)){(items.find(e=>e.matches('.mast .active'))||items[0])?.focus();return}
  const search=document.querySelector('#q');
- const firstCard=document.querySelector('#grid > .card');
+ const firstCard=items.find(e=>e.matches('#grid > .card'));
+ if(dx===0 && dy>0 && active===search && firstCard){
+  firstCard.focus({preventScroll:true});
+  firstCard.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+  return;
+ }
  if(dx===0 && dy<0 && search && firstCard && active.matches('#grid > .card') &&
     Math.abs(active.getBoundingClientRect().top-firstCard.getBoundingClientRect().top)<2 &&
     items.includes(search)){
@@ -31,16 +36,7 @@ let held='',next=0,timer,editing;
 
 function activateSearch(field){
  field.focus();
- const virtualKeyboard=navigator.virtualKeyboard;
- if(!virtualKeyboard?.show || !navigator.userActivation?.hasBeenActive)return;
- const previousPolicy=field.getAttribute('virtualkeyboardpolicy');
- field.setAttribute('virtualkeyboardpolicy','manual');
- try{
-  virtualKeyboard.show();
- }finally{
-  if(previousPolicy===null)field.removeAttribute('virtualkeyboardpolicy');
-  else field.setAttribute('virtualkeyboardpolicy',previousPolicy);
- }
+ navigator.virtualKeyboard?.show();
 }
 
 function changeOption(select,step){
@@ -61,15 +57,15 @@ function scan(){
  const {buttons,axes}=pad;
  const keys=Object.keys(directions), horizontal=axes[0]||0,vertical=axes[1]||0;
  const arrow=keys.find(k=>buttons[k]?.pressed)||(Math.max(Math.abs(horizontal),Math.abs(vertical))>.58?(Math.abs(horizontal)>Math.abs(vertical)?(horizontal<0?'14':'15'):(vertical<0?'12':'13')):'');
- const key=arrow|| (buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':'');
+ const key=buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':arrow;
  if(key){
   if(indicator)indicator.hidden=false;
-  if(key!==held||(arrow&&performance.now()>=next)){
+  if(key!==held||(key===arrow&&performance.now()>=next)){
    document.documentElement.classList.add('pad-navigation');
    next=performance.now()+(key===held?130:340);
    if(editing!==document.activeElement)editing=undefined;
-   if(arrow&&editing)changeOption(editing,['12','14'].includes(arrow)?-1:1);
-   else if(arrow)move(...directions[arrow]);
+   if(key===arrow&&editing)changeOption(editing,['12','14'].includes(arrow)?-1:1);
+   else if(key===arrow)move(...directions[arrow]);
    else if(key==='Y'){
     const field=controls().find(el=>el.matches('input[type=search]'));
     if(field)activateSearch(field);
@@ -86,6 +82,10 @@ function scan(){
  }
  held=key;
 }
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Enter'||event.repeat||event.isComposing||!event.target.matches?.('input[type=search]'))return;
+ activateSearch(event.target);
+});
 document.addEventListener('pointerdown',()=>document.documentElement.classList.remove('pad-navigation'));
 window.addEventListener('gamepadconnected',()=>{if(!timer)timer=setInterval(scan,42)});
 window.addEventListener('gamepaddisconnected',()=>{if(!Array.from(navigator.getGamepads?.()||[]).some(Boolean)){clearInterval(timer);timer=undefined;held='';editing=undefined;if(indicator)indicator.hidden=true}});
