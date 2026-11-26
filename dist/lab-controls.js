@@ -3,14 +3,26 @@ const focusable='a[href],button:not([disabled]),select:not([disabled]),input:not
 function controls(){
  return [...document.querySelectorAll(focusable)].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility==='visible'&&e.tabIndex>=0);
 }
+function focusControl(control){
+ control.focus({preventScroll:true});
+ control.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+}
 function move(dx,dy){
  const items=controls(), active=document.activeElement;
  if(!items.includes(active)){(items.find(e=>e.matches('.mast .active'))||items[0])?.focus();return}
  const search=document.querySelector('#q');
+ const order=document.querySelector('#orden');
+ if(dy===0 && dx>0 && active===search && items.includes(order)){
+  focusControl(order);
+  return;
+ }
+ if(dy===0 && dx<0 && active===order && items.includes(search)){
+  focusControl(search);
+  return;
+ }
  const firstCard=items.find(e=>e.matches('#grid > .card'));
  if(dx===0 && dy>0 && active===search && firstCard){
-  firstCard.focus({preventScroll:true});
-  firstCard.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+  focusControl(firstCard);
   return;
  }
  if(dx===0 && dy<0 && search && firstCard && active.matches('#grid > .card') &&
@@ -29,18 +41,25 @@ function move(dx,dy){
   const score=forward+across*2.8;
   if(score<best){best=score;target=e}
  }
- if(target){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'})}
+ if(target)focusControl(target);
 }
 const indicator=document.getElementById('pad-status');
 const statusLabel=indicator?.querySelector('.pad-status-label');
 function connectedPads(){
  return Array.from(navigator.getGamepads?.()||[]).filter(p=>p?.mapping==='standard');
 }
+function isAlly(pad){
+ return /\b(?:rog|asus)\b.*\bally\b/i.test(pad.id);
+}
 function updatePadStatus(){
  const pads=connectedPads();
- if(indicator)indicator.hidden=pads.length===0;
+ const ally=pads.some(isAlly);
+ if(indicator){
+  indicator.hidden=pads.length===0;
+  indicator.classList.toggle('pad-ally',ally);
+ }
  if(statusLabel){
-  const label=pads.some(p=>/\b(?:rog|asus)\b.*\bally\b/i.test(p.id))?'ROG Ally conectada':'Mando conectado';
+  const label=ally?'ROG Ally conectada':'Mando conectado';
   if(statusLabel.textContent!==label)statusLabel.textContent=label;
  }
  return pads.length>0;
@@ -52,39 +71,87 @@ function activateSearch(field){
  navigator.virtualKeyboard?.show();
 }
 
-function changeOption(select,step){
- if(select.matches('input[type=range]')){
-  if(step<0)select.stepDown();else select.stepUp();
-  select.dispatchEvent(new Event('input',{bubbles:true}));return;
+let picker;
+function openOptions(select){
+ const dialog=document.createElement('dialog');
+ dialog.className='pad-options';
+ const title=document.createElement('h2');
+ title.id='pad-options-title';
+ title.textContent=select.getAttribute('aria-label')||select.labels[0]?.firstChild?.textContent.trim()||'Seleccionar opción';
+ dialog.setAttribute('aria-labelledby',title.id);
+ dialog.append(title);
+ let selectedButton;
+ for(const option of select.options){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='btn';
+  button.textContent=option.label;
+  button.disabled=option.matches(':disabled');
+  button.setAttribute('aria-pressed',String(option.selected));
+  if(option.selected&&!button.disabled)selectedButton=button;
+  button.addEventListener('click',()=>{
+   if(select.selectedIndex!==option.index){
+    select.selectedIndex=option.index;
+    select.dispatchEvent(new Event('input',{bubbles:true}));
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+   }
+   dialog.close();
+  });
+  dialog.append(button);
  }
- const options=[...select.options];
- for(let i=select.selectedIndex+step;i>=0&&i<options.length;i+=step){
-  if(options[i].disabled)continue;
-  select.selectedIndex=i;select.dispatchEvent(new Event('change',{bubbles:true}));return;
+ dialog.addEventListener('close',()=>{
+  if(picker===dialog)picker=undefined;
+  dialog.remove();
+  if(controls().includes(select))focusControl(select);
+ },{once:true});
+ document.body.append(dialog);
+ dialog.showModal();
+ picker=dialog;
+ (selectedButton||dialog.querySelector('button:not([disabled])'))?.focus();
+}
+
+function stepRange(range,step){
+ if(step<0)range.stepDown();else range.stepUp();
+ range.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function navigateOptions(key){
+ if(key==='B')picker.close();
+ else if(key==='A')document.activeElement?.click();
+ else if(key==='12'||key==='13'){
+  const buttons=[...picker.querySelectorAll('button:not([disabled])')];
+  const index=buttons.indexOf(document.activeElement);
+  buttons[Math.max(0,Math.min(buttons.length-1,index+(key==='12'?-1:1)))]?.focus();
  }
 }
+
 function scan(){
  if(document.hidden){held='';return}
- const pad=connectedPads()[0];
+ const pads=connectedPads();
+ const pad=pads.find(isAlly)||pads[0];
  if(!pad){held='';return}
  const {buttons,axes}=pad;
  const keys=Object.keys(directions), horizontal=axes[0]||0,vertical=axes[1]||0;
  const arrow=keys.find(k=>buttons[k]?.pressed)||(Math.max(Math.abs(horizontal),Math.abs(vertical))>.58?(Math.abs(horizontal)>Math.abs(vertical)?(horizontal<0?'14':'15'):(vertical<0?'12':'13')):'');
- const key=buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':arrow;
+ const key=buttons[0]?.pressed?'A':buttons[1]?.pressed?'B':buttons[3]?.pressed?'Y':buttons[2]?.pressed?'X':arrow;
  if(key){
   if(key!==held||(key===arrow&&performance.now()>=next)){
    document.documentElement.classList.add('pad-navigation');
    next=performance.now()+(key===held?130:340);
    if(editing!==document.activeElement)editing=undefined;
-   if(key===arrow&&editing)changeOption(editing,['12','14'].includes(arrow)?-1:1);
+   if(picker?.open)navigateOptions(key);
+   else if(key===arrow&&editing)stepRange(editing,['12','14'].includes(arrow)?-1:1);
    else if(key===arrow)move(...directions[arrow]);
-   else if(key==='Y'){
+   else if(key==='X'){
+    const order=controls().find(el=>el.id==='orden');
+    if(order)openOptions(order);
+   }else if(key==='Y'){
     const field=controls().find(el=>el.matches('input[type=search]'));
     if(field)activateSearch(field);
    }else if(key==='A'){
     const el=document.activeElement;
     if(el?.matches('input[type=search],input[type=text],textarea'))activateSearch(el);
-    else if(el?.matches('select,input[type=range]'))editing=editing?undefined:el;
+    else if(el?.matches('select:not([multiple])'))openOptions(el);
+    else if(el?.matches('input[type=range]'))editing=editing?undefined:el;
     else if(el?.matches(focusable))el.click();
    }else if(key==='B'){
     if(editing)editing=undefined;
