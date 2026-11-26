@@ -36,7 +36,7 @@ async function get(url){
 function status(offer,t){
  if(t>=Date.parse(offer.end))return offer.seenActive?'history':'expired';
  if(t<Date.parse(offer.start))return 'upcoming';
- return offer.seenActive?'active':'awaiting';
+ return 'active';
 }
 function countdown(end,t){
  const mins=Math.max(0,Math.ceil((end-t)/60000));
@@ -83,7 +83,7 @@ function render(){
  const active=offers.filter(o=>status(o,t)==='active');
  $('free-count').textContent=active.length+' '+(kind==='trial'?(active.length===1?'prueba disponible':'pruebas disponibles'):(active.length===1?'juego disponible':'juegos disponibles'));
  const stale=data.stale||!data.checked||t-Date.parse(data.checked)>26*hour||(kind==='trial'&&data.trialsStale);
- $('free-status').textContent=(data.checked?'Última comprobación: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'');
+ $('free-status').textContent=(data.checked?'Último intento de actualización: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'');
  $('free-description').textContent=kind==='trial'?'Prueba juegos completos o eventos gratuitos por tiempo limitado. Cuando termine la promoción, el juego dejará de ser gratuito.':'Reclama estos juegos antes de que acabe la promoción y consérvalos en tu biblioteca.';
  const results=offers.filter(o=>{
   const s=status(o,t), ending=s==='active'&&Date.parse(o.end)-t<=24*hour;

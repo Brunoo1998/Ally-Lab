@@ -146,21 +146,29 @@ def collect_trials(now):
     return list(found.values())
 
 def refresh(previous, now):
-    found = collect(read(GP), read(EPIC), now)
     old = {item['id']:item for item in previous.get('offers', [])}
+    found = []
+    stale = False
     trials_stale = False
+    # Las dos tiendas se revisan de forma independiente. Si una falla, la otra sigue.
+    try:
+        found.extend(collect(read(GP), read(EPIC), now))
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(f'Regalos de Epic sin actualizar: {exc}')
+        stale = True
+        found.extend(i for i in old.values() if i.get('kind', 'keep') == 'keep' and parsed(i['end']) > now)
     try:
         found.extend(collect_trials(now))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f'Pruebas temporales sin verificar: {exc}')
         trials_stale = True
+        found.extend(i for i in old.values() if i.get('kind') == 'trial' and parsed(i['end']) > now)
     offers = [dict(item, added=old.get(item['id'],{}).get('added', now.isoformat())) for item in found]
-    # Solo promociones observadas como activas entran en el historial.
     for item in offers:
         item['seenActive'] = parsed(item['start']) <= now or old.get(item['id'],{}).get('seenActive',False)
     ids = {item['id'] for item in offers}
     history = sorted((i for k,i in old.items() if k not in ids and i.get('seenActive') and parsed(i['end'])<=now),key=lambda i:i['end'],reverse=True)
-    return dict(checked=now.isoformat(),stale=False,trialsStale=trials_stale,offers=offers+history[:100])
+    return dict(checked=now.isoformat(),stale=stale,trialsStale=trials_stale,offers=offers+history[:100])
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
