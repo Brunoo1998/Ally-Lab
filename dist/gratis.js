@@ -43,11 +43,13 @@ function countdown(end,t){
  return [days&&days+' d',hours&&hours+' h',rest+' min'].filter(Boolean).join(' ');
 }
 function card(offer,state,t,soon){
- const item=add(grid,'article',null,'free-card');
- if(safe(offer.cover)){const img=add(item,'img',null,'free-cover');img.src=offer.cover;img.alt='';img.loading='lazy'}
- const box=add(item,'div',null,'free-copy');
- add(box,'p',offer.platform+(soon?' · Termina pronto':state==='active'&&t-Date.parse(offer.added)<24*hour?' · Nuevo':''),'free-badge');
- add(box,'h2',offer.title);
+ const item=add(grid,'article',null,'card free-card');
+ const cover=add(item,'div',null,'cover free-cover');
+ if(safe(offer.cover)){const img=add(cover,'img');img.src=offer.cover;img.alt='';img.loading='lazy'}
+ else add(cover,'span',offer.title.slice(0,2).toUpperCase());
+ const box=add(item,'div',null,'card-body free-copy');
+ add(box,'p',offer.platform+(soon?' · Termina pronto':state==='active'&&t-Date.parse(offer.added)<24*hour?' · Nuevo':''),'card-meta free-badge');
+ add(box,'h3',offer.title);
  if(offer.description&&offer.description!==offer.title)add(box,'p',offer.description);
  add(box,'p',(offer.genre||'Género sin confirmar')+' · '+(offer.rating!=null?offer.rating+'/5':'Valoración sin confirmar'),'free-muted');
  const prices=add(box,'div',null,'free-prices');add(prices,'del',price.format(offer.original));add(prices,'strong',price.format(0));
@@ -65,13 +67,8 @@ function card(offer,state,t,soon){
   });
  }
  const game=games.get(fold(offer.title));
- if(game){
-  if(game.fps)add(box,'p','Consulta los FPS de referencia y el intervalo estimado en el simulador.','free-muted');
-  link(box,'Abrir simulador FPS','./index.html#juego/'+encodeURIComponent(game.id)+'?sim=1');
- }else add(box,'p','Rendimiento en Ally X sin datos verificados.','free-muted');
- if(state==='active'&&safe(offer.url))link(box,'Conseguir gratis',offer.url,'btn');
- else if(safe(offer.url))link(box,'Ver ficha oficial',offer.url);
- if(safe(offer.source))link(box,'Ficha en GamerPower',offer.source);
+ if(!game?.fps)add(box,'p','Rendimiento en Ally X sin datos verificados.','free-muted');
+ if(safe(offer.url))link(box,state==='active'?'Conseguir gratis':'Ver ficha oficial',offer.url,'btn');
 }
 function render(){
  if(!data)return;
