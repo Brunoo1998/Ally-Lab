@@ -29,8 +29,11 @@
 .emu-source td:nth-child(2) { font-variant-numeric:tabular-nums; }
 .emu-source a { display:inline-flex; align-items:center; min-height:44px; color:var(--lime); overflow-wrap:anywhere; }
 .masiva-games { list-style:none; padding:0; }
-.masiva-games li { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem 1rem; border-bottom:1px solid var(--line); padding:.3rem 0; overflow-wrap:anywhere; }
-.masiva-games strong { flex:1 1 14rem; min-width:0; }
+.masiva-games li { display:grid; grid-template-columns:4.75rem minmax(0,1fr); align-items:center; gap:.75rem; border-bottom:1px solid var(--line); padding:.5rem 0; overflow-wrap:anywhere; }
+.retro-cover { display:grid; place-items:center; position:relative; aspect-ratio:1; padding:.3rem; background:#10131c; border-radius:6px; text-align:center; color:var(--muted); font-size:.65rem; }
+.retro-cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#10131c; border-radius:inherit; }
+.retro-game-info { display:flex; flex-wrap:wrap; align-items:center; gap:0 .75rem; }
+.retro-game-info strong { flex:1 1 14rem; min-width:0; }
 #masiva-consoles { grid-template-columns:repeat(3,minmax(0,1fr)); }
 #masiva-consoles[hidden] { display:none; }
 #masiva-consoles .emu-card { padding:1rem; }
