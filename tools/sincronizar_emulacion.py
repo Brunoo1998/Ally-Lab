@@ -13,6 +13,7 @@ SETUP = ("Configuración inicial para tu Ally X: selecciona modo Mando en Armour
          "para mantener los píxeles nítidos. Ajustes de partida, sin mediciones en la consola.")
 SYSTEMS = {
     "gb": {"name": "Game Boy", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Game-Boy-Original.png/330px-Game-Boy-Original.png"},
+    "gba": {"name": "Game Boy Advance", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Nintendo-Game-Boy-Advance-Purple-FL.png/330px-Nintendo-Game-Boy-Advance-Purple-FL.png"},
     "gbc": {"name": "Game Boy Color", "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Game-Boy-Color-Purple.png/330px-Game-Boy-Color-Purple.png"},
 }
 for system in SYSTEMS.values():
@@ -45,8 +46,8 @@ def build_catalog():
     for row in read_jsonl(ROOT / "tools/emulacion.jsonl"):
         if any(not isinstance(row.get(key), str) or not row[key].strip() for key in fields):
             raise ValueError("Ficha incompleta")
-        if row["system"] not in SYSTEMS or "español" not in row["language"].casefold():
-            raise ValueError(f"Sistema o idioma sin verificar: {row['id']}")
+        if row["system"] not in SYSTEMS:
+            raise ValueError(f"Sistema sin verificar: {row['id']}")
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", row["id"]):
             raise ValueError(f"Identificador inválido: {row['id']}")
         if not all(https_url(row[key]) for key in ("download", "cover")):

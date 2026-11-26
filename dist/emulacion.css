@@ -21,3 +21,4 @@
 .emu-keys { display:flex; flex-wrap:wrap; gap:.35rem; padding-top:.6rem; }
 .emu-keys .btn { min-width:2.75rem; }
 .emu-tools summary { cursor:pointer; min-height:44px; align-content:center; }
+.emu-download { display:inline-flex; align-items:center; margin:0 .8rem .8rem; padding:0 .65rem; }

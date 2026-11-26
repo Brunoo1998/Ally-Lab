@@ -25,25 +25,30 @@ function artwork(url) {
 
 function showResults() {
   const query = normalize(search.value.trim());
-  results.hidden = !system && !query;
-  if (results.hidden) return;
+  results.hidden = false;
   const matches = catalog.games.filter(game => {
     const name = catalog.systems[game.system].name;
-    return (query || system === game.system) &&
+    return (query || !system || system === game.system) &&
       (!query || normalize(game.title + ' ' + name).includes(query));
   });
   const pages = Math.max(1, Math.ceil(matches.length / pageSize));
   page = Math.min(page, pages);
-  heading.textContent = query ? 'Resultados de búsqueda' : catalog.systems[system].name;
+  heading.textContent = query ? 'Resultados de búsqueda' : (system ? catalog.systems[system].name : 'Todos los juegos');
+  byId('emu-reset').hidden = !query && !system;
   byId('emu-count').textContent = matches.length ? `${matches.length} ${matches.length === 1 ? "juego" : "juegos"}` : "No se encontraron juegos.";
   byId('emu-games').replaceChildren(...matches.slice((page - 1) * pageSize, page * pageSize).map(game => {
-    const link = element('a', '', 'card emu-card');
+    const card = element('article', '', 'card');
+    const link = element('a', '', 'emu-card');
     link.href = '#juego/' + game.id;
     link.id = 'emu-game-' + game.id;
     link.append(artwork(game.cover), element('strong', game.title),
       element('span', catalog.systems[game.system].name + ' · ' + game.edition));
     link.addEventListener('click', () => { lastCard = link.id; });
-    return link;
+    const download = element('a', 'Descarga oficial', 'btn emu-download');
+    download.href = game.download;
+    download.setAttribute('aria-label', 'Descarga oficial de ' + game.title);
+    card.append(link, download);
+    return card;
   }));
   byId('emu-pages').hidden = pages === 1;
   byId('emu-prev').disabled = page === 1;
@@ -83,7 +88,7 @@ function renderRoute() {
 }
 
 async function start() {
-  const response = await fetch('./datos/emulacion.json');
+  const response = await fetch('./datos/emulacion.json?v=65');
   if (!response.ok) throw new Error('No se pudo cargar el catálogo');
   catalog = await response.json();
   for (const [id, platform] of Object.entries(catalog.systems)) {
@@ -120,6 +125,7 @@ async function start() {
   }
   window.addEventListener('hashchange', renderRoute);
   byId('emu-status').hidden = true;
+  showResults();
   renderRoute();
 }
 start().catch(() => {

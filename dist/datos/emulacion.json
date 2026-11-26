@@ -7,6 +7,13 @@
       "emulatorUrl": "https://mgba.io/downloads.html",
       "setup": "Configuración inicial para tu Ally X: selecciona modo Mando en Armoury Crate, configura la cruceta y botones en mGBA para Windows x64, y usa escalado entero para mantener los píxeles nítidos. Ajustes de partida, sin mediciones en la consola."
     },
+    "gba": {
+      "name": "Game Boy Advance",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Nintendo-Game-Boy-Advance-Purple-FL.png/330px-Nintendo-Game-Boy-Advance-Purple-FL.png",
+      "emulator": "mGBA",
+      "emulatorUrl": "https://mgba.io/downloads.html",
+      "setup": "Configuración inicial para tu Ally X: selecciona modo Mando en Armoury Crate, configura la cruceta y botones en mGBA para Windows x64, y usa escalado entero para mantener los píxeles nítidos. Ajustes de partida, sin mediciones en la consola."
+    },
     "gbc": {
       "name": "Game Boy Color",
       "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Game-Boy-Color-Purple.png/330px-Game-Boy-Color-Purple.png",
@@ -16,6 +23,30 @@
     }
   },
   "games": [
+    {
+      "id": "dangan-gb",
+      "system": "gb",
+      "title": "Dangan GB",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "580 kB",
+      "format": "ZIP con ROM de Game Boy",
+      "download": "https://snorpung.itch.io/dangan-gb",
+      "cover": "https://img.itch.zone/aW1nLzE3NTA2NjQucG5n/original/nCu3iT.png",
+      "setup": "Extrae dangan v1.1.zip y abre la ROM de Game Boy. El autor también recomienda BGB en Windows."
+    },
+    {
+      "id": "deadeus",
+      "system": "gb",
+      "title": "Deadeus",
+      "edition": "Edición estándar",
+      "language": "Sin confirmar",
+      "size": "325 kB",
+      "format": "Paquete con ROM de Game Boy",
+      "download": "https://izma.itch.io/deadeus",
+      "cover": "https://img.itch.zone/aW1nLzIzNjE3OTkucG5n/original/zCEU4w.png",
+      "setup": "Elige Regular Edition. Si prefieres BGB, el autor incluye su configuración en la descarga."
+    },
     {
       "id": "fun-video-store",
       "system": "gbc",
@@ -39,6 +70,90 @@
       "download": "https://bbbbbr.itch.io/gb-wordyl",
       "cover": "https://img.itch.zone/aW1nLzE4MzkwODcxLnBuZw==/original/WrL6qW.png",
       "setup": "Descarga el ZIP GameBoy_32k_nosave, extráelo y abre la ROM con sufijo ES en mGBA. Usa la cruceta para el teclado del juego, A/B para añadir o borrar letras y START para enviar la palabra."
+    },
+    {
+      "id": "gb-dungeon",
+      "system": "gb",
+      "title": "GB_Dungeon",
+      "edition": "Prototipo",
+      "language": "Sin confirmar",
+      "size": "32 kB",
+      "format": "ROM .gb",
+      "download": "https://kininia.itch.io/gb-dungeon",
+      "cover": "https://img.itch.zone/aW1hZ2UvMzA4Mjg3LzE1MTQwMTMucG5n/original/keXV9c.png",
+      "setup": "Elige gb_Dungeon.gb en la página del autor y abre el archivo desde el emulador."
+    },
+    {
+      "id": "goodboy-galaxy",
+      "system": "gba",
+      "title": "Goodboy Galaxy",
+      "edition": "Demo 1.0.7",
+      "language": "Multidioma",
+      "size": "50 MB",
+      "format": "Paquete de ROMs de GBA",
+      "download": "https://goodboygalaxy.itch.io/goodboy-galaxy-demo",
+      "cover": "https://img.itch.zone/aW1nLzYwMzIyMTUucG5n/original/UaQibz.png",
+      "setup": "Elige Goodboy Galaxy DEMO for GBA (roms only) y abre la ROM con mGBA para Windows."
+    },
+    {
+      "id": "sixies",
+      "system": "gb",
+      "title": "Sixies",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "128 kB",
+      "format": "ROM .gb",
+      "download": "https://dskilton.itch.io/gameboy-sixies",
+      "cover": "https://img.itch.zone/aW1nLzMwMDM2OTg4LnBuZw==/original/nO3gID.png",
+      "setup": "Abre sixies-V1.00.gb y asigna también Start y Select en mGBA."
+    },
+    {
+      "id": "timebeat-32",
+      "system": "gb",
+      "title": "Timebeat 32",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "32 kB",
+      "format": "ROM .gb",
+      "download": "https://carlossss111.itch.io/timebeat",
+      "cover": "https://img.itch.zone/aW1nLzI2NjcwODk5LnBuZw==/original/qPZDYv.png",
+      "setup": "Abre Timebeat-1.1.gb. Ajusta el desfase de audio en el menú si las pulsaciones van adelantadas o retrasadas."
+    },
+    {
+      "id": "tobu-penguin",
+      "system": "gb",
+      "title": "Tobu Penguin",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "32 kB",
+      "format": "ROM .gb",
+      "download": "https://locos-de-atari.itch.io/tobu-penguin",
+      "cover": "https://img.itch.zone/aW1nLzIzODcyNjE4LmpwZWc=/original/q%2Frunm.jpeg",
+      "setup": "Abre TobuPenguin.gb. Asigna la cruceta al movimiento, A al aleteo y B a chafar."
+    },
+    {
+      "id": "tobu-tobu-girl",
+      "system": "gb",
+      "title": "Tobu Tobu Girl",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "3.8 MB",
+      "format": "Paquete con ROM de Game Boy",
+      "download": "https://tangramgames.itch.io/tobutobugirl",
+      "cover": "https://img.itch.zone/aW1hZ2UvNzg0MDgvOTA1MDI5LnBuZw==/original/XQl1mb.png",
+      "setup": "Elige el paquete Game Boy rom y abre la ROM incluida."
+    },
+    {
+      "id": "tobu-tobu-girl-deluxe",
+      "system": "gbc",
+      "title": "Tobu Tobu Girl Deluxe",
+      "edition": "Juego completo",
+      "language": "Sin confirmar",
+      "size": "256 kB",
+      "format": "ROM .gb",
+      "download": "https://tangramgames.itch.io/tobu-tobu-girl-deluxe",
+      "cover": "https://img.itch.zone/aW1nLzI2Mjg1MjcucG5n/original/8xica8.png",
+      "setup": "Elige tobudx.gb. El juego se diseñó para Game Boy Color aunque el archivo use la extensión .gb."
     }
   ]
 }
