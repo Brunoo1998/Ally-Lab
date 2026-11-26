@@ -20,6 +20,14 @@ function icon(parent,type){
  svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.classList.add('fps-icon');
  const path=document.createElementNS(ns,'path');path.setAttribute('d',glyphs[type]);svg.append(path);parent.append(svg);
 }
+function estimatedRange(result){
+ return result?.type.startsWith('Estimación')&&result.high!==null&&result.high!==result.low;
+}
+
+function headlineFPS(result){
+ return estimatedRange(result)?'≈'+formatNumber.format(Math.round(result.center)):formatFPS(result);
+}
+
 function setting(k,value,rows=[]){
  if(value==='guide'&&(k==='q'||k==='scale')){
   const preset=k==='q'&&qualityPreset(rows);
@@ -203,7 +211,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   renderComparison();
  }
  function renderPrimary(){
-  const value=formatFPS(result);
+  const value=headlineFPS(result);
   numeric.textContent=result?value:'—';
   unit.textContent=kinds[current.gen];
   const max=Math.max(120,goal,result?.center||0);
@@ -214,7 +222,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   const couldReach=result&&(result.high===null||result.high>=goal);
   headline.textContent=!result?'Sin referencia para esta selección':supportsGoal?(result.confidence==='Baja'?'El modelo sitúa la selección sobre '+goal+' FPS':'Dentro del objetivo de '+goal+' FPS'):couldReach?'Objetivo de '+goal+' FPS incierto':'Por debajo de '+goal+' FPS';
   context.textContent=!result?'Prueba una configuración documentada o consulta los ajustes de la ficha.'
-   :[result.why,result.limit==='>'?'La prueba publica un mínimo, representado como umbral.':result.high!==result.low&&result.type==='Medición publicada'?'Intervalo observado en la prueba.':'',
+   :[estimatedRange(result)?'Rango orientativo: '+formatFPS(result)+' FPS.':'',result.why,result.limit==='>'?'La prueba publica un mínimo, representado como umbral.':result.high!==result.low&&result.type==='Medición publicada'?'Intervalo observado en la prueba.':'',
       current.gen==='on'?'Incluye fotogramas generados.':current.gen==='?'?'La prueba no separa el tipo de fotogramas.':''].filter(Boolean).join(' ');
   provenance.replaceChildren();if(result)source(provenance,result.source);
   goalButtons.forEach((b,i)=>b.setAttribute('aria-pressed',String([30,60,120][i]===goal)));
@@ -238,8 +246,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   for(const [label,config,value] of [['Guardada',saved,before],['Actual',current,result]]){
    const card=add(pair,'div',null,'fps-snapshot');
    add(card,'h4',label);
-   add(card,'strong',value?formatFPS(value)+' FPS':'Datos insuficientes');
-   add(card,'p',[kinds[config.gen],value?.type,value?'Confianza '+value.confidence.toLowerCase():null].filter(Boolean).join(' · '));
+   add(card,'strong',value?headlineFPS(value)+' FPS':'Datos insuficientes');
+   add(card,'p',[estimatedRange(value)?'Rango: '+formatFPS(value)+' FPS':null,kinds[config.gen],value?.type,value?'Confianza '+value.confidence.toLowerCase():null].filter(Boolean).join(' · '));
    const list=add(card,'dl',null,'fps-value-list');
    for(const k of Object.keys(names)){
     const row=add(list,'div');add(row,'dt',names[k]);add(row,'dd',display(k,config[k],config.profile));
@@ -300,7 +308,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   if(next.profile!==current.profile)changed.unshift(model.profiles[next.profile].name);
   apply(next);
   const outcome=mode==='60'?(reliable(best)?'La referencia alcanza 60 FPS renderizados.':'Mejor alternativa disponible. No hay respaldo suficiente para garantizar 60 FPS renderizados.'):'Perfil aplicado.';
-  status.textContent=[outcome,result?formatFPS(result)+' '+kinds[current.gen]+' · Confianza '+result.confidence.toLowerCase()+'.':'Sin cifra respaldada.',
+  status.textContent=[outcome,result?headlineFPS(result)+' '+kinds[current.gen]+' · Confianza '+result.confidence.toLowerCase()+'.':'Sin cifra respaldada.',
    changed.length?'Cambios: '+changed.join(', ')+'.':'La selección ya coincide.'].join(' ');
  }
  for(const [id,label] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
