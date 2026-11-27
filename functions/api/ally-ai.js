@@ -35,6 +35,24 @@ async function clientKey(ctx,now) {
   const digest=await crypto.subtle.sign('HMAC',key,enc.encode(day+':'+ip));
   return Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
 }
+async function reserveQuota(db,key,now) {
+  const removeExpired=()=>db.prepare('DELETE FROM ally_ai_limits WHERE expires <= ?').bind(now).run();
+  try {
+    await removeExpired();
+  } catch(error) {
+    if(!/no such table:\s*(?:main\.)?ally_ai_limits\b/i.test(String(error)))throw error;
+    await db.batch([
+      db.prepare('CREATE TABLE IF NOT EXISTS ally_ai_limits (bucket TEXT PRIMARY KEY, hits INTEGER NOT NULL, expires INTEGER NOT NULL)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS ally_ai_limits_expiration ON ally_ai_limits (expires)')
+    ]);
+    await removeExpired();
+  }
+  const minuteExpiry=(Math.floor(now/60)+1)*60;
+  const dayExpiry=(Math.floor(now/86400)+1)*86400;
+  return await consume(db,key+':'+minuteExpiry,minuteExpiry,4)
+    && await consume(db,key+':'+dayExpiry,dayExpiry,20)
+    && await consume(db,'total:'+dayExpiry,dayExpiry,90);
+}
 function fallback(result) {
   if(!result.cards.length)return result.noMatch;
   if(result.direct)return 'Puedes abrir este resultado.';
@@ -98,13 +116,13 @@ export async function onRequestPost(ctx) {
     if(!decision){
       const key=await clientKey(ctx,now);
       if(!key)return json({...basic,notice:noAI,availability:'missing_rate_configuration'});
-      const minuteExpiry=(Math.floor(now/60)+1)*60;
-      const dayExpiry=(Math.floor(now/86400)+1)*86400;
-      const db=ctx.env.ALLY_AI_LIMITS;
-      await db.prepare('DELETE FROM ally_ai_limits WHERE expires <= ?').bind(now).run();
-      if(!await consume(db,key+':'+minuteExpiry,minuteExpiry,4)||
-         !await consume(db,key+':'+dayExpiry,dayExpiry,20)||
-         !await consume(db,'total:'+dayExpiry,dayExpiry,90))
+      let allowed;
+      try {
+        allowed=await reserveQuota(ctx.env.ALLY_AI_LIMITS,key,now);
+      } catch {
+        return json({...basic,notice:noAI,availability:'database_unavailable'});
+      }
+      if(!allowed)
         return json({...basic,notice:'Se ha alcanzado el límite de Ally AI. La búsqueda sigue disponible.',availability:'limited'});
       decision=await infer(ctx.env,question,result.cards);
       if(faq)faqCache.set(cacheKey,decision);
@@ -122,6 +140,6 @@ export async function onRequestPost(ctx) {
       cards.length>1&&decision.intent==='elegir'?'Hay varias coincidencias. Puedes elegir una de estas entradas.':basic.answer;
     return json({...basic,cards,answer,mode:'ai',model});
   }catch{
-    return json({...basic,notice:noAI,availability:'unavailable'});
+    return json({...basic,notice:noAI,availability:'model_unavailable'});
   }
 }

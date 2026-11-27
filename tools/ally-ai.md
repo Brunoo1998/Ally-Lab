@@ -3,7 +3,7 @@
 ## Configuración de producción
 
 1. En Cloudflare, abre **Workers & Pages → ally-lab → Settings → Bindings** y añade **Workers AI** con el nombre `AI` en producción.
-2. Crea una base **D1** en el plan gratuito. Ejecuta las sentencias de [ally-ai-limits.sql](ally-ai-limits.sql) en su consola y añade el binding **D1 database** con el nombre `ALLY_AI_LIMITS` al proyecto Pages.
+2. Crea una base **D1** en el plan gratuito. Añade el binding **D1 database** con el nombre `ALLY_AI_LIMITS` al proyecto Pages. La primera consulta que requiera IA inicializa la tabla y su índice si faltan. También puedes aplicar [ally-ai-limits.sql](ally-ai-limits.sql) en la consola D1.
 3. En **Settings → Variables and Secrets**, añade como secreto de producción `ALLY_AI_RATE_SECRET`. Usa un valor aleatorio de al menos 24 caracteres, por ejemplo la salida de `openssl rand -hex 32`.
 4. Vuelve a desplegar. Abre Ally AI y envía «Quiero jugar a Battlefield a 60 FPS». En la respuesta de red de `POST /api/ally-ai`, verifica `mode: "ai"` y `model: "@cf/zai-org/glm-4.7-flash"`. Esas propiedades se emiten únicamente tras recibir y validar una respuesta del modelo o reutilizar una respuesta previamente validada de una pregunta pública.
 
