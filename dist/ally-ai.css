@@ -66,7 +66,7 @@
 .ally-ai-progress:empty { display:none; }
 .ally-ai-sr { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
 @media(max-width:560px) {
-  .ally-ai-panel { width:calc(100vw - 1.7rem);height:min(32rem,calc(100dvh - 2rem)); }
+  .ally-ai-panel { position:fixed; inset-inline:max(.85rem,env(safe-area-inset-left)) max(.85rem,env(safe-area-inset-right)); inset-block-end:max(.85rem,env(safe-area-inset-bottom)); width:auto; height:min(32rem,calc(100dvh - 2rem)); }
   .ally-ai-large { height:calc(100dvh - 2rem); }
   .ally-ai-actions button { min-height:44px; }
 }
