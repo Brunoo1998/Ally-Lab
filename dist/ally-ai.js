@@ -2,6 +2,89 @@ import {mountMicroanimations} from './ally-microanimations.js?v=4';
 import {mountMascot} from './ally-mascot.js?v=4';
 const examples=['Quiero jugar a Battlefield a 60 FPS','Busca Super Mario World para Super Nintendo','Llévame a los juegos gratis'];
 const welcome='Soy Ally AI. Puedo buscar juegos, abrir secciones y mostrar las pruebas de rendimiento disponibles para la Xbox ROG Ally X.';
+
+// La guía es local: abrir el chat o cambiar de sección no envía peticiones a la IA.
+function pageGuide(){
+  const page=(location.pathname.split('/').pop()||'index.html').replace(/\.html$/i,'');
+  const [route,query='']=location.hash.slice(1).split('?');
+  const match=route.match(/^juego\/([a-z0-9-]{1,150})$/);
+  const simulator=page==='index'&&(route==='simulador'||(match&&new URLSearchParams(query).has('sim')));
+  const selected=simulator?document.querySelector('#simulador select[aria-label="Juego"]'):null;
+  const rawId=match?.[1]||(route==='simulador'?selected?.value:'');
+  const gameId=/^[a-z0-9-]{1,150}$/.test(rawId||'')?rawId:null;
+  const rawName=simulator?(selected?.value===gameId?selected.selectedOptions?.[0]?.textContent:''):
+    (match?document.getElementById('game-title')?.textContent:'');
+  const gameName=rawName?.trim().replace(/\s+/g,' ').slice(0,100)||'';
+  const fallback={section:'Juegos',intro:welcome,
+    actions:examples.map(question=>({label:question,question}))};
+  const action=(label,question)=>({label,question});
+
+  if(page==='gratis'){
+    const trial=document.querySelector('[data-kind="trial"][aria-pressed="true"]');
+    return {section:trial?'Pruebas temporales':'Juegos gratis',
+      intro:trial?'Estás viendo pruebas gratuitas por tiempo limitado. Puedo buscar las disponibles y sus tiendas.':'Estás en Juegos gratis. Puedo buscar regalos para conservar y distinguirlos de las pruebas temporales.',
+      actions:(trial?[
+        action('Pruebas disponibles','Muéstrame las pruebas gratuitas temporales disponibles'),
+        action('Juegos para conservar','Muéstrame los juegos gratis disponibles'),
+        action('Ofertas de Epic','Muéstrame los juegos gratis de Epic Games Store')
+      ]:[
+        action('Juegos gratis ahora','Muéstrame los juegos gratis disponibles'),
+        action('Pruebas temporales','Muéstrame las pruebas gratuitas temporales disponibles'),
+        action('Ofertas de Epic','Muéstrame los juegos gratis de Epic Games Store')
+      ])};
+  }
+  if(page==='news')return {section:'Noticias',
+    intro:'Estás en Noticias. Puedo buscar novedades de juegos, controladores y actualizaciones publicadas.',
+    actions:[
+      action('Últimas noticias','Muéstrame las últimas noticias de Ally Lab'),
+      action('Drivers y BIOS','Noticias de drivers y BIOS'),
+      action('Actualizaciones de juegos','Noticias de Battlefield 6')
+    ]};
+  if(page==='ports'){
+    const visible=document.querySelector('#details:not([hidden]) h1')?.textContent?.trim().replace(/\s+/g,' ').slice(0,100)||'';
+    return {section:'Ports y Recompilaciones',
+      intro:visible?'Estás consultando '+visible+'. Puedo buscar recompilaciones y proyectos relacionados.':'Estás en Ports y Recompilaciones. Puedo ayudarte a encontrar proyectos para PC.',
+      actions:[
+        action(visible?'Proyectos relacionados':'Proyectos de Zelda', 'Busca ports y recompilaciones de '+(visible||'Zelda')),
+        action('Nintendo Switch','Busca ports y recompilaciones de Nintendo Switch'),
+        action('Explorar ports','Muéstrame ports y recompilaciones')
+      ]};
+  }
+  if(page==='emulacion')return {section:'Retro',
+    intro:'Estás en Retro. Puedo ayudarte a buscar juegos por título y consola o abrir su catálogo.',
+    actions:[
+      action('Mario · Super Nintendo','Busca Super Mario World para Super Nintendo'),
+      action('Zelda · Nintendo 64','Busca Zelda Ocarina of Time para Nintendo 64'),
+      action('Game Boy Advance','Juegos de Game Boy Advance')
+    ]};
+  if(page==='index'&&simulator){
+    return {section:'Simulador FPS',gameId,
+      intro:gameName?'Estás en el simulador de '+gameName+'. Puedo consultar sus referencias de rendimiento y ajustes documentados.':'Estás en el Simulador FPS. Puedo ayudarte a buscar ajustes y objetivos de rendimiento.',
+      actions:gameName?[
+        action('Objetivo 60 FPS','Quiero jugar a '+gameName+' a 60 FPS'),
+        action('Ajustes a 900p','Muéstrame la configuración de '+gameName+' a 900p'),
+        action('Rendimiento documentado','Qué datos de rendimiento hay para '+gameName)
+      ]:[
+        action('Battlefield a 60 FPS','Quiero jugar a Battlefield 6 a 60 FPS'),
+        action('Buscar ajustes','Muéstrame la configuración de Cyberpunk 2077'),
+        action('Juegos gratis','Llévame a los juegos gratis')
+      ]};
+  }
+  if(page==='index'&&match){
+    return {section:'Ficha del juego',gameId,
+      intro:gameName?'Estás en la ficha de '+gameName+'. Puedo consultar sus ajustes y pruebas de rendimiento.':'Estás en una ficha de juego. Puedo ayudarte a buscar configuraciones y resultados documentados.',
+      actions:gameName?[
+        action('Ver configuración','Muéstrame la configuración de '+gameName),
+        action('Objetivo 60 FPS','Quiero jugar a '+gameName+' a 60 FPS'),
+        action('Rendimiento disponible','Qué datos de rendimiento hay para '+gameName)
+      ]:[
+        action('Buscar ajustes','Muéstrame la configuración de Cyberpunk 2077'),
+        action('Objetivo 60 FPS','Quiero jugar a Battlefield 6 a 60 FPS'),
+        action('Ver juegos gratis','Llévame a los juegos gratis')
+      ]};
+  }
+  return fallback;
+}
 function add(parent,tag,text,className){
   const node=document.createElement(tag);
   if(text)node.textContent=text;
@@ -111,17 +194,19 @@ function append(entry){
   transcript.scrollTop=transcript.scrollHeight;
 }
 function showStart(){
+  const guide=pageGuide();
   transcript.replaceChildren();
-  append({answer:welcome});
+  add(transcript,'p','Estás en · '+guide.section,'ally-ai-context');
+  append({answer:guide.intro});
   if(entries.length){entries.forEach(append);return;}
   const suggestions=add(transcript,'div',null,'ally-ai-examples');
-  examples.forEach(q=>button(suggestions,q,()=>submit(q)));
+  guide.actions.forEach(({label,question})=>button(suggestions,label,()=>submit(question)));
 }
 function toggle(){
   panel.hidden=!panel.hidden;
   trigger.hidden=!panel.hidden;
   trigger.setAttribute('aria-expanded',String(!panel.hidden));
-  if(panel.hidden)trigger.focus();else input.focus();
+  if(panel.hidden)trigger.focus();else{showStart();input.focus();}
 }
 function reset(){
   pending?.abort();pending=undefined;
@@ -136,9 +221,10 @@ async function submit(message,mode='chat'){
   if(!value||pending)return;
   const controller=new AbortController();
   pending=controller;
-  const context=[...new Set(entries.slice().reverse()
+  const currentGame=pageGuide().gameId;
+  const context=[...new Set([currentGame,...entries.slice().reverse()
     .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId)
-    .map(entry=>entry.cards[0].gameId))].slice(0,2);
+    .map(entry=>entry.cards[0].gameId)].filter(Boolean))].slice(0,2);
   const user={user:value};entries.push(user);save();append(user);
   input.value='';setBusy(true);
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
@@ -163,5 +249,13 @@ async function submit(message,mode='chat'){
 form.addEventListener('submit',e=>{e.preventDefault();void submit(input.value);});
 panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();toggle();}});
 showStart();
+// Las rutas internas usan hash; al cambiar de juego se actualiza la ayuda sin reiniciar la charla.
+const refreshContext=()=>{if(!panel.hidden)queueMicrotask(showStart);};
+window.addEventListener('hashchange',refreshContext);
+window.addEventListener('popstate',refreshContext);
+// En Juegos gratis la pestaña puede cambiar sin cambiar la URL.
+document.addEventListener('click',event=>{
+  if(!panel.hidden&&event.target.closest?.('[data-kind]'))queueMicrotask(showStart);
+});
 
 mountMicroanimations(root,trigger,mountMascot(root,trigger),modes);

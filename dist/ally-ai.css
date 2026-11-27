@@ -48,6 +48,7 @@
 .ally-ai-actions button:last-child { font-size:1.25rem;min-width:38px; }
 .ally-ai-transcript { overflow:auto;overscroll-behavior:contain;padding:.75rem;display:flex;flex-direction:column;gap:.6rem; }
 .ally-ai-transcript p { margin:0;line-height:1.45; }
+.ally-ai .ally-ai-context { color:var(--ai-muted);font-size:.76rem;letter-spacing:.02em;font-weight:650; }
 .ally-ai-user,.ally-ai-answer { border-radius:12px;padding:.65rem .75rem;overflow-wrap:anywhere;font-size:.88rem; }
 .ally-ai-user { align-self:end;background:#302347;max-width:90%; }
 .ally-ai-answer { background:#1a1829; }
