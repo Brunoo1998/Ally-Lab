@@ -45,7 +45,8 @@ async function start(){
  const lastDay=new Date(now.getFullYear(),now.getMonth(),0).getDate();
  cutoff.setDate(Math.min(now.getDate(),lastDay));
  const day=value=>[value.getFullYear(),value.getMonth()+1,value.getDate()].map((n,i)=>String(n).padStart(i?2:4,'0')).join('-');
- const news=(await json('news')).filter(n=>n.date>=day(cutoff)&&n.date<=day(now));
+ const targetId=location.hash.slice(1);
+ const news=(await json('news')).filter(n=>'noticia-'+n.id===targetId||(n.date>=day(cutoff)&&n.date<=day(now)));
  news.sort((a,b)=>b.date.localeCompare(a.date));
  const catalog=await json('catalogo');
  const games=new Map(catalog.games.map(g=>[g.id,g]));

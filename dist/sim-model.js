@@ -307,3 +307,18 @@ export function createModel(game, detail, verifiedPoints) {
   }
  };
 }
+
+// Shared by the simulator and Ally AI. Only apply choices the selected profile exposes.
+export function simulatorTarget(model, params) {
+ const index=params.get('ref');
+ const profile=params.get('profile');
+ const anchor=index!==null&&/^\d+$/.test(index)?model.anchors[Number(index)]:null;
+ const base=anchor||(profile!==null&&/^\d+$/.test(profile)?model.profiles[Number(profile)]:null)||model.initial;
+ if(!base)return null;
+ const choice=model.options(base.profile);
+ const r=Number(params.get('r')),w=Number(params.get('w'));
+ const q=params.get('q'),scale=params.get('scale'),gen=params.get('gen');
+ return {...base,r:resolutions.includes(r)?r:base.r,w:Number.isInteger(w)&&w>=7&&w<=35?w:base.w,
+  q:choice.qualities.includes(q)?q:base.q,scale:choice.scales.includes(scale)?scale:base.scale,
+  gen:choice.generation.includes(gen)?gen:base.gen};
+}

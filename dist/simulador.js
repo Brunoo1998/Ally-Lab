@@ -1,4 +1,4 @@
-import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel} from './sim-model.js?v=55';
+import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel,simulatorTarget} from './sim-model.js?v=ally-ai-2';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
 
 import {campoES,valorES} from './idioma.js?v=20261121';
@@ -323,7 +323,6 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  for(const [id,label] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
   button(buttons,label,id==='60'?'fps-optimize':'',()=>recommend(id));
  }
- const anchorParam = new URLSearchParams(location.hash.split('?')[1]).get('ref');
- const anchorIndex = anchorParam !== null && /^\d+$/.test(anchorParam) ? Number(anchorParam) : -1;
- apply(model.anchors[anchorIndex] || model.initial);
+ const params=new URLSearchParams(location.hash.split('?')[1]);
+ apply(simulatorTarget(model,params)||model.initial);
 }

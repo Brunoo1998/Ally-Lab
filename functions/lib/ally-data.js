@@ -1,4 +1,4 @@
-import {createModel, labels, scaleLabel, kinds} from '../../dist/sim-model.js';
+import {createModel, labels, scaleLabel, kinds, simulatorTarget} from '../../dist/sim-model.js';
 import {isBlockedLink} from '../../dist/retro-403.js';
 import {retroEmuladores} from '../../dist/retro-emuladores.js';
 
@@ -24,7 +24,7 @@ const pages = [
 ];
 export const fold = value => String(value ?? '').normalize('NFD').replace(/\p{M}/gu,'')
   .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-const stop = new Set('a al de del la las el los un una unos unas y o en para por con sin mi me se que quiero jugar busca buscar abre abrelo dame muestra muestrame ensename enseñame ver llevame donde esta cual cuales puedo juego juegos consola consolas mejor configuracion ajustes fps maximo rendimiento recomendado ultimas ultimo alli lab ally'.split(' '));
+const stop = new Set('dime decirme como conseguir mas subir aumentar bajar tener alcanzar puedo poner pongo usar lo seria funciona mejor config a al de del la las el los un una unos unas y o en para por con sin mi me se que quiero jugar busca buscar abre abrelo dame muestra muestrame ensename enseñame ver llevame donde esta cual cuales puedo juego juegos consola consolas mejor configuracion ajustes fps maximo rendimiento recomendado ultimas ultimo alli lab ally'.split(' '));
 const id = encodeURIComponent;
 const words = s => fold(s).split(' ').filter(w => w && !stop.has(w) && !/^\d{2,4}p?$/.test(w));
 const safe = x => typeof x === 'string' && /^(https:\/\/|\.\/assets\/)/i.test(x) ? x.replace(/^\.\//,'/') : '';
@@ -72,16 +72,43 @@ function performanceCards(game,detail,question) {
   const model=createModel(game,detail);
   const desired=Number(question.match(/\b(720|900|1080)p\b/i)?.[1]);
   const target=Number(question.match(/\b(\d{2,3})\s*fps\b/i)?.[1]);
-  const anchors=model.anchors.filter(a=>!desired||a.r===desired).slice().sort((a,b)=>
-    (target?Number(b.gen==='off'&&b.low>=target)-Number(a.gen==='off'&&a.low>=target):0)||b.low-a.low);
-  return anchors.slice(0,2).map(a=>{
-    const result=model.evaluate(a);
-    const params=new URLSearchParams({sim:'1',ref:String(model.anchors.indexOf(a))});
-    return {label:'Referencia publicada',fps:a.high&&a.high!==a.low?[a.low,a.high].join('–'):((a.limit==='>'?'≥':a.limit==='≈'?'≈':'')+a.low),
-      comparison:result?.type||'Referencia',kind:kinds[a.gen],resolution:a.r?a.r+'p':'Sin documentar',
-      quality:labels[a.q]||a.q,tdp:a.w?a.w+' W':'Sin documentar',scale:scaleLabel(a.scale),
-      generation:labels[a.gen]||'Sin documentar',url:'/#juego/'+id(game.id)+'?'+params};
-  });
+  const watt=Number(question.match(/\b([7-9]|[12]\d|3[0-5])\s*w\b/i)?.[1]);
+  const quality=Object.entries({low:'baj[oa]',medium:'medi[oa]',high:'alt[oa]',ultra:'ultra'})
+    .find(([,name])=>new RegExp('\\b'+name+'\\b','i').test(question))?.[0];
+  const fg=/\b(?:desactiv[oa]|sin)\s+(?:fg|frame generation)/i.test(question)?'off':
+    /\b(?:activ[oa]|con)\s+(?:fg|frame generation)/i.test(question)?'on':'';
+  const fsr=/\b(?:activo|activar|con)\s+fsr\b/i.test(question);
+  const exact=model.anchors.filter(a=>(!desired||a.r===desired)&&(!watt||a.w===watt)&&
+    (!quality||a.q===quality)&&(!fg||a.gen===fg)&&(!fsr||/^fsr/i.test(a.scale)));
+  const sorted=(exact.length?exact:model.anchors.length?model.anchors:model.profiles).slice().sort((a,b)=>
+    (target?Number(b.gen==='off'&&b.low>=target)-Number(a.gen==='off'&&a.low>=target):0)||(b.low||0)-(a.low||0));
+  const seen=new Set();
+  return sorted.flatMap(a=>{
+    const params=new URLSearchParams({sim:'1',profile:String(a.profile)});
+    const ref=model.anchors.indexOf(a);
+    if(ref>=0)params.set('ref',String(ref));
+    if(desired)params.set('r',desired);
+    if(watt)params.set('w',watt);
+    if(quality)params.set('q',quality);
+    if(fg)params.set('gen',fg);
+    const scale=fsr ? (/^fsr/i.test(a.scale)?a.scale:model.options(a.profile).scales.find(s=>/^fsr/i.test(s))) : '';
+    if(fsr&&!scale)return [];
+    if(scale)params.set('scale',scale);
+    const setting=simulatorTarget(model,params);
+    if(!setting||(desired&&setting.r!==desired)||(watt&&setting.w!==watt)||
+       (quality&&setting.q!==quality)||(fg&&setting.gen!==fg))return [];
+    const key=[setting.profile,setting.r,setting.w,setting.q,setting.scale,setting.gen].join('|');
+    if(seen.has(key))return [];
+    seen.add(key);
+    const result=model.evaluate(setting);
+    if(!result||(!desired&&!watt&&!quality&&!fg&&!fsr&&result.type==='Estimación por catálogo'))return [];
+    const fps=result.high!=null&&result.high!==result.low?`${result.low}–${result.high}`:
+      (result.limit==='>'?'≥':result.limit==='≈'?'≈':'')+result.low;
+    return [{fps,minimum:result.low,comparison:result.type,confidence:result.confidence,reason:result.why,
+      kind:kinds[setting.gen],resolution:setting.r?setting.r+'p':'Sin documentar',
+      quality:labels[setting.q]||setting.q,tdp:setting.w?setting.w+' W':'Sin documentar',scale:scaleLabel(setting.scale),
+      generation:labels[setting.gen]||'Sin documentar',url:'/#juego/'+id(game.id)+'?'+params}];
+  }).slice(0,2);
 }
 async function retro(ctx, key, query) {
   const url='https://raw.githubusercontent.com/Arley4d/DescargaMasiva/main/'+key+'.jsonl';
@@ -122,7 +149,14 @@ async function retro(ctx, key, query) {
       score};
   });
 }
-export async function retrieve(ctx, question) {
+export async function retrieve(ctx, question, context) {
+  const previous=Array.isArray(context)?context.slice(0,2).filter(v=>typeof v==='string'&&/^[a-z0-9-]{1,150}$/.test(v)):[];
+  const follow=fold(question);
+  const refer=/^(?:y\b|abre (?:ese|el anterior)|comparalo con el anterior|que pasa si)/.test(follow);
+  const open=/^abre (?:ese|el anterior)/.test(follow);
+  const compare=follow==='comparalo con el anterior';
+  if(refer&&(!previous.length||(compare&&previous.length<2)))
+    return {direct:true,cards:[],noMatch:'Indícame el juego o elige una ficha para que pueda continuar.'};
   const normalized=fold(question);
   const nav=normalized.match(/^(?:llevame a|abre|ir a|abre el|ver) (?:el |la |las |los )?(juegos gratis|simulador(?: de fps)?|retro|noticias(?: de ally lab)?|ports|catalogo|juegos de pc)$/);
   if(nav){
@@ -132,14 +166,15 @@ export async function retrieve(ctx, question) {
   }
   const consoleMatch=Object.entries(consoles).flatMap(([key,names])=>names.split('|').map(name=>[key,fold(name)]))
     .sort((a,b)=>b[1].length-a[1].length).find(([,name])=>(' '+normalized+' ').includes(' '+name+' '));
-  const performance=/\bfps\b|\b(?:720|900|1080)p\b|rendimiento|configuraci[oó]n/i.test(question);
+  const performance=(refer&&!open)||/\bfps\b|\b(?:720|900|1080)p\b|rendimiento|configuraci[oó]n|\b(?:tdp|fsr|calidad)\b/i.test(question);
   const news=/notici|drivers|\bbios\b/.test(normalized);
   const offers=/gratis|gratuito|oferta|promocion|temporales/.test(normalized);
   const ports=/\bport\b|\bports\b|recompil/.test(normalized);
   const retroFamilies=/mario|pokemon|zelda|metroid|sonic|donkey kong/.test(normalized);
   const retroIntent=!ports&&(consoleMatch||/retro|emulacion/.test(normalized)||retroFamilies&&!performance);
   const queryText=consoleMatch?(' '+normalized+' ').replace(' '+consoleMatch[1]+' ',' '):normalized;
-  const query=words(queryText).filter(w=>!['retro','noticias','gratis','gratuitos','ofertas','recompilaciones','recompilacion','ports','port','ultimas','temporales','emulacion'].includes(w)).slice(0,12);
+  const specs=/\bcalidad\b|\b(?:720|900|1080)p\b/i.test(question);
+  const query=words(queryText).filter(w=>!specs||!['calidad','media','medio','baja','bajo','alta','alto','ultra'].includes(w)).filter(w=>!['retro','noticias','gratis','gratuitos','ofertas','recompilaciones','recompilacion','ports','port','ultimas','temporales','emulacion'].includes(w)).slice(0,12);
   const found=[];
   let incomplete=false;
   if(retroIntent){
@@ -172,7 +207,15 @@ export async function retrieve(ctx, question) {
     const lists=await Promise.all([optional(data(ctx,'gratis')),optional(json(remote+'gratis.json')),optional(json(remote+'gratis-otras-tiendas.json'))]);
     const now=Date.now(), unique=new Map();
     for(const list of lists)for(const o of list?.offers||[])if(o.region==='ES'&&Date.parse(o.start)<=now&&Date.parse(o.end)>now)unique.set(o.id,o);
-    const selection=[...unique.values()].filter(o=>!query.length||rank(o.title,o.platform,query)>0).slice(0,6);
+    const stores=['steam','epic','gog','battle net','ubisoft','ea app'];
+    const store=stores.find(name=>(' '+normalized+' ').includes(' '+name+' '));
+    const trial=/prueba|temporal/.test(normalized);
+    const terms=query.filter(w=>!['buscame','gratuitas','pruebas','prueba','gratuita','activos','activas'].includes(w)
+      &&(!store||!store.split(' ').includes(w)));
+    const selection=[...unique.values()].filter(o=>(!store||fold(o.platform).includes(store))&&
+      (!trial||o.kind==='trial')&&(!terms.length||rank(o.title,o.platform,terms)>0)).slice(0,6);
+    if(!selection.length&&store)return {direct:true,cards:[publicCard('Juegos gratis · '+store,'/gratis?tienda='+id(store)+(trial?'&tipo=trial':''),'Sección')],
+      answer:'No hay ofertas activas de esa tienda en los datos consultados. Puedes abrir su filtro.'};
     return {cards:selection.map(o=>publicCard(o.title,'/gratis#oferta='+id(o.id)+'&tipo='+id(o.kind||'keep'),'Oferta activa',
       {description:o.platform+' · Hasta '+o.end,cover:safe(o.cover)})),incomplete:lists.slice(1).some(x=>!x),noMatch:'No he encontrado una oferta activa que coincida.'};
   }
@@ -191,7 +234,10 @@ export async function retrieve(ctx, question) {
   const exact=catalog.find(g=>fold(g.title)===normalized);
   let candidates=exact?[exact]:catalog.map(g=>[g,rank(g.title,g.id,query)]).filter(([,s])=>s>0)
     .sort((a,b)=>b[1]-a[1]).slice(0,6).map(([g])=>g);
-  const general=performance&&!query.length;
+  if(refer)candidates=(follow.startsWith('abre el anterior')?previous.slice(1,2):previous.slice(0,compare?2:1)).map(key=>catalog.find(g=>g.id===key)).filter(Boolean);
+  const general=performance&&!query.length&&!refer;
+  if(general&&!/\bfps\b/i.test(question))return {direct:true,cards:[],noMatch:'¿Para qué juego quieres esa configuración?'};
+  if(refer&&!candidates.length)return {direct:true,cards:[],noMatch:'La ficha anterior ya no está disponible en el catálogo.'};
   if(general)candidates=catalog.filter(g=>/60|[789]\d|1\d{2}/.test(String(g.fps)));
   const months=performance?await Promise.all([...new Set(candidates.map(g=>g.published.slice(0,7)))].map(m=>
     optional(cached(local(ctx,m).href,()=>data(ctx,m))))):[];
@@ -208,10 +254,11 @@ export async function retrieve(ctx, question) {
           notes:(detail.notes||[]).slice(0,2),url:'/#juego/'+id(g.id)+'?ajuste='+(profileIndex+1)};
       }
     }
-    return publicCard(g.title,'/#juego/'+id(g.id),'Juego de PC',{cover:safe(g.cover),simulator:'/#juego/'+id(g.id)+'?sim=1',
+    return publicCard(g.title,'/#juego/'+id(g.id),'Juego de PC',{cover:safe(g.cover),gameId:g.id,description:'PC · Xbox ROG Ally X',simulator:'/#juego/'+id(g.id)+'?sim=1',
       ...(performance?{readings:performanceCards(g,detail,question),documented}:{})});
-  }).filter(c=>!general||c.readings?.some(r=>r.kind!==kinds.on&&Number(r.fps.replace(/^[≥≈]/,'').split('–')[0])>=threshold));
-  return {cards:cards.slice(0,6),direct:!!exact&&!performance,performance,general,incomplete:!source,
+  }).filter(c=>!general||c.readings?.some(r=>r.kind!==kinds.on&&r.minimum>=threshold&&!r.comparison.startsWith('Estimación')));
+  return {cards:cards.slice(0,6),direct:open||!!exact&&!performance,performance,general,compare,incomplete:!source,
+    ...(refer&&/cargador|corriente|enchuf/i.test(question)?{contextNotice:'La ficha no permite calcular un cambio solo por conectar el cargador. Puedes indicar el TDP que quieres comprobar.'}:{}),
     noMatch:general?'No hay referencias suficientes para ese objetivo en los datos consultados. Puedes indicar un juego concreto.':
       'No he encontrado una ficha que coincida. Prueba con el título completo o indica la consola.'};
 }

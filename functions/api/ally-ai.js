@@ -54,11 +54,13 @@ async function reserveQuota(db,key,now) {
     && await consume(db,'total:'+dayExpiry,dayExpiry,90);
 }
 function fallback(result) {
+  if(result.answer)return result.answer;
+  if(result.contextNotice)return result.contextNotice;
   if(!result.cards.length)return result.noMatch;
   if(result.direct)return 'Puedes abrir este resultado.';
   if(result.performance){
-    if(result.cards.length>1&&!result.general)return 'Hay varias coincidencias. Elige la ficha del juego concreto.';
-    if(result.cards.some(c=>c.readings?.length))return 'Estas son las referencias disponibles para la Xbox ROG Ally X. Comprueba el tipo de FPS y las condiciones de cada prueba.';
+    if(result.cards.length>1&&!result.general&&!result.compare)return 'Hay varias coincidencias. Elige la ficha del juego concreto.';
+    if(result.cards.some(c=>c.readings?.length))return 'Estos son los resultados del simulador para la Xbox ROG Ally X. Las estimaciones son orientativas y no garantizan una cifra de FPS.';
     if(result.cards.some(c=>c.documented))return 'He encontrado una configuración documentada para la Xbox ROG Ally X. Las notas de la prueba no permiten garantizar ese objetivo de FPS.';
     return 'He encontrado la ficha, pero faltan datos suficientes para recomendar un ajuste con esos FPS o esa resolución.';
   }
@@ -100,7 +102,7 @@ export async function onRequestPost(ctx) {
   if(counter?.minute===minute&&counter.count>=15)return json({error:'Demasiadas consultas. Prueba en un minuto.'},429);
   statements.set(ip,{minute,count:counter?.minute===minute?counter.count+1:1});
   let result;
-  try{result=await retrieve(ctx,question);}catch{
+  try{result=await retrieve(ctx,question,body.context);}catch{
     return json({answer:'No se han podido consultar los datos. Puedes abrir el catálogo y buscar allí.',cards:[{title:'Catálogo de Ally Lab',url:'/#juegos',kind:'Sección'}],mode:'search',notice:noAI});
   }
   const basic={answer:fallback(result),cards:result.cards,mode:'search',

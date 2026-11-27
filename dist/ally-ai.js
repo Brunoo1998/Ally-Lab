@@ -86,8 +86,9 @@ function card(parent,value){
   if(value.description)add(item,'p',value.description);
   if(Array.isArray(value.readings))for(const r of value.readings){
     const section=add(item,'div',null,'ally-ai-reading');
-    add(section,'strong',[r.fps+' FPS',r.kind,r.comparison].filter(Boolean).join(' · '));
+    add(section,'strong',[r.fps+' FPS',r.kind,r.comparison,r.confidence?'Confianza '+r.confidence:''].filter(Boolean).join(' · '));
     add(section,'p',[r.resolution,r.quality,r.tdp,r.scale,'FG '+r.generation].filter(Boolean).join(' · '));
+    if(r.reason)add(section,'p',r.reason);
     link(section,'Abrir ajuste en el simulador',r.url);
   }
   if(value.documented&&!value.readings?.length){
@@ -97,7 +98,7 @@ function card(parent,value){
     for(const note of value.documented.notes||[])add(section,'p',note);
     link(section,'Abrir ajustes de la ficha',value.documented.url);
   }
-  link(item,value.kind==='Sección'?'Abrir sección':'Abrir en Ally Lab',value.url);
+  link(item,({'Sección':'Abrir sección','Juego de PC':'Abrir ficha','Retro':'Abrir en Retro','Noticia':'Leer noticia','Port':'Abrir proyecto','Oferta activa':'Ver oferta'})[value.kind]||'Abrir en Ally Lab',value.url);
   if(value.simulator&&!value.readings?.length)link(item,'Abrir simulador',value.simulator);
 }
 function append(entry){
@@ -133,12 +134,15 @@ async function submit(message,mode='chat'){
   if(!value||pending)return;
   const controller=new AbortController();
   pending=controller;
+  const context=[...new Set(entries.slice().reverse()
+    .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId)
+    .map(entry=>entry.cards[0].gameId))].slice(0,2);
   const user={user:value};entries.push(user);save();append(user);
   input.value='';setBusy(true);
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
   try{
     const res=await fetch('/api/ally-ai',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:value,mode}),signal:controller.signal});
+      body:JSON.stringify({message:value,mode,context}),signal:controller.signal});
     const entry=await res.json();
     if(pending!==controller)return;
     const answer=res.ok?entry:{answer:entry.error||'No se pudo completar la consulta.'};
