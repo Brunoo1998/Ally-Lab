@@ -3,114 +3,14 @@
     "id": "xbox-app-noviembre",
     "title": "Xbox anuncia una aplicación de PC más rápida",
     "date": "2026-11-05",
-    "category": "destacadas",
+    "category": "software",
     "source": "Xbox Wire",
     "url": "https://news.xbox.com/en-us/2026/11/05/a-faster-simpler-xbox-experience-is-coming-to-pc-web-and-cloud/",
     "summary": "La aplicación de Xbox para Windows que usa la consola recibe mejoras de carga y navegación. El anuncio se refiere a la aplicación de PC y no ofrece mediciones de FPS en juegos para este modelo.",
     "impact": "informativo",
     "priority": 3,
-    "scope": "pc"
-  },
-  {
-    "id": "forza-horizon-6-2026-11-02",
-    "title": "Forza Horizon 6 corrige errores gráficos en su parche de noviembre",
-    "date": "2026-11-02",
-    "category": "juegos",
-    "source": "Forza Support",
-    "url": "https://support.forza.net/hc/en-us/articles/56954433524627-FH6-Release-Notes-November-2-2026",
-    "summary": "El parche distribuido también para Windows PC corrige, entre otros fallos, los indicadores del Ferrari 488 Pista y la decoración del Mercedes-Benz 190 E al cambiar el nivel de detalle. El estudio no aporta mediciones de FPS en la Xbox Ally X.",
-    "impact": "positivo",
-    "gameId": "forza-horizon-6-rog-xbox-ally-x-game-settings",
-    "image": "./assets/portadas/99.webp",
-    "scope": "pc"
-  },
-  {
-    "id": "mw4-2026-11-19",
-    "title": "Modern Warfare 4 corrige problemas de estabilidad",
-    "date": "2026-11-19",
-    "category": "juegos",
     "scope": "pc",
-    "source": "Call of Duty · Infinity Ward",
-    "url": "https://www.callofduty.com/patchnotes/2026/11/call-of-duty-modern-warfare-4-season-1-patch-notes",
-    "summary": "El parche general corrige problemas de estabilidad y un fallo que podía dejar a jugadores fuera del mapa en Wager Match Gun Game. También afecta a quienes juegan en Windows. Las notas no publican mediciones en la Ally X.",
-    "impact": "positivo",
-    "gameId": "call-of-duty-modern-warfare-4-rog-xbox-ally-x-game-settings",
-    "image": "./assets/portadas/12.webp",
-    "weekly": true
-  },
-  {
-    "id": "bf6-2125",
-    "title": "Battlefield 6 y REDSEC reciben correcciones de cierres",
-    "date": "2026-11-25",
-    "category": "juegos",
-    "source": "EA",
-    "url": "https://www.ea.com/games/battlefield/battlefield-6/news/battlefield-6-game-update-2-1-2-5",
-    "summary": "EA anunció para el 26 de noviembre un parche multiplataforma con correcciones de cierres en Battlefield 6 y REDSEC.",
-    "scope": "pc",
-    "impact": "positivo",
-    "gameId": "battlefield-6-rog-xbox-ally-x",
-    "image": "./assets/portadas/351.webp"
-  },
-  {
-    "id": "bf6-2120",
-    "title": "Battlefield 6 actualiza el audio y la interfaz",
-    "date": "2026-11-09",
-    "category": "juegos",
-    "source": "EA",
-    "url": "https://www.ea.com/games/battlefield/redsec/news/battlefield-6-game-update-2-1-2-0",
-    "summary": "La actualización 2.1.2.0 incluye mejoras de audio e interfaz y correcciones en multijugador y REDSEC.",
-    "scope": "pc",
-    "impact": "positivo",
-    "gameId": "battlefield-6-rog-xbox-ally-x",
-    "image": "./assets/portadas/351.webp"
-  },
-  {
-    "id": "windows-kb5132061",
-    "title": "Windows 11 amplía la cobertura de los nuevos certificados de arranque seguro",
-    "date": "2026-11-10",
-    "category": "drivers",
-    "source": "Microsoft Support",
-    "url": "https://support.microsoft.com/es-es/servicing/os/windows-11/2026/11/kb5132061-windows-11-24h2-25h2-26h2-security-update",
-    "summary": "El parche de seguridad de noviembre amplía la lista de equipos elegibles para recibir automáticamente los certificados de Arranque seguro.",
-    "scope": "pc",
-    "impact": "informativo"
-  },
-  {
-    "id": "windows-kb5127936",
-    "title": "Microsoft publica la actualización opcional de octubre para Windows 11",
-    "date": "2026-10-28",
-    "category": "destacadas",
-    "source": "Microsoft Support",
-    "url": "https://support.microsoft.com/en-gb/servicing/os/windows-11/2026/11/kb5132061-windows-11-24h2-25h2-26h2-security-update",
-    "summary": "Microsoft identifica la compilación 26200.9818 como la vista previa del 28 de octubre para 25H2. Sus mejoras se incluyen en la actualización de seguridad de noviembre.",
-    "scope": "pc",
-    "impact": "informativo"
-  },
-  {
-    "id": "fh6-derrape-noviembre",
-    "title": "Forza Horizon 6 corrige un fallo de puntuación ligado a los FPS",
-    "date": "2026-11-05",
-    "category": "rendimiento",
-    "source": "Forza Support",
-    "url": "https://support.forza.net/hc/en-us/articles/57179145129363-FH6-Release-Notes-November-5-2026",
-    "summary": "El parche para Windows y Steam corrige un fallo por el que los FPS del jugador podían reducir la puntuación en zonas de derrape. Es una corrección de puntuación.",
-    "scope": "pc",
-    "impact": "positivo",
-    "gameId": "forza-horizon-6-rog-xbox-ally-x-game-settings",
-    "image": "./assets/portadas/99.webp"
-  },
-  {
-    "id": "mw4-estabilidad-1102",
-    "title": "Modern Warfare 4 corrige cierres en varios modos",
-    "date": "2026-11-02",
-    "category": "juegos",
-    "source": "Infinity Ward",
-    "url": "https://www.callofduty.com/patchnotes/2026/10/call-of-duty-modern-warfare-4-launch-patch-notes",
-    "summary": "La actualización general del 2 de noviembre incluye correcciones de estabilidad y cierres que afectaban a varios modos.",
-    "scope": "pc",
-    "impact": "positivo",
-    "gameId": "call-of-duty-modern-warfare-4-rog-xbox-ally-x-game-settings",
-    "image": "./assets/portadas/12.webp"
+    "model": "Xbox ROG Ally X (RC73XA)"
   },
   {
     "id": "adrenalin-26111-portatiles",
@@ -121,7 +21,9 @@
     "url": "https://www.amd.com/en/resources/support-articles/release-notes/RN-RAD-WIN-26-11-1.html",
     "summary": "AMD señala que este paquete genérico no incluye soporte para consolas portátiles de juego y remite a los controladores específicos del fabricante.",
     "scope": "pc",
-    "impact": "informativo"
+    "impact": "informativo",
+    "model": "Xbox ROG Ally X (RC73XA)",
+    "version": "26.11.1"
   },
   {
     "id": "asus-rc73xa-32015-7029",
@@ -130,43 +32,23 @@
     "category": "drivers",
     "source": "ASUS",
     "url": "https://www.asus.com/us/supportonly/rc73xa/helpdesk_download/",
-    "summary": "El controlador OEM V32.0.32015.7029 para la RC73XA admite FSR 4.1 e incluye optimizaciones para Modern Warfare 4, Star Wars: Galactic Racer y Final Fantasy Resonance. Requiere Windows 11 24H2 o posterior.",
+    "summary": "El controlador oficial de ASUS incorpora compatibilidad con FSR 4.1 en software compatible. Requiere Windows 11 24H2 o posterior.",
     "scope": "model",
-    "impact": "positivo"
-  },
-  {
-    "id": "xbox-retrocompatibilidad-pc-25",
-    "title": "Xbox amplía a 25 juegos su catálogo retrocompatible en PC",
-    "date": "2026-11-12",
-    "category": "destacadas",
-    "source": "Xbox Wire",
-    "url": "https://news.xbox.com/en-us/2026/11/12/25-original-xbox-games-now-available-on-pc/",
-    "summary": "Xbox añadió 21 títulos en regiones compatibles y anunció mejoras de estabilidad y rendimiento para los cuatro primeros juegos del programa. Los títulos admiten ratón y teclado.",
-    "scope": "pc",
-    "impact": "positivo"
+    "impact": "positivo",
+    "model": "Xbox ROG Ally X (RC73XA)",
+    "version": "V32.0.32015.7029"
   },
   {
     "id": "windows-kb5132057",
     "title": "Windows 11 lleva los ajustes rápidos al modo Xbox",
     "date": "2026-11-19",
-    "category": "destacadas",
+    "category": "windows",
     "source": "Microsoft Support",
     "url": "https://support.microsoft.com/en-us/servicing/os/windows-11/2026/11/kb5132057-windows-11-25h2-26h2-update",
     "summary": "La actualización preliminar opcional KB5132057 para Windows 11 25H2 y 26H2 permite abrir los ajustes rápidos desde la barra de navegación de la vista de tareas de juego, dentro del modo Xbox.",
     "scope": "pc",
-    "impact": "positivo"
-  },
-  {
-    "id": "hogwarts-pc-2153883",
-    "title": "Hogwarts Legacy corrige el guardado de ajustes gráficos en PC",
-    "date": "2026-11-05",
-    "category": "juegos",
-    "source": "Portkey Games",
-    "url": "https://portkeygamessupport.wbgames.com/hc/en-us/articles/57148020112659-Hogwarts-Legacy-PC-Patch-November-5th-2026",
-    "summary": "La compilación 2153883 corrige casos en los que algunas opciones gráficas no se guardaban correctamente y reduce la necesidad de reiniciar al cambiar ciertas opciones de generación de fotogramas.",
-    "scope": "pc",
     "impact": "positivo",
-    "gameId": "hogwarts-legacy-rog-xbox-ally-x",
-    "weekly": true
+    "model": "Xbox ROG Ally X (RC73XA)",
+    "version": "KB5132057"
   }
 ]

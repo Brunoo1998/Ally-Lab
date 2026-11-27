@@ -1,6 +1,7 @@
-# Editar Ally Lab News
-Las noticias se administran en dist/datos/news.json. Cada entrada necesita id único, title, date (AAAA-MM-DD de publicación original), category, source, url y summary redactado en español. Categorías: destacadas, juegos, drivers, rendimiento. impact es opcional y admite positivo, negativo o informativo. priority ordena las tres noticias de portada y la fecha resuelve empates.
-Para enlazar una ficha, usa gameId con el id de dist/datos/catalogo.json. image admite una ruta a una imagen autorizada en dist; en su ausencia se utiliza la imagen del dispositivo. Usa weekly: true solo para una mejora de rendimiento o compatibilidad confirmada en un juego. Incluye fpsBefore, fpsAfter y conditions únicamente con mediciones comparables y trazables en la RC73XA.
-Conserva una sola entrada por anuncio o versión. Enlaza el original y distingue un parche general de Windows de una prueba específica en el dispositivo. Después de editar, publica la nueva versión del Site.
+# Actualizaciones ROG Ally
 
-Incluye mejoras de PC con una relación concreta con la consola, como optimización de juegos compatibles, correcciones de estabilidad, mejoras de mando y actualizaciones de Windows o herramientas AMD aplicables. Declara scope como pc para cambios generales o model si la fuente identifica el modelo. Marca weekly también cuando un parche general confirma mejoras de rendimiento, compatibilidad o estabilidad para un juego de Windows compatible, sin convertirlo en prueba del hardware.
+Edita los datos en `dist/datos/news.json`. Incluye BIOS y firmware (`bios`), controladores (`drivers`), Armoury Crate SE y la app Xbox (`software`) y Windows (`windows`) cuando exista un efecto concreto en la consola.
+
+Usa fuentes oficiales de ASUS, AMD, Microsoft y Xbox. Excluye lanzamientos, tráilers, catálogos y parches de juegos. Una novedad general de PC requiere una relación verificable con el funcionamiento de la consola. Declara `scope: "pc"` para software general y `scope: "model"` para cambios específicos del modelo.
+
+Cada entrada incluye `id` único, `title`, `date` original (AAAA-MM-DD), `category`, `model`, `scope`, `summary` en español, `source` y `url` HTTPS oficial. Añade `version` cuando conste. `impact` es opcional y admite positivo, negativo o informativo. Resume qué cambia y cómo afecta a la consola. Deduplica por anuncio y versión.
