@@ -1,7 +1,10 @@
 const directions={12:[0,-1],13:[0,1],14:[-1,0],15:[1,0]};
 const focusable='a[href],button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary';
-function controls(){
- return [...document.querySelectorAll(focusable)].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility==='visible'&&e.tabIndex>=0);
+function openChat(){
+ return document.querySelector('#ally-ai-panel:not([hidden])');
+}
+function controls(scope=openChat()||document){
+ return [...scope.querySelectorAll(focusable)].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility==='visible'&&e.tabIndex>=0);
 }
 function focusControl(control){
  control.focus({preventScroll:true});
@@ -141,12 +144,14 @@ function scan(){
   }
  }
  heldAllyShortcut=allyShortcut;
+ const chat=openChat();
  const scrollAxis=axes[3]||0;
  const tilt=Math.abs(scrollAxis);
  const deadZone=.2;
  if(tilt>deadZone&&!picker?.open){
   const strength=(tilt-deadZone)/(1-deadZone);
-  window.scrollBy({top:Math.sign(scrollAxis)*strength**2*40,behavior:'instant'});
+  const scroller=chat?.querySelector('.ally-ai-transcript')||window;
+  scroller.scrollBy({top:Math.sign(scrollAxis)*strength**2*40,behavior:'instant'});
  }
  const keys=Object.keys(directions), horizontal=axes[0]||0,vertical=axes[1]||0;
  const arrow=keys.find(k=>buttons[k]?.pressed)||(Math.max(Math.abs(horizontal),Math.abs(vertical))>.58?(Math.abs(horizontal)>Math.abs(vertical)?(horizontal<0?'14':'15'):(vertical<0?'12':'13')):'');
@@ -167,13 +172,17 @@ function scan(){
     if(field)activateSearch(field);
    }else if(key==='A'){
     const el=document.activeElement;
+    if(chat&&!chat.contains(el)){
+     held=key;
+     return;
+    }
     if(el?.matches('input[type=search],input[type=text],textarea'))activateSearch(el);
     else if(el?.matches('select:not([multiple])'))openOptions(el);
     else if(el?.matches('input[type=range]'))editing=editing?undefined:el;
     else if(el?.matches(focusable))el.click();
    }else if(key==='B'){
     if(editing)editing=undefined;
-    else if(!document.activeElement?.matches('input,select,textarea'))document.querySelector('#ficha:not([hidden]) .back a,#details:not([hidden]) > a:first-child')?.click();
+    else if(!chat&&!document.activeElement?.matches('input,select,textarea'))document.querySelector('#ficha:not([hidden]) .back a,#details:not([hidden]) > a:first-child')?.click();
    }
   }
  }
