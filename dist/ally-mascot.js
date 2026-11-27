@@ -95,4 +95,5 @@ export function mountMascot(root, trigger) {
     if(event.key===keys.dismissed||event.key===keys.last)pause();
   });
   schedule();
+  return peek;
 }

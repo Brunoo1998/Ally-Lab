@@ -107,3 +107,49 @@
   .ally-mascot .ally-mascot-dismiss {width:42px;}
 }
 @media(prefers-reduced-motion:reduce) { .ally-ai .ally-mascot {display:none;} }
+
+.ally-ai .ally-ai-trigger { position:relative; z-index:1; }
+.ally-ai .ally-micro-robot {
+  position:absolute; inset-block-end:calc(100% - .6rem); inset-inline-end:.65rem;
+  width:56px; height:56px; border:0; padding:0; background:none;
+  transform-origin:bottom center;
+  animation:ally-micro-peek 1.6s ease-in-out both;
+}
+.ally-micro-robot img {display:block;width:100%;height:100%;transform-origin:50% 80%;}
+[data-mascot-effect="peek"] .ally-micro-robot img {animation:ally-micro-look 1.6s ease both;}
+[data-mascot-effect="play"] .ally-micro-robot img {animation:ally-micro-play 1.6s ease both;}
+[data-mascot-effect="blink"] .ally-micro-robot::after {
+  content:'';position:absolute;left:31%;top:34%;width:33%;height:14%;border-radius:3px;
+  background:#161322;pointer-events:none;animation:ally-micro-blink 1.6s ease both;
+}
+[data-mascot-effect="cursor"] .ally-micro-robot img {transform:rotate(var(--ally-gaze,0deg));transition:transform .2s ease;}
+[data-mascot-effect="energy"] .ally-ai-trigger::after {
+  content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 9px #baf95080,0 0 17px #a17be490;
+  animation:ally-micro-energy 1.6s ease-in-out both;
+}
+.ally-micro-setting {display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:.55rem;cursor:pointer;}
+.ally-micro-setting input {accent-color:var(--ai-lime);}
+@keyframes ally-micro-peek {
+  0%,100% {opacity:0;transform:translateY(1.5rem) scale(.86)}
+  28%,72% {opacity:1;transform:none}
+}
+@keyframes ally-micro-look {30%,70% {transform:none} 44% {transform:rotate(-6deg)} 58% {transform:rotate(6deg)}}
+@keyframes ally-micro-play {28%,74% {transform:translateY(8px)} 43% {transform:translateY(5px) rotate(-5deg)} 59% {transform:translateY(5px) rotate(5deg)}}
+@keyframes ally-micro-blink {0%,44%,55%,100% {opacity:0} 48%,51% {opacity:1}}
+@keyframes ally-micro-energy {0%,100% {opacity:0;transform:scale(1)} 50% {opacity:.65;transform:scale(1.035)}}
+@media(max-width:480px) {
+  .ally-ai .ally-micro-robot {width:46px;height:46px;}
+  .ally-micro-setting {margin-inline-start:.35rem;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .ally-ai .ally-micro-robot,.ally-ai .ally-ai-trigger::after {display:none;}
+}
+[data-mascot-effect="play"] .ally-micro-robot::after {
+  content:''; position:absolute; inset-block-end:0; inset-inline-start:15%;
+  width:9px; height:6px; border-radius:5px; background:#a17be4;
+  box-shadow:32px 0 #a17be4; pointer-events:none;
+  animation:ally-micro-grip 1.6s ease both;
+}
+@keyframes ally-micro-grip {0%,22%,79%,100% {opacity:0} 32%,69% {opacity:1}}
+@media(max-width:480px) { [data-mascot-effect="play"] .ally-micro-robot::after {box-shadow:26px 0 #a17be4;} }

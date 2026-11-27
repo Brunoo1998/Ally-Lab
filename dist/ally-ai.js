@@ -1,4 +1,5 @@
-import {mountMascot} from './ally-mascot.js?v=2';
+import {mountMicroanimations} from './ally-microanimations.js?v=1';
+import {mountMascot} from './ally-mascot.js?v=3';
 const examples=['Quiero jugar a Battlefield a 60 FPS','Busca Super Mario World para Super Nintendo','Llévame a los juegos gratis'];
 const welcome='Soy Ally AI. Puedo buscar juegos, abrir secciones y mostrar las pruebas de rendimiento disponibles para la Xbox ROG Ally X.';
 function add(parent,tag,text,className){
@@ -163,4 +164,4 @@ form.addEventListener('submit',e=>{e.preventDefault();void submit(input.value);}
 panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();toggle();}});
 showStart();
 
-mountMascot(root,trigger);
+mountMicroanimations(root,trigger,mountMascot(root,trigger),modes);
