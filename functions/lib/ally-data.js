@@ -152,7 +152,8 @@ async function retro(ctx, key, query) {
 export async function retrieve(ctx, question, context) {
   const previous=Array.isArray(context)?context.slice(0,2).filter(v=>typeof v==='string'&&/^[a-z0-9-]{1,150}$/.test(v)):[];
   const follow=fold(question);
-  const refer=/^(?:y\b|abre (?:ese|el anterior)|comparalo con el anterior|que pasa si)/.test(follow);
+  const refer=/^(?:y\b|abre (?:ese|el anterior)|comparalo con el anterior|que pasa si)/.test(follow)
+    || /\b(?:jugarlo|jugarla|ponerlo|ponerla|este juego|ese juego)\b/.test(follow);
   const open=/^abre (?:ese|el anterior)/.test(follow);
   const compare=follow==='comparalo con el anterior';
   if(refer&&(!previous.length||(compare&&previous.length<2)))
@@ -231,13 +232,17 @@ export async function retrieve(ctx, question, context) {
     return {cards:[],noMatch:'La versión publicada en Cloudflare no tiene una sección de accesorios o almacenamiento indexada.'};
   const source=await optional(cached(new URL('/datos/catalogo.json',ctx.request.url).href,()=>data(ctx,'catalogo')));
   const catalog=source?.games||[];
-  const exact=catalog.find(g=>fold(g.title)===normalized);
-  let candidates=exact?[exact]:catalog.map(g=>[g,rank(g.title,g.id,query)]).filter(([,s])=>s>0)
+  const named=catalog.filter(g=>(' '+normalized+' ').includes(' '+fold(g.title)+' '))
+    .sort((a,b)=>fold(b.title).length-fold(a.title).length)[0];
+  const exact=named&&fold(named.title)===normalized;
+  const contextual=!named&&(refer||previous.length>0&&performance&&!query.length&&
+    !/\b(?:que|cuales) juegos\b/.test(normalized));
+  let candidates=named?[named]:catalog.map(g=>[g,rank(g.title,g.id,query)]).filter(([,s])=>s>0)
     .sort((a,b)=>b[1]-a[1]).slice(0,6).map(([g])=>g);
-  if(refer)candidates=(follow.startsWith('abre el anterior')?previous.slice(1,2):previous.slice(0,compare?2:1)).map(key=>catalog.find(g=>g.id===key)).filter(Boolean);
-  const general=performance&&!query.length&&!refer;
+  if(contextual)candidates=(follow.startsWith('abre el anterior')?previous.slice(1,2):previous.slice(0,compare?2:1)).map(key=>catalog.find(g=>g.id===key)).filter(Boolean);
+  const general=performance&&!query.length&&!contextual;
   if(general&&!/\bfps\b/i.test(question))return {direct:true,cards:[],noMatch:'¿Para qué juego quieres esa configuración?'};
-  if(refer&&!candidates.length)return {direct:true,cards:[],noMatch:'La ficha anterior ya no está disponible en el catálogo.'};
+  if(contextual&&!candidates.length)return {direct:true,cards:[],noMatch:'La ficha anterior ya no está disponible en el catálogo.'};
   if(general)candidates=catalog.filter(g=>/60|[789]\d|1\d{2}/.test(String(g.fps)));
   const months=performance?await Promise.all([...new Set(candidates.map(g=>g.published.slice(0,7)))].map(m=>
     optional(cached(local(ctx,m).href,()=>data(ctx,m))))):[];
