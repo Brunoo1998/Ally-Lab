@@ -235,13 +235,17 @@ export async function retrieve(ctx, question, context) {
   const named=catalog.filter(g=>(' '+normalized+' ').includes(' '+fold(g.title)+' '))
     .sort((a,b)=>fold(b.title).length-fold(a.title).length)[0];
   const exact=named&&fold(named.title)===normalized;
-  const contextual=!named&&(refer||previous.length>0&&performance&&!query.length&&
-    !/\b(?:que|cuales) juegos\b/.test(normalized));
   let candidates=named?[named]:catalog.map(g=>[g,rank(g.title,g.id,query)]).filter(([,s])=>s>0)
     .sort((a,b)=>b[1]-a[1]).slice(0,6).map(([g])=>g);
+  // An FPS or settings request can refer to the last game without a pronoun.
+  // Prefer a title from the new message, including matches found by title search.
+  const requestWords = /^(?:configuraciones?|ajuste(?:s)?|grafico[s]?|grafica[s]?|llegar|lograr|obtener|mantener|estables?|objetivo|recomienda|recomiendas|recomendais|conseguir|deberia|debo|necesito|aplico|aplicar|selecciono|seleccionar|optimo|optima|tdp|vatios|w)$/;
+  const settingsOnly=performance&&query.every(word=>requestWords.test(word));
+  const asksForGames=/\b(?:que|cuales) juegos\b/.test(normalized);
+  const contextual=!named&&(refer||previous.length>0&&!candidates.length&&settingsOnly&&!asksForGames);
   if(contextual)candidates=(follow.startsWith('abre el anterior')?previous.slice(1,2):previous.slice(0,compare?2:1)).map(key=>catalog.find(g=>g.id===key)).filter(Boolean);
-  const general=performance&&!query.length&&!contextual;
-  if(general&&!/\bfps\b/i.test(question))return {direct:true,cards:[],noMatch:'¿Para qué juego quieres esa configuración?'};
+  const general=performance&&!contextual&&settingsOnly&&asksForGames;
+  if(performance&&!contextual&&!candidates.length&&settingsOnly&&!asksForGames)return {direct:true,cards:[],noMatch:'¿Para qué juego quieres esa configuración?'};
   if(contextual&&!candidates.length)return {direct:true,cards:[],noMatch:'La ficha anterior ya no está disponible en el catálogo.'};
   if(general)candidates=catalog.filter(g=>/60|[789]\d|1\d{2}/.test(String(g.fps)));
   const months=performance?await Promise.all([...new Set(candidates.map(g=>g.published.slice(0,7)))].map(m=>
