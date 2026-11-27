@@ -123,10 +123,26 @@
   background:#161322;pointer-events:none;animation:ally-micro-blink 1.6s ease both;
 }
 [data-mascot-effect="cursor"] .ally-micro-robot img {transform:rotate(var(--ally-gaze,0deg));transition:transform .2s ease;}
-[data-mascot-effect="energy"] .ally-ai-trigger::after {
-  content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
-  box-shadow:0 0 9px #baf95080,0 0 17px #a17be490;
-  animation:ally-micro-energy 1.6s ease-in-out both;
+/* Brillo puntual en la burbuja, sincronizado con cada gesto o saludo de Ally AI. */
+[data-mascot-effect] .ally-ai-trigger::before,
+.ally-ai:has(.ally-mascot:not([hidden])) .ally-ai-trigger::before {
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border:1.5px solid rgba(151,103,214,.88);
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:0 0 0 1px rgba(187,251,84,.24),
+    0 0 9px rgba(187,251,84,.46),
+    0 0 17px rgba(155,102,220,.30);
+  opacity:0;
+  animation:ally-micro-edge-light 1.6s ease-in-out both;
+}
+@keyframes ally-micro-edge-light {
+  0%,100% {opacity:0;transform:scale(.985)}
+  25% {opacity:.72}
+  52% {opacity:1;transform:scale(1.015)}
+  78% {opacity:.5}
 }
 .ally-micro-setting {display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:.55rem;cursor:pointer;}
 .ally-micro-setting input {accent-color:var(--ai-lime);}
@@ -137,13 +153,12 @@
 @keyframes ally-micro-look {30%,70% {transform:none} 44% {transform:rotate(-6deg)} 58% {transform:rotate(6deg)}}
 @keyframes ally-micro-play {28%,74% {transform:translateY(8px)} 43% {transform:translateY(5px) rotate(-5deg)} 59% {transform:translateY(5px) rotate(5deg)}}
 @keyframes ally-micro-blink {0%,44%,55%,100% {opacity:0} 48%,51% {opacity:1}}
-@keyframes ally-micro-energy {0%,100% {opacity:0;transform:scale(1)} 50% {opacity:.65;transform:scale(1.035)}}
 @media(max-width:480px) {
   .ally-ai .ally-micro-robot {width:46px;height:46px;}
   .ally-micro-setting {margin-inline-start:.35rem;}
 }
 @media(prefers-reduced-motion:reduce) {
-  .ally-ai .ally-micro-robot,.ally-ai .ally-ai-trigger::after {display:none;}
+  .ally-ai .ally-micro-robot,.ally-ai .ally-ai-trigger::before {display:none;}
 }
 [data-mascot-effect="play"] .ally-micro-robot::after {
   content:''; position:absolute; inset-block-end:0; inset-inline-start:15%;
