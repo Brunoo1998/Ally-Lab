@@ -144,6 +144,20 @@
   52% {opacity:1;transform:scale(1.015)}
   78% {opacity:.5}
 }
+/* Dos latidos discretos, sincronizados con los 1,6 s de la mascota y su brillo. */
+@media(prefers-reduced-motion:no-preference) {
+  [data-mascot-effect] .ally-ai-trigger,
+  .ally-ai:has(.ally-mascot:not([hidden])) .ally-ai-trigger {
+    transform-origin:center;
+    animation:ally-micro-heartbeat 1.6s ease-in-out both;
+    will-change:transform;
+  }
+  @keyframes ally-micro-heartbeat {
+    0%, 15%, 38%, 66%, 100% {transform:scale(1)}
+    26% {transform:scale(1.045)}
+    49% {transform:scale(1.028)}
+  }
+}
 .ally-micro-setting {display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:.55rem;cursor:pointer;}
 .ally-micro-setting input {accent-color:var(--ai-lime);}
 @keyframes ally-micro-peek {
