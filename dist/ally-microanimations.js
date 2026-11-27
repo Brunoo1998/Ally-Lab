@@ -1,7 +1,6 @@
 const preference='ally-mascot-decorative-motion';
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const effects=['peek','play','blink','energy'];
-const quiet=2400;
 const minDelay=30_000, maxDelay=45_000;
 const randomDelay=()=>minDelay+Math.floor(Math.random()*(maxDelay-minDelay+1));
 
@@ -34,7 +33,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   toggle.checked=enabled();
 
   let due=Date.now()+randomDelay(), cursorAfter=Date.now()+minDelay;
-  let lastActivity=Date.now(), timer, finish, effect='';
+  let timer, finish, effect='';
   function eligible() {
     return toggle.checked&&!reduced.matches&&!document.hidden&&!trigger.hidden&&greeting.hidden&&
       !document.activeElement?.closest(editable);
@@ -49,11 +48,11 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   function queue() {
     clearTimeout(timer);
     if(!eligible())return;
-    const wait=Math.max(due,lastActivity+quiet)-Date.now();
+    const wait=due-Date.now();
     timer=setTimeout(tick,Math.max(0,wait));
   }
   function play(name) {
-    if(effect||!eligible()||Date.now()-lastActivity<quiet)return false;
+    if(effect||!eligible())return false;
     effect=name;
     root.dataset.mascotEffect=name;
     robot.hidden=name==='energy';
@@ -65,14 +64,8 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   }
   function tick() {
     if(!eligible())return;
-    if(Date.now()<Math.max(due,lastActivity+quiet)){queue();return;}
+    if(Date.now()<due){queue();return;}
     if(!play(effects[Math.floor(Math.random()*effects.length)]))queue();
-  }
-  function activity(event) {
-    if(event?.target===robot||robot.contains(event?.target||null))return;
-    lastActivity=Date.now();
-    stop();
-    queue();
   }
   function stateChanged() {
     if(!eligible())stop();
@@ -98,10 +91,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   const observer=new MutationObserver(stateChanged);
   observer.observe(trigger,{attributes:true,attributeFilter:['hidden']});
   observer.observe(greeting,{attributes:true,attributeFilter:['hidden']});
-  document.addEventListener('visibilitychange',activity);
-  document.addEventListener('pointerdown',activity,{passive:true});
-  document.addEventListener('scroll',activity,{capture:true,passive:true});
-  document.addEventListener('keydown',activity);
+  document.addEventListener('visibilitychange',stateChanged);
   document.addEventListener('focusin',stateChanged);
   document.addEventListener('focusout',()=>queueMicrotask(stateChanged));
   reduced.addEventListener('change',stateChanged);
