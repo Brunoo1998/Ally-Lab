@@ -132,10 +132,12 @@ function scan(){
  const {buttons,axes}=pad;
  const allyShortcut=buttons[10]?.pressed||buttons[11]?.pressed;
  if(allyShortcut&&!heldAllyShortcut&&!picker?.open){
-  const chatTrigger=document.querySelector('.ally-ai-trigger[aria-expanded="false"]:not([hidden])');
-  if(chatTrigger){
+  const chatButton=document.querySelector(
+   '.ally-ai-trigger:not([hidden]), #ally-ai-panel:not([hidden]) button[aria-label="Cerrar Ally AI"]'
+  );
+  if(chatButton){
    document.documentElement.classList.add('pad-navigation');
-   chatTrigger.click();
+   chatButton.click();
   }
  }
  heldAllyShortcut=allyShortcut;
