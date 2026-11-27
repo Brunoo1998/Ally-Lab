@@ -122,5 +122,51 @@
     "summary": "AMD señala que este paquete genérico no incluye soporte para consolas portátiles de juego y remite a los controladores específicos del fabricante.",
     "scope": "pc",
     "impact": "informativo"
+  },
+  {
+    "id": "asus-rc73xa-32015-7029",
+    "title": "ASUS incorpora FSR 4.1 al controlador de la Xbox Ally X",
+    "date": "2026-11-06",
+    "category": "drivers",
+    "source": "ASUS",
+    "url": "https://www.asus.com/us/supportonly/rc73xa/helpdesk_download/",
+    "summary": "El controlador OEM V32.0.32015.7029 para la RC73XA admite FSR 4.1 e incluye optimizaciones para Modern Warfare 4, Star Wars: Galactic Racer y Final Fantasy Resonance. Requiere Windows 11 24H2 o posterior.",
+    "scope": "model",
+    "impact": "positivo"
+  },
+  {
+    "id": "xbox-retrocompatibilidad-pc-25",
+    "title": "Xbox amplía a 25 juegos su catálogo retrocompatible en PC",
+    "date": "2026-11-12",
+    "category": "destacadas",
+    "source": "Xbox Wire",
+    "url": "https://news.xbox.com/en-us/2026/11/12/25-original-xbox-games-now-available-on-pc/",
+    "summary": "Xbox añadió 21 títulos en regiones compatibles y anunció mejoras de estabilidad y rendimiento para los cuatro primeros juegos del programa. Los títulos admiten ratón y teclado.",
+    "scope": "pc",
+    "impact": "positivo"
+  },
+  {
+    "id": "windows-kb5132057",
+    "title": "Windows 11 lleva los ajustes rápidos al modo Xbox",
+    "date": "2026-11-19",
+    "category": "destacadas",
+    "source": "Microsoft Support",
+    "url": "https://support.microsoft.com/en-us/servicing/os/windows-11/2026/11/kb5132057-windows-11-25h2-26h2-update",
+    "summary": "La actualización preliminar opcional KB5132057 para Windows 11 25H2 y 26H2 permite abrir los ajustes rápidos desde la barra de navegación de la vista de tareas de juego, dentro del modo Xbox.",
+    "scope": "pc",
+    "impact": "positivo"
+  },
+  {
+    "id": "hogwarts-pc-2153883",
+    "title": "Hogwarts Legacy corrige el guardado de ajustes gráficos en PC",
+    "date": "2026-11-05",
+    "category": "juegos",
+    "source": "Portkey Games",
+    "url": "https://portkeygamessupport.wbgames.com/hc/en-us/articles/57148020112659-Hogwarts-Legacy-PC-Patch-November-5th-2026",
+    "summary": "La compilación 2153883 corrige casos en los que algunas opciones gráficas no se guardaban correctamente y reduce la necesidad de reiniciar al cambiar ciertas opciones de generación de fotogramas.",
+    "scope": "pc",
+    "impact": "positivo",
+    "gameId": "hogwarts-legacy-rog-xbox-ally-x",
+    "weekly": true
   }
 ]

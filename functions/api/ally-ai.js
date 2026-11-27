@@ -1,5 +1,6 @@
 import {fold, retrieve} from '../lib/ally-data.js';
 
+const siteOrigin='https://ally-lab-rog-ally-x.brunoceuta1998.chatgpt.site';
 const model='@cf/zai-org/glm-4.7-flash';
 const noAI='La IA no está disponible ahora. Puedes seguir usando la búsqueda de Ally Lab.';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -87,9 +88,29 @@ async function infer(env, question, cards) {
   const search=typeof answer.search==='string'&&/^[\p{L}\p{N} '&.:!-]{3,90}$/u.test(answer.search)?answer.search:'';
   return {order,intent:answer.intent,search};
 }
+export function onRequestOptions({request}) {
+  if(request.headers.get('Origin')!==siteOrigin||
+     request.headers.get('Access-Control-Request-Method')!=='POST')return new Response(null,{status:403});
+  return new Response(null,{status:204,headers:{
+    'Access-Control-Allow-Origin':siteOrigin,
+    'Access-Control-Allow-Methods':'POST',
+    'Access-Control-Allow-Headers':'Content-Type',
+    'Vary':'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+  }});
+}
+
 export async function onRequestPost(ctx) {
+  const response=await answerRequest(ctx);
+  response.headers.append('Vary','Origin');
+  if(ctx.request.headers.get('Origin')===siteOrigin)
+    response.headers.set('Access-Control-Allow-Origin',siteOrigin);
+  return response;
+}
+
+async function answerRequest(ctx) {
   const origin=new URL(ctx.request.url).origin;
-  if(ctx.request.headers.get('Origin')!==origin||
+  const requestOrigin=ctx.request.headers.get('Origin');
+  if((requestOrigin!==origin&&requestOrigin!==siteOrigin)||
      !ctx.request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'Solicitud no autorizada.'},403);
   let body;
   try{body=await boundedJson(ctx.request);}catch{return json({error:'Mensaje no válido o demasiado largo.'},400);}

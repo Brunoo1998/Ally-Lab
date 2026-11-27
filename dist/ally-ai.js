@@ -229,7 +229,10 @@ async function submit(message,mode='chat'){
   input.value='';setBusy(true);
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
   try{
-    const res=await fetch('/api/ally-ai',{method:'POST',headers:{'Content-Type':'application/json'},
+    const endpoint=location.origin==='https://ally-lab-rog-ally-x.brunoceuta1998.chatgpt.site'
+      ? 'https://ally-lab.pages.dev/api/ally-ai'
+      : '/api/ally-ai';
+    const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({message:value,mode,context}),signal:controller.signal});
     const entry=await res.json();
     if(pending!==controller)return;
