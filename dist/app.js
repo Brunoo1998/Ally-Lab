@@ -194,6 +194,12 @@ function settings(game,detail,requested) {
     });
   } else picker.textContent=units(presets[0].name);
   p.append(picker);
+  const community = new URL('https://ally-community.pages.dev/');
+  community.search = new URLSearchParams({game:game.id,title:game.title});
+  const links=el('div','hero-links');
+  const share=anchor('Compartir mi configuración',community.href,'btn');
+  links.append(anchor('Debate de la comunidad',community.href,'btn'),share);
+  p.append(links);
   if(detail.fromText) p.append(el('p','small','Ajustes descritos en el texto de la guía.'));
   const controls=el('div','table-tools'), count=el('span');
   count.setAttribute('role','status'); controls.append(count);
@@ -213,6 +219,14 @@ function settings(game,detail,requested) {
   thead.append(row); table.append(caption,thead,body); p.append(controls,table);
   function draw(){
     const preset=presets[current];
+    const draft=new URL(community);
+    draft.searchParams.set('share','1');
+    draft.searchParams.set('model','Xbox ROG Ally X');
+    const find=(pattern)=>preset.rows.find(([key])=>pattern.test(key))?.[1];
+    const resolution=find(/^(?:output |screen |display )?resolution$/i)||preset.name.match(/\b(?:720|900|1080)p\b/i)?.[0];
+    const known={resolution,quality:find(/^(?:graphic[s]? )?(?:quality|preset)$/i),scaling:find(/upscal|fsr/i),frameGeneration:find(/frame generation/i)};
+    for(const [key,value] of Object.entries(known))if(value)draft.searchParams.set(key,String(value).slice(0,100));
+    share.href=draft.href;
     if(presets.length>1) Array.from(picker.children).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===current)));
     caption.textContent='Configuración de '+game.title+' · '+preset.name;
     count.textContent=preset.rows.length+(preset.rows.length===1?' ajuste':' ajustes');
