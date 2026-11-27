@@ -2,7 +2,8 @@ const preference='ally-mascot-decorative-motion';
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const effects=['peek','play','blink','energy'];
 const quiet=2400;
-const randomDelay=()=>90_000+Math.floor(Math.random()*90_001);
+const minDelay=30_000, maxDelay=45_000;
+const randomDelay=()=>minDelay+Math.floor(Math.random()*(maxDelay-minDelay+1));
 
 export function mountMicroanimations(root,trigger,greeting,controls) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -32,7 +33,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   }
   toggle.checked=enabled();
 
-  let due=Date.now()+randomDelay(), cursorAfter=Date.now()+90_000;
+  let due=Date.now()+randomDelay(), cursorAfter=Date.now()+minDelay;
   let lastActivity=Date.now(), timer, finish, effect='';
   function eligible() {
     return toggle.checked&&!reduced.matches&&!document.hidden&&!trigger.hidden&&greeting.hidden&&
@@ -57,7 +58,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     root.dataset.mascotEffect=name;
     robot.hidden=name==='energy';
     due=Date.now()+randomDelay();
-    cursorAfter=Date.now()+90_000;
+    cursorAfter=Date.now()+minDelay;
     finish=setTimeout(stop,1600);
     queue();
     return true;
