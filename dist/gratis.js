@@ -80,7 +80,10 @@ function card(offer,state,t,soon){
  if(safe(offer.url))link(box,state==='active'?(offer.kind==='trial'?'Probar gratis':'Conseguir gratis'):'Ver ficha oficial',offer.url,'btn');
 }
 function allOffers(){
- return [...(data?.offers ?? []),...(otherStores?.offers ?? [])];
+ return [...(data?.offers ?? []),...(otherStores?.offers ?? [])].filter(offer =>
+  !/^(?:itch|itch\.io)$/i.test(String(offer.platform || '').trim()) &&
+  !/^itch:/i.test(String(offer.id || ''))
+ );
 }
 function render(){
  if(!data)return;
