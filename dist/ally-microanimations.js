@@ -1,7 +1,7 @@
 const preference='ally-mascot-decorative-motion';
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const effects=['peek','play','blink','energy'];
-const minDelay=30_000, maxDelay=45_000;
+const minDelay=30_000, maxDelay=45_000, sequenceMs=1600;
 const randomDelay=()=>minDelay+Math.floor(Math.random()*(maxDelay-minDelay+1));
 
 export function mountMicroanimations(root,trigger,greeting,controls) {
@@ -42,6 +42,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     clearTimeout(finish);
     robot.hidden=true;
     root.removeAttribute('data-mascot-effect');
+    root.removeAttribute('data-mascot-sequence');
     robot.style.removeProperty('--ally-gaze');
     effect='';
   }
@@ -54,11 +55,13 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   function play(name) {
     if(effect||!eligible())return false;
     effect=name;
+    // Una sola señal en el mismo fotograma inicia robot, borde y latido.
     root.dataset.mascotEffect=name;
-    robot.hidden=name==='energy';
+    root.dataset.mascotSequence='micro';
+    robot.hidden=false;
     due=Date.now()+randomDelay();
     cursorAfter=Date.now()+minDelay;
-    finish=setTimeout(stop,1600);
+    finish=setTimeout(stop,sequenceMs);
     queue();
     return true;
   }
@@ -67,8 +70,24 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     if(Date.now()<due){queue();return;}
     if(!play(effects[Math.floor(Math.random()*effects.length)]))queue();
   }
+  function startGreetingSequence() {
+    // El saludo se muestra desde ally-mascot.js y emite el inicio en el mismo turno.
+    stop();
+    if(toggle.checked&&!reduced.matches&&!document.hidden&&!trigger.hidden&&
+       !document.activeElement?.closest(editable)){
+      root.dataset.mascotSequence='greeting';
+      finish=setTimeout(()=>{
+        if(root.dataset.mascotSequence==='greeting')root.removeAttribute('data-mascot-sequence');
+      },sequenceMs);
+    }
+    // No disparar otra microanimación inmediatamente después de un saludo.
+    due=Math.max(due,Date.now()+minDelay);
+    queue();
+  }
   function stateChanged() {
-    if(!eligible())stop();
+    const paused=!toggle.checked||reduced.matches||document.hidden||trigger.hidden||
+      !!document.activeElement?.closest(editable);
+    if(paused||(!greeting.hidden&&effect)||(greeting.hidden&&root.dataset.mascotSequence==='greeting'))stop();
     queue();
   }
   robot.addEventListener('click',()=>trigger.click());
@@ -87,6 +106,11 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   });
   window.addEventListener('storage',event=>{
     if(event.key===preference){toggle.checked=enabled();stateChanged();}
+  });
+  root.addEventListener('ally-mascot-greeting-start',startGreetingSequence);
+  root.addEventListener('ally-mascot-greeting-end',()=>{
+    if(root.dataset.mascotSequence==='greeting')stop();
+    queue();
   });
   const observer=new MutationObserver(stateChanged);
   observer.observe(trigger,{attributes:true,attributeFilter:['hidden']});

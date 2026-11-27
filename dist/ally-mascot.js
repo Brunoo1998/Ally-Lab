@@ -50,8 +50,10 @@ export function mountMascot(root, trigger) {
       exit=setTimeout(()=>hide(),260);
       return;
     }
+    const wasVisible=!peek.hidden;
     peek.hidden=true;
     peek.classList.remove('ally-mascot-leaving');
+    if(wasVisible)root.dispatchEvent(new Event('ally-mascot-greeting-end'));
   }
   function schedule() {
     clearTimeout(timer);
@@ -66,6 +68,8 @@ export function mountMascot(root, trigger) {
     write(keys.count,read(keys.count)+1);
     write(keys.last,now);
     peek.hidden=false;
+    // Señal síncrona: la entrada del saludo comparte fotograma con brillo y latido.
+    root.dispatchEvent(new Event('ally-mascot-greeting-start'));
     exit=setTimeout(()=>hide(true),4000);
     timer=setTimeout(schedule,spacing);
   }

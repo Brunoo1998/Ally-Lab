@@ -3,6 +3,7 @@
   --ai-muted:#c5bed6;
   --ai-line:#665483;
   --ai-lime:#bbfb54;
+  --ally-sequence-time:1.6s;
   position:fixed;
   inset-inline-end:max(.85rem,env(safe-area-inset-right));
   inset-block-end:max(.85rem,env(safe-area-inset-bottom));
@@ -82,7 +83,7 @@
   width:max-content;
   max-width:calc(100vw - 2.5rem);
   transform-origin:bottom right;
-  animation:ally-mascot-peek .32s ease-out both;
+  animation:ally-mascot-peek var(--ally-sequence-time) linear both;
 }
 .ally-mascot.ally-mascot-leaving { animation:ally-mascot-hide .25s ease-in both; pointer-events:none; }
 .ally-mascot .ally-mascot-hello {
@@ -92,15 +93,22 @@
   color:#faf6ff; background:#2b2040; box-shadow:0 .35rem 1rem #0006;
   font-size:.8rem; text-align:left;
 }
-.ally-mascot-hello img { flex:none; width:48px; height:48px; animation:ally-mascot-wave .75s .22s ease-in-out both; }
+.ally-mascot-hello img { flex:none; width:48px; height:48px; animation:ally-mascot-wave var(--ally-sequence-time) linear both; }
 .ally-mascot .ally-mascot-dismiss {
   position:absolute; inset-inline-end:.18rem; inset-block-start:50%; transform:translateY(-50%);
   width:36px; height:44px; padding:0; border:0; border-radius:10px;
   background:transparent; color:#e9dbff; font-size:1.1rem;
 }
-@keyframes ally-mascot-peek { from {opacity:0;transform:translateY(1.1rem) scale(.88)} to {opacity:1;transform:none} }
+@keyframes ally-mascot-peek {
+  0% {opacity:0;transform:translateY(1.1rem) scale(.88)}
+  28%,100% {opacity:1;transform:none}
+}
 @keyframes ally-mascot-hide { to {opacity:0;transform:translateY(1rem) scale(.9)} }
-@keyframes ally-mascot-wave { 0%,100% {transform:none} 35% {transform:rotate(-10deg)} 65% {transform:rotate(7deg)} }
+@keyframes ally-mascot-wave {
+  0%,20%,40%,48%,68%,100% {transform:none}
+  30% {transform:rotate(-9deg)}
+  57% {transform:rotate(7deg)}
+}
 @media(max-width:480px) {
   .ally-mascot .ally-mascot-hello {font-size:.75rem; padding-inline-end:2.65rem;}
   .ally-mascot-hello img {width:39px;height:39px;}
@@ -108,55 +116,63 @@
 }
 @media(prefers-reduced-motion:reduce) { .ally-ai .ally-mascot {display:none;} }
 
+/* Secuencia única: cada movimiento, borde y latido nace de data-mascot-sequence.
+   No hay activaciones independientes por presencia del saludo ni por temporizadores CSS. */
 .ally-ai .ally-ai-trigger { position:relative; z-index:1; }
 .ally-ai .ally-micro-robot {
   position:absolute; inset-block-end:calc(100% - .6rem); inset-inline-end:.65rem;
   width:56px; height:56px; border:0; padding:0; background:none;
   transform-origin:bottom center;
-  animation:ally-micro-peek 1.6s ease-in-out both;
+  animation:ally-micro-peek var(--ally-sequence-time) linear both;
 }
 .ally-micro-robot img {display:block;width:100%;height:100%;transform-origin:50% 80%;}
-[data-mascot-effect="peek"] .ally-micro-robot img {animation:ally-micro-look 1.6s ease both;}
-[data-mascot-effect="play"] .ally-micro-robot img {animation:ally-micro-play 1.6s ease both;}
+[data-mascot-effect="peek"] .ally-micro-robot img {
+  animation:ally-micro-look var(--ally-sequence-time) linear both;
+}
+[data-mascot-effect="play"] .ally-micro-robot img {
+  animation:ally-micro-play var(--ally-sequence-time) linear both;
+}
+[data-mascot-effect="energy"] .ally-micro-robot img {
+  animation:ally-micro-energy-look var(--ally-sequence-time) linear both;
+}
 [data-mascot-effect="blink"] .ally-micro-robot::after {
   content:'';position:absolute;left:31%;top:34%;width:33%;height:14%;border-radius:3px;
-  background:#161322;pointer-events:none;animation:ally-micro-blink 1.6s ease both;
+  background:#161322;pointer-events:none;
+  animation:ally-micro-blink var(--ally-sequence-time) linear both;
 }
-[data-mascot-effect="cursor"] .ally-micro-robot img {transform:rotate(var(--ally-gaze,0deg));transition:transform .2s ease;}
-/* Brillo puntual en la burbuja, sincronizado con cada gesto o saludo de Ally AI. */
-[data-mascot-effect] .ally-ai-trigger::before,
-.ally-ai:has(.ally-mascot:not([hidden])) .ally-ai-trigger::before {
-  content:'';
-  position:absolute;
-  inset:-2px;
-  border:1.5px solid rgba(151,103,214,.88);
-  border-radius:inherit;
-  pointer-events:none;
-  box-shadow:0 0 0 1px rgba(187,251,84,.24),
-    0 0 9px rgba(187,251,84,.46),
-    0 0 17px rgba(155,102,220,.30);
-  opacity:0;
-  animation:ally-micro-edge-light 1.6s ease-in-out both;
+[data-mascot-effect="cursor"] .ally-micro-robot img {
+  transform:rotate(var(--ally-gaze,0deg));transition:transform .2s ease;
 }
-@keyframes ally-micro-edge-light {
-  0%,100% {opacity:0;transform:scale(.985)}
-  25% {opacity:.72}
-  52% {opacity:1;transform:scale(1.015)}
-  78% {opacity:.5}
-}
-/* Dos latidos discretos, sincronizados con los 1,6 s de la mascota y su brillo. */
 @media(prefers-reduced-motion:no-preference) {
-  [data-mascot-effect] .ally-ai-trigger,
-  .ally-ai:has(.ally-mascot:not([hidden])) .ally-ai-trigger {
+  [data-mascot-sequence] .ally-ai-trigger::before {
+    content:'';
+    position:absolute; inset:-2px; border-radius:inherit;
+    border:1.5px solid rgba(151,103,214,.88);
+    pointer-events:none;
+    box-shadow:0 0 0 1px rgba(187,251,84,.24),
+      0 0 9px rgba(187,251,84,.46),0 0 17px rgba(155,102,220,.30);
+    opacity:0;
+    animation:ally-sequence-edge var(--ally-sequence-time) linear both;
+  }
+  [data-mascot-sequence] .ally-ai-trigger {
     transform-origin:center;
-    animation:ally-micro-heartbeat 1.6s ease-in-out both;
+    animation:ally-sequence-heartbeat var(--ally-sequence-time) linear both;
     will-change:transform;
   }
-  @keyframes ally-micro-heartbeat {
-    0%, 15%, 38%, 66%, 100% {transform:scale(1)}
-    26% {transform:scale(1.045)}
-    49% {transform:scale(1.028)}
-  }
+}
+/* Los picos del borde y del latido coinciden con los gestos del robot (30% y 57%). */
+@keyframes ally-sequence-edge {
+  0%,100% {opacity:0;transform:scale(.985)}
+  20% {opacity:.16}
+  30% {opacity:1;transform:scale(1.013)}
+  40% {opacity:.42}
+  57% {opacity:.88;transform:scale(1.008)}
+  75% {opacity:.35}
+}
+@keyframes ally-sequence-heartbeat {
+  0%,20%,40%,48%,68%,100% {transform:scale(1)}
+  30% {transform:scale(1.045)}
+  57% {transform:scale(1.028)}
 }
 .ally-micro-setting {display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:.55rem;cursor:pointer;}
 .ally-micro-setting input {accent-color:var(--ai-lime);}
@@ -164,9 +180,14 @@
   0%,100% {opacity:0;transform:translateY(1.5rem) scale(.86)}
   28%,72% {opacity:1;transform:none}
 }
-@keyframes ally-micro-look {30%,70% {transform:none} 44% {transform:rotate(-6deg)} 58% {transform:rotate(6deg)}}
-@keyframes ally-micro-play {28%,74% {transform:translateY(8px)} 43% {transform:translateY(5px) rotate(-5deg)} 59% {transform:translateY(5px) rotate(5deg)}}
+@keyframes ally-micro-look {0%,30%,68%,100% {transform:none} 44% {transform:rotate(-6deg)} 57% {transform:rotate(6deg)}}
+@keyframes ally-micro-play {0%,100% {transform:none} 30%,72% {transform:translateY(8px)} 44% {transform:translateY(5px) rotate(-5deg)} 57% {transform:translateY(5px) rotate(5deg)}}
 @keyframes ally-micro-blink {0%,44%,55%,100% {opacity:0} 48%,51% {opacity:1}}
+@keyframes ally-micro-energy-look {
+  0%,20%,40%,48%,68%,100% {transform:none}
+  30% {transform:translateY(-2px) scale(1.04)}
+  57% {transform:translateY(-4px) scale(1.025)}
+}
 @media(max-width:480px) {
   .ally-ai .ally-micro-robot {width:46px;height:46px;}
   .ally-micro-setting {margin-inline-start:.35rem;}
@@ -178,7 +199,7 @@
   content:''; position:absolute; inset-block-end:0; inset-inline-start:15%;
   width:9px; height:6px; border-radius:5px; background:#a17be4;
   box-shadow:32px 0 #a17be4; pointer-events:none;
-  animation:ally-micro-grip 1.6s ease both;
+  animation:ally-micro-grip var(--ally-sequence-time) linear both;
 }
-@keyframes ally-micro-grip {0%,22%,79%,100% {opacity:0} 32%,69% {opacity:1}}
+@keyframes ally-micro-grip {0%,20%,80%,100% {opacity:0} 30%,68% {opacity:1}}
 @media(max-width:480px) { [data-mascot-effect="play"] .ally-micro-robot::after {box-shadow:26px 0 #a17be4;} }
