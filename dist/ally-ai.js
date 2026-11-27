@@ -138,6 +138,7 @@ const form=add(panel,'form',null,'ally-ai-form');
 const label=add(form,'label','Tu consulta','ally-ai-sr');
 const input=add(form,'input');
 input.id='ally-ai-message';
+input.type='text';
 label.htmlFor=input.id;
 input.maxLength=400;
 input.placeholder='Pregúntame sobre Ally Lab…';
@@ -206,7 +207,13 @@ function toggle(){
   panel.hidden=!panel.hidden;
   trigger.hidden=!panel.hidden;
   trigger.setAttribute('aria-expanded',String(!panel.hidden));
-  if(panel.hidden)trigger.focus();else{showStart();input.focus();}
+  if(panel.hidden){
+    trigger.focus();
+    return;
+  }
+  showStart();
+  input.focus();
+  navigator.virtualKeyboard?.show?.();
 }
 function reset(){
   pending?.abort();pending=undefined;
