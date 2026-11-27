@@ -26,7 +26,7 @@ export const fold = value => String(value ?? '').normalize('NFD').replace(/\p{M}
   .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 const stop = new Set('dime decirme como conseguir mas subir aumentar bajar tener alcanzar puedo poner pongo usar lo seria funciona mejor config a al de del la las el los un una unos unas y o en para por con sin mi me se que quiero jugar busca buscar abre abrelo dame muestra muestrame ensename enseñame ver llevame donde esta cual cuales puedo juego juegos consola consolas mejor configuracion ajustes fps maximo rendimiento recomendado ultimas ultimo alli lab ally'.split(' '));
 const id = encodeURIComponent;
-const words = s => fold(s).split(' ').filter(w => w && !stop.has(w) && !/^\d{2,4}p?$/.test(w));
+const words = s => fold(s).replace(/\bciber\s?punk\b/g,'cyberpunk').split(' ').filter(w => w && !stop.has(w) && !/^\d{1,4}p?$/.test(w));
 const safe = x => typeof x === 'string' && /^(https:\/\/|\.\/assets\/)/i.test(x) ? x.replace(/^\.\//,'/') : '';
 const publicCard = (title,url,kind,extra={}) => ({title:String(title).slice(0,240),url,kind,...extra});
 function editOne(a,b) {
@@ -80,8 +80,10 @@ function performanceCards(game,detail,question) {
   const fsr=/\b(?:activo|activar|con)\s+fsr\b/i.test(question);
   const exact=model.anchors.filter(a=>(!desired||a.r===desired)&&(!watt||a.w===watt)&&
     (!quality||a.q===quality)&&(!fg||a.gen===fg)&&(!fsr||/^fsr/i.test(a.scale)));
+  const efficiency=/bateria|autonomia|menos consumo|menos energia/.test(fold(question));
   const sorted=(exact.length?exact:model.anchors.length?model.anchors:model.profiles).slice().sort((a,b)=>
-    (target?Number(b.gen==='off'&&b.low>=target)-Number(a.gen==='off'&&a.low>=target):0)||(b.low||0)-(a.low||0));
+    (target?Number(b.gen==='off'&&b.low>=target)-Number(a.gen==='off'&&a.low>=target):0)||
+    (efficiency?(a.w||Infinity)-(b.w||Infinity)||0:0)||(b.low||0)-(a.low||0));
   const seen=new Set();
   return sorted.flatMap(a=>{
     const params=new URLSearchParams({sim:'1',profile:String(a.profile)});
@@ -149,15 +151,13 @@ async function retro(ctx, key, query) {
       score};
   });
 }
-export async function retrieve(ctx, question, context) {
+export async function retrieve(ctx, question, context, followup={}) {
   const previous=Array.isArray(context)?context.slice(0,2).filter(v=>typeof v==='string'&&/^[a-z0-9-]{1,150}$/.test(v)):[];
   const follow=fold(question);
-  const refer=/^(?:y\b|abre (?:ese|el anterior)|comparalo con el anterior|que pasa si)/.test(follow)
+  const refer=/^(?:y\b|abre (?:ese|el anterior)|comparalo con el anterior|que pasa si|optimizame este juego|cual de las dos|a cuantos vatios)/.test(follow)
     || /\b(?:jugarlo|jugarla|ponerlo|ponerla|este juego|ese juego)\b/.test(follow);
   const open=/^abre (?:ese|el anterior)/.test(follow);
   const compare=follow==='comparalo con el anterior';
-  if(refer&&(!previous.length||(compare&&previous.length<2)))
-    return {direct:true,cards:[],noMatch:'Indícame el juego o elige una ficha para que pueda continuar.'};
   const normalized=fold(question);
   const nav=normalized.match(/^(?:llevame al?|abre|ir al?|abre el|ver) (?:el |la |las |los )?(juegos gratis|simulador(?: de fps)?|retro|noticias(?: de ally lab)?|ports|catalogo|juegos de pc)$/);
   if(nav){
@@ -167,7 +167,7 @@ export async function retrieve(ctx, question, context) {
   }
   const consoleMatch=Object.entries(consoles).flatMap(([key,names])=>names.split('|').map(name=>[key,fold(name)]))
     .sort((a,b)=>b[1].length-a[1].length).find(([,name])=>(' '+normalized+' ').includes(' '+name+' '));
-  const performance=(refer&&!open)||/\bfps\b|\b(?:720|900|1080)p\b|rendimiento|configuraci[oó]n|\b(?:tdp|fsr|calidad)\b/i.test(question);
+  const performance=(refer&&!open)||/\bfps\b|\b(?:720|900|1080)p\b|rendimiento|configuraci[oó]n|\b(?:tdp|fsr|calidad|vatios?|bateria)\b|\b\d{1,2}\s*w\b/i.test(question);
   const news=/notici|drivers|\bbios\b/.test(normalized);
   const offers=/gratis|gratuito|oferta|promocion|temporales/.test(normalized);
   const ports=/\bport\b|\bports\b|recompil/.test(normalized);
@@ -211,7 +211,7 @@ export async function retrieve(ctx, question, context) {
     const stores=['steam','epic','gog','battle net','ubisoft','ea app'];
     const store=stores.find(name=>(' '+normalized+' ').includes(' '+name+' '));
     const trial=/prueba|temporal/.test(normalized);
-    const terms=query.filter(w=>!['buscame','gratuitas','pruebas','prueba','gratuita','activos','activas'].includes(w)
+    const terms=query.filter(w=>!['buscame','gratuitas','pruebas','prueba','gratuita','activos','activas','ahora','hoy','disponibles','conseguir','temporalmente'].includes(w)
       &&(!store||!store.split(' ').includes(w)));
     const selection=[...unique.values()].filter(o=>(!store||fold(o.platform).includes(store))&&
       (!trial||o.kind==='trial')&&(!terms.length||rank(o.title,o.platform,terms)>0)).slice(0,6);
@@ -242,15 +242,17 @@ export async function retrieve(ctx, question, context) {
   const requestWords = /^(?:configuraciones?|ajuste(?:s)?|grafico[s]?|grafica[s]?|llegar|lograr|obtener|mantener|estables?|objetivo|recomienda|recomiendas|recomendais|conseguir|deberia|debo|necesito|aplico|aplicar|selecciono|seleccionar|optimo|optima|tdp|vatios|w)$/;
   const settingsOnly=performance&&query.every(word=>requestWords.test(word));
   const asksForGames=/\b(?:que|cuales) juegos\b/.test(normalized);
-  const contextual=!named&&(refer||previous.length>0&&!candidates.length&&settingsOnly&&!asksForGames);
+  const contextual=!named&&!candidates.length&&(refer||previous.length>0&&settingsOnly&&!asksForGames);
   if(contextual)candidates=(follow.startsWith('abre el anterior')?previous.slice(1,2):previous.slice(0,compare?2:1)).map(key=>catalog.find(g=>g.id===key)).filter(Boolean);
   const general=performance&&!contextual&&settingsOnly&&asksForGames;
   if(performance&&!contextual&&!candidates.length&&settingsOnly&&!asksForGames)return {direct:true,cards:[],noMatch:'¿Para qué juego quieres esa configuración?'};
-  if(contextual&&!candidates.length)return {direct:true,cards:[],noMatch:'La ficha anterior ya no está disponible en el catálogo.'};
+  if(contextual&&!candidates.length)return {direct:true,cards:[],noMatch:previous.length?'La ficha anterior ya no está disponible en el catálogo.':'Indícame el juego o elige una ficha para que pueda continuar.'};
   if(general)candidates=catalog.filter(g=>/60|[789]\d|1\d{2}/.test(String(g.fps)));
+  const performanceQuestion=contextual&&followup.constraints?followup.constraints+' '+question.replace(/\b\d{1,3}\s*(?:fps|w|vatios?)\b|\b(?:720|900|1080)p\b/gi,''):
+    question.replace(/\b(\d{1,2})\s*vatios?\b/gi,'$1 W');
   const months=performance?await Promise.all([...new Set(candidates.map(g=>g.published.slice(0,7)))].map(m=>
     optional(cached(local(ctx,m).href,()=>data(ctx,m))))):[];
-  const resolution=Number(question.match(/\b(720|900|1080)p\b/i)?.[1]);
+  const resolution=Number(performanceQuestion.match(/\b(720|900|1080)p\b/i)?.[1]);
   const threshold=Number(question.match(/\b(\d{2,3})\s*fps\b/i)?.[1])||60;
   const cards=candidates.map(g=>{
     const detail=months.find(m=>m&&Object.hasOwn(m,g.id))?.[g.id];
@@ -264,10 +266,10 @@ export async function retrieve(ctx, question, context) {
       }
     }
     return publicCard(g.title,'/#juego/'+id(g.id),'Juego de PC',{cover:safe(g.cover),gameId:g.id,description:'PC · Xbox ROG Ally X',simulator:'/#juego/'+id(g.id)+'?sim=1',
-      ...(performance?{readings:performanceCards(g,detail,question),documented}:{})});
+      ...(performance?{readings:performanceCards(g,detail,performanceQuestion),documented}:{})});
   }).filter(c=>!general||c.readings?.some(r=>r.kind!==kinds.on&&r.minimum>=threshold&&!r.comparison.startsWith('Estimación')));
   return {cards:cards.slice(0,6),direct:open||!!exact&&!performance,performance,general,compare,incomplete:!source,
-    ...(refer&&/cargador|corriente|enchuf/i.test(question)?{contextNotice:'La ficha no permite calcular un cambio solo por conectar el cargador. Puedes indicar el TDP que quieres comprobar.'}:{}),
+    ...(contextual&&followup.settings?.power?{contextNotice:'Cambiar la alimentación no permite calcular por sí solo los FPS. Los ajustes mostrados son referencias del simulador y no una medición específica en '+(followup.settings.power==='battery'?'batería.':'corriente.')}:{}),
     noMatch:general?'No hay referencias suficientes para ese objetivo en los datos consultados. Puedes indicar un juego concreto.':
       'No he encontrado una ficha que coincida. Prueba con el título completo o indica la consola.'};
 }

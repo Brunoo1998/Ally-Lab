@@ -149,13 +149,18 @@ const modes=add(panel,'div',null,'ally-ai-modes');
 const search=button(modes,'Solo buscar',()=>submit(input.value,'search'));
 const storage='ally-ai-conversation-v1';
 let entries=[];
+let memory;
 let pending;
 try{
   const stored=JSON.parse(sessionStorage.getItem(storage)||'[]');
   if(Array.isArray(stored))entries=stored.slice(-16);
+  memory=JSON.parse(sessionStorage.getItem(storage+'-settings')||'null');
 }catch{}
 function save(){
-  try{sessionStorage.setItem(storage,JSON.stringify(entries.slice(-16)));}catch{}
+  try{
+    sessionStorage.setItem(storage,JSON.stringify(entries.slice(-16)));
+    sessionStorage.setItem(storage+'-settings',JSON.stringify(memory||null));
+  }catch{}
 }
 function card(parent,value){
   const item=add(parent,'article',null,'ally-ai-card');
@@ -217,11 +222,36 @@ function toggle(){
 }
 function reset(){
   pending?.abort();pending=undefined;
-  input.value='';entries=[];save();showStart();setBusy(false);input.focus();
+  input.value='';entries=[];memory=null;save();showStart();setBusy(false);input.focus();
 }
 function setBusy(busy){
   send.disabled=search.disabled=busy;
   progress.textContent=busy?'Buscando y preparando la respuesta…':'';
+}
+async function offlineSearch(value){
+  const normalize=text=>text.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase()
+    .replace(/\bciberpunk\b/g,'cyberpunk').replace(/[^\p{L}\p{N} ]/gu,' ').trim();
+  const query=normalize(value);
+  const sections=[
+    ['Simulador FPS','/#simulador',/simulador/],
+    ['Juegos gratis','/gratis',/gratis|gratuitos|ofertas/],
+    ['Retro','/emulacion',/retro|emulacion|zelda|nintendo/],
+    ['Ports y Recompilaciones','/ports',/ports|recompilaciones/],
+    ['Noticias','/news',/noticias/]
+  ];
+  const cards=sections.filter(([, , pattern])=>pattern.test(query))
+    .map(([title,url])=>({title,url,kind:'Sección'}));
+  if(!cards.length){
+    try{
+      const response=await fetch('/datos/catalogo.json',{signal:AbortSignal.timeout(4000)});
+      const {games}=await response.json();
+      for(const game of games.filter(game=>(' '+query+' ').includes(' '+normalize(game.title)+' ')).slice(0,4)){
+        cards.push({title:game.title,kind:'Juego de PC',gameId:game.id,url:'/#juego/'+encodeURIComponent(game.id)});
+      }
+    }catch{}
+  }
+  if(!cards.length)cards.push({title:'Catálogo de Ally Lab',kind:'Sección',url:'/#juegos'});
+  return {answer:'El asistente está temporalmente fuera de servicio. Puedes abrir estos resultados de la búsqueda básica.',cards};
 }
 async function submit(message,mode='chat'){
   const value=message.trim();
@@ -229,9 +259,9 @@ async function submit(message,mode='chat'){
   const controller=new AbortController();
   pending=controller;
   const currentGame=pageGuide().gameId;
-  const context=[...new Set([currentGame,...entries.slice().reverse()
+  const context=[...new Set([...entries.slice().reverse()
     .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId)
-    .map(entry=>entry.cards[0].gameId)].filter(Boolean))].slice(0,2);
+    .map(entry=>entry.cards[0].gameId),currentGame].filter(Boolean))].slice(0,2);
   const user={user:value};entries.push(user);save();append(user);
   input.value='';setBusy(true);
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
@@ -240,15 +270,16 @@ async function submit(message,mode='chat'){
       ? 'https://ally-lab.pages.dev/api/ally-ai'
       : '/api/ally-ai';
     const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:value,mode,context}),signal:controller.signal});
+      body:JSON.stringify({message:value,mode,context,memory}),signal:controller.signal});
     const entry=await res.json();
     if(pending!==controller)return;
     const answer=res.ok?entry:{answer:entry.error||'No se pudo completar la consulta.'};
+    if(res.ok&&entry.memory)memory={settings:entry.memory};
     entries.push(answer);save();append(answer);
   }catch{
     if(pending===controller){
-      const answer={answer:'Ally AI no ha podido responder. Puedes continuar en el catálogo.',
-        cards:[{title:'Catálogo de Ally Lab',kind:'Sección',url:'/#juegos'}]};
+      const answer=await offlineSearch(value);
+      if(pending!==controller)return;
       entries.push(answer);save();append(answer);
     }
   }finally{
