@@ -1,5 +1,6 @@
-import {mountMicroanimations} from './ally-microanimations.js?v=4';
-import {mountMascot} from './ally-mascot.js?v=4';
+import {createAllySprite} from './ally-sprites.js';
+import {mountMicroanimations} from './ally-microanimations.js?v=5';
+import {mountMascot} from './ally-mascot.js?v=5';
 const examples=['Quiero jugar a Battlefield a 60 FPS','Busca Super Mario World para Super Nintendo','Llévame a los juegos gratis'];
 const welcome='Soy Ally AI. Puedo buscar juegos, abrir secciones y mostrar las pruebas de rendimiento disponibles para la Xbox ROG Ally X.';
 
@@ -118,7 +119,10 @@ panel.id='ally-ai-panel';
 panel.hidden=true;
 panel.setAttribute('aria-labelledby','ally-ai-title');
 const header=add(panel,'header',null,'ally-ai-head');
-const heading=add(header,'h2','Ally AI');
+const identity=add(header,'div',null,'ally-ai-identity');
+const chatMascot=createAllySprite();
+identity.append(chatMascot.node);
+const heading=add(identity,'h2','Ally AI');
 heading.id='ally-ai-title';
 const controls=add(header,'div',null,'ally-ai-actions');
 button(controls,'Nueva',reset).setAttribute('aria-label','Nueva conversación');
@@ -151,6 +155,19 @@ const storage='ally-ai-conversation-v1';
 let entries=[];
 let memory;
 let pending;
+let mascotState='idle';
+const mascotMotion=matchMedia('(prefers-reduced-motion: reduce)');
+function updateMascot(){
+  if(panel.hidden||document.hidden||mascotMotion.matches||root.dataset.mascotMotion==='off'){
+    chatMascot.stop();
+    return;
+  }
+  chatMascot.play(mascotState,mascotState==='think');
+}
+function showMascot(state){
+  mascotState=state;
+  updateMascot();
+}
 try{
   const stored=JSON.parse(sessionStorage.getItem(storage)||'[]');
   if(Array.isArray(stored))entries=stored.slice(-16);
@@ -213,16 +230,18 @@ function toggle(){
   trigger.hidden=!panel.hidden;
   trigger.setAttribute('aria-expanded',String(!panel.hidden));
   if(panel.hidden){
+    chatMascot.stop();
     trigger.focus();
     return;
   }
   showStart();
+  showMascot(pending?'think':'idle');
   input.focus();
   navigator.virtualKeyboard?.show?.();
 }
 function reset(){
   pending?.abort();pending=undefined;
-  input.value='';entries=[];memory=null;save();showStart();setBusy(false);input.focus();
+  input.value='';entries=[];memory=null;save();showStart();setBusy(false);showMascot('idle');input.focus();
 }
 function setBusy(busy){
   send.disabled=search.disabled=busy;
@@ -263,7 +282,7 @@ async function submit(message,mode='chat'){
     .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId)
     .map(entry=>entry.cards[0].gameId),currentGame].filter(Boolean))].slice(0,2);
   const user={user:value};entries.push(user);save();append(user);
-  input.value='';setBusy(true);
+  input.value='';setBusy(true);showMascot('think');
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
   try{
     const endpoint=location.origin==='https://ally-lab-rog-ally-x.brunoceuta1998.chatgpt.site'
@@ -276,11 +295,13 @@ async function submit(message,mode='chat'){
     const answer=res.ok?entry:{answer:entry.error||'No se pudo completar la consulta.'};
     if(res.ok&&entry.memory)memory={settings:entry.memory};
     entries.push(answer);save();append(answer);
+    showMascot(!res.ok||entry.availability?'confused':entry.cards?.length?'celebrate':'reply');
   }catch{
     if(pending===controller){
       const answer=await offlineSearch(value);
       if(pending!==controller)return;
       entries.push(answer);save();append(answer);
+      showMascot('confused');
     }
   }finally{
     clearTimeout(timeout);
@@ -300,3 +321,7 @@ document.addEventListener('click',event=>{
 });
 
 mountMicroanimations(root,trigger,mountMascot(root,trigger),modes);
+
+document.addEventListener('visibilitychange',updateMascot);
+mascotMotion.addEventListener('change',updateMascot);
+root.addEventListener('ally-mascot-motion',updateMascot);

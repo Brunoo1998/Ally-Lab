@@ -1,6 +1,8 @@
+import {createAllySprite} from './ally-sprites.js';
 const preference='ally-mascot-decorative-motion';
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
-const effects=['peek','play','blink','energy'];
+const effects={peek:'lookRight',play:'jump',blink:'blink',energy:'celebrate',walk:'walk',run:'run',sleep:'sleep',idle:'idle',cursor:'lookLeft'};
+const spontaneous=Object.keys(effects).filter(name=>name!=='cursor');
 const minDelay=30_000, maxDelay=45_000, sequenceMs=1600;
 const randomDelay=()=>minDelay+Math.floor(Math.random()*(maxDelay-minDelay+1));
 
@@ -12,12 +14,8 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   robot.className='ally-micro-robot';
   robot.hidden=true;
   robot.setAttribute('aria-label','Abrir Ally AI');
-  const image=document.createElement('img');
-  image.src='/assets/ally-robot.svg';
-  image.alt='';
-  image.width=56;
-  image.height=56;
-  robot.append(image);
+  const sprite=createAllySprite();
+  robot.append(sprite.node);
   root.insertBefore(robot,trigger);
 
   const label=document.createElement('label');
@@ -31,6 +29,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     catch { return true; }
   }
   toggle.checked=enabled();
+  root.dataset.mascotMotion=toggle.checked?'on':'off';
 
   let due=Date.now()+randomDelay(), cursorAfter=Date.now()+minDelay;
   let timer, finish, effect='';
@@ -41,6 +40,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   function stop() {
     clearTimeout(finish);
     robot.hidden=true;
+    sprite.stop();
     root.removeAttribute('data-mascot-effect');
     root.removeAttribute('data-mascot-sequence');
     robot.style.removeProperty('--ally-gaze');
@@ -59,6 +59,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     root.dataset.mascotEffect=name;
     root.dataset.mascotSequence='micro';
     robot.hidden=false;
+    sprite.play(effects[name]);
     due=Date.now()+randomDelay();
     cursorAfter=Date.now()+minDelay;
     finish=setTimeout(stop,sequenceMs);
@@ -68,7 +69,7 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
   function tick() {
     if(!eligible())return;
     if(Date.now()<due){queue();return;}
-    if(!play(effects[Math.floor(Math.random()*effects.length)]))queue();
+    if(!play(spontaneous[Math.floor(Math.random()*spontaneous.length)]))queue();
   }
   function startGreetingSequence() {
     // El saludo se muestra desde ally-mascot.js y emite el inicio en el mismo turno.
@@ -85,6 +86,11 @@ export function mountMicroanimations(root,trigger,greeting,controls) {
     queue();
   }
   function stateChanged() {
+    const motion=toggle.checked?'on':'off';
+    if(root.dataset.mascotMotion!==motion){
+      root.dataset.mascotMotion=motion;
+      root.dispatchEvent(new Event('ally-mascot-motion'));
+    }
     const paused=!toggle.checked||reduced.matches||document.hidden||trigger.hidden||
       !!document.activeElement?.closest(editable);
     if(paused||(!greeting.hidden&&effect)||(greeting.hidden&&root.dataset.mascotSequence==='greeting'))stop();

@@ -1,3 +1,4 @@
+import {createAllySprite} from './ally-sprites.js';
 const delay=20_000, spacing=300_000, dismissal=86_400_000;
 const keys={count:'ally-mascot-count',last:'ally-mascot-last',dismissed:'ally-mascot-dismissed'};
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
@@ -24,14 +25,10 @@ export function mountMascot(root, trigger) {
   hello.type='button';
   hello.className='ally-mascot-hello';
   hello.setAttribute('aria-label','¡Hola! ¿Necesitas ayuda? Abrir Ally AI');
-  const robot=document.createElement('img');
-  robot.src='/assets/ally-robot.svg';
-  robot.alt='';
-  robot.width=52;
-  robot.height=52;
+  const robot=createAllySprite();
   const message=document.createElement('span');
   message.textContent='¡Hola! ¿Necesitas ayuda?';
-  hello.append(robot,message);
+  hello.append(robot.node,message);
   const close=document.createElement('button');
   close.type='button';
   close.className='ally-mascot-dismiss';
@@ -52,6 +49,7 @@ export function mountMascot(root, trigger) {
     }
     const wasVisible=!peek.hidden;
     peek.hidden=true;
+    robot.stop();
     peek.classList.remove('ally-mascot-leaving');
     if(wasVisible)root.dispatchEvent(new Event('ally-mascot-greeting-end'));
   }
@@ -68,6 +66,7 @@ export function mountMascot(root, trigger) {
     write(keys.count,read(keys.count)+1);
     write(keys.last,now);
     peek.hidden=false;
+    if(root.dataset.mascotMotion!=='off')robot.play('wave');
     // Señal síncrona: la entrada del saludo comparte fotograma con brillo y latido.
     root.dispatchEvent(new Event('ally-mascot-greeting-start'));
     exit=setTimeout(()=>hide(true),4000);
