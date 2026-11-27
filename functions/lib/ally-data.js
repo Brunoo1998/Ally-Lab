@@ -158,7 +158,7 @@ export async function retrieve(ctx, question, context) {
   if(refer&&(!previous.length||(compare&&previous.length<2)))
     return {direct:true,cards:[],noMatch:'Indícame el juego o elige una ficha para que pueda continuar.'};
   const normalized=fold(question);
-  const nav=normalized.match(/^(?:llevame a|abre|ir a|abre el|ver) (?:el |la |las |los )?(juegos gratis|simulador(?: de fps)?|retro|noticias(?: de ally lab)?|ports|catalogo|juegos de pc)$/);
+  const nav=normalized.match(/^(?:llevame al?|abre|ir al?|abre el|ver) (?:el |la |las |los )?(juegos gratis|simulador(?: de fps)?|retro|noticias(?: de ally lab)?|ports|catalogo|juegos de pc)$/);
   if(nav){
     const q=nav[1], index=q.includes('gratis')?2:q.includes('simulador')?1:q==='retro'?3:q.includes('noticias')?5:q==='ports'?4:0;
     const [title,url]=pages[index];
