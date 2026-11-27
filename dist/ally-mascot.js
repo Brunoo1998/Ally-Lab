@@ -1,4 +1,4 @@
-const delay=30_000, spacing=600_000, dismissal=86_400_000;
+const delay=20_000, spacing=300_000, dismissal=86_400_000;
 const keys={count:'ally-mascot-count',last:'ally-mascot-last',dismissed:'ally-mascot-dismissed'};
 const editable='input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 
