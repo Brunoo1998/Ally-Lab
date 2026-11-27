@@ -74,3 +74,36 @@
   .ally-ai-panel:not([hidden]) { animation:ally-ai-open .18s ease-out; }
   @keyframes ally-ai-open { from{opacity:0;transform:translateY(.4rem)} to{opacity:1;transform:translateY(0)} }
 }
+
+.ally-mascot {
+  position:absolute;
+  inset-inline-end:0;
+  inset-block-end:calc(100% + .4rem);
+  width:max-content;
+  max-width:calc(100vw - 2.5rem);
+  transform-origin:bottom right;
+  animation:ally-mascot-peek .32s ease-out both;
+}
+.ally-mascot.ally-mascot-leaving { animation:ally-mascot-hide .25s ease-in both; pointer-events:none; }
+.ally-mascot .ally-mascot-hello {
+  display:flex; align-items:center; gap:.35rem; max-width:100%;
+  padding:.2rem 2.35rem .2rem .25rem; min-height:48px;
+  border:1px solid #9a73d0; border-radius:15px;
+  color:#faf6ff; background:#2b2040; box-shadow:0 .35rem 1rem #0006;
+  font-size:.8rem; text-align:left;
+}
+.ally-mascot-hello img { flex:none; width:48px; height:48px; animation:ally-mascot-wave .75s .22s ease-in-out both; }
+.ally-mascot .ally-mascot-dismiss {
+  position:absolute; inset-inline-end:.18rem; inset-block-start:50%; transform:translateY(-50%);
+  width:36px; height:44px; padding:0; border:0; border-radius:10px;
+  background:transparent; color:#e9dbff; font-size:1.1rem;
+}
+@keyframes ally-mascot-peek { from {opacity:0;transform:translateY(1.1rem) scale(.88)} to {opacity:1;transform:none} }
+@keyframes ally-mascot-hide { to {opacity:0;transform:translateY(1rem) scale(.9)} }
+@keyframes ally-mascot-wave { 0%,100% {transform:none} 35% {transform:rotate(-10deg)} 65% {transform:rotate(7deg)} }
+@media(max-width:480px) {
+  .ally-mascot .ally-mascot-hello {font-size:.75rem; padding-inline-end:2.65rem;}
+  .ally-mascot-hello img {width:39px;height:39px;}
+  .ally-mascot .ally-mascot-dismiss {width:42px;}
+}
+@media(prefers-reduced-motion:reduce) { .ally-ai .ally-mascot {display:none;} }
