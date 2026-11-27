@@ -323,5 +323,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  for(const [id,label] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
   button(buttons,label,id==='60'?'fps-optimize':'',()=>recommend(id));
  }
- apply(model.initial);
+ const anchorParam = new URLSearchParams(location.hash.split('?')[1]).get('ref');
+ const anchorIndex = anchorParam !== null && /^\d+$/.test(anchorParam) ? Number(anchorParam) : -1;
+ apply(model.anchors[anchorIndex] || model.initial);
 }

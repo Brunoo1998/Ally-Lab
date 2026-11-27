@@ -43,7 +43,9 @@ async function recoverCover(image) {
 
 function render() {
   const term = query.value.trim().toLocaleLowerCase('es');
-  const matches = games.filter(game => game.n.toLocaleLowerCase('es').includes(term));
+  const exact = new URLSearchParams(location.hash.split('?')[1]).get('juego');
+  const matches = games.filter(game => exact && query.value === exact
+    ? game.n === exact : game.n.toLocaleLowerCase('es').includes(term));
   const pages = Math.ceil(matches.length / limit);
   results.replaceChildren();
   for (const game of matches.slice(page * limit, (page + 1) * limit)) {
@@ -111,7 +113,7 @@ async function loadConsole(key) {
   request = current;
   games = [];
   page = 0;
-  query.value = '';
+  query.value = new URLSearchParams(location.hash.split('?')[1]).get('juego') || '';
   query.disabled = true;
   results.replaceChildren();
   pager.hidden = true;
@@ -150,7 +152,7 @@ async function loadConsole(key) {
 }
 
 function route() {
-  const key = location.hash.startsWith('#consola/') ? location.hash.slice(9) : '';
+  const key = location.hash.startsWith('#consola/') ? location.hash.slice(9).split('?')[0] : '';
   const card = document.getElementById('console-' + key);
   consoles.hidden = Boolean(card);
   details.hidden = !card;

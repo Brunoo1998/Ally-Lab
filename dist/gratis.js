@@ -11,6 +11,7 @@ const extraRemote = new URL('gratis-otras-tiendas.json', remote).href;
 const date = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'});
 const price = new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const fold = s=>s.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
+let linkedOffer;
 let data, otherStores, games = new Map(), view='active', kind='keep', lastState='';
 const now = ()=>Date.now();
 
@@ -90,6 +91,7 @@ function render(){
  $('free-status').textContent=(data.checked?'Último intento de actualización: '+date.format(new Date(data.checked))+'. ':'')+(stale?'Comprobación de ofertas pendiente; confirma la disponibilidad en la tienda.':'')+(kind==='keep'&&otherStores?.checked?' Otras tiendas: '+date.format(new Date(otherStores.checked))+'.':'');
  $('free-description').textContent=kind==='trial'?'Prueba juegos completos o eventos gratuitos por tiempo limitado. Cuando termine la promoción, el juego dejará de ser gratuito.':'Reclama estos juegos antes de que acabe la promoción y consérvalos en tu biblioteca.';
  const results=offers.filter(o=>{
+  if(linkedOffer && o.id!==linkedOffer)return false;
   const s=status(o,t), ending=s==='active'&&Date.parse(o.end)-t<=24*hour;
   return (s===view||(view==='ending'&&ending))&&(!platform.value||o.platform===platform.value)
    &&(!genre.value||(o.genre||'unknown')===genre.value)&&fold(o.title).includes(fold(query.value.trim()));
@@ -134,6 +136,7 @@ function updateFilters(){
  render();
 }
 for(const button of kinds)button.onclick=()=>{
+ linkedOffer=undefined;
  kind=button.dataset.kind;
  view='active';
  for(const other of kinds)other.setAttribute('aria-pressed',String(other===button));
@@ -143,11 +146,19 @@ for(const button of kinds)button.onclick=()=>{
  render();
 };
 for(const button of tabs)button.onclick=()=>{
+ linkedOffer=undefined;
  view=button.dataset.view;
  for(const other of tabs)other.setAttribute('aria-pressed',String(other===button));
  render();
 };
-fields.forEach(field=>field.addEventListener(field===query?'input':'change',render));
+const offerRoute=new URLSearchParams(location.hash.slice(1));
+if(offerRoute.has('oferta')){
+  const offerId=offerRoute.get('oferta');
+  const target=kinds.find(button=>button.dataset.kind===offerRoute.get('tipo'));
+  target?.click();
+  linkedOffer=offerId;
+}
+fields.forEach(field=>field.addEventListener(field===query?'input':'change',()=>{linkedOffer=undefined;render()}));
 get(local).then(apply).catch(()=>{$('free-status').textContent='Datos pendientes de actualizar.'});
 get(remote).then(apply).catch(()=>{});
 get('./datos/catalogo.json').then(c=>{games=new Map(c.games.map(g=>[fold(g.title),g]));render()}).catch(()=>{});

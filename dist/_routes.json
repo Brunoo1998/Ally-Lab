@@ -1,5 +1,8 @@
 {
   "version": 1,
-  "include": ["/googlea9122a02eb64d3ad.html"],
+  "include": [
+    "/googlea9122a02eb64d3ad.html",
+    "/api/ally-ai"
+  ],
   "exclude": []
 }

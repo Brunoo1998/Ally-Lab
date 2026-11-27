@@ -22,6 +22,7 @@ async function json(name){
 }
 function card(parent,n,games){
  const article=add(parent,'article','','news-card');
+ article.id='noticia-'+n.id;
  const img=add(article,'img');img.src=n.image||'./assets/consola.webp';img.alt='';img.loading='lazy';
  img.onerror=()=>{img.onerror=null;img.src='./assets/consola.webp'};
  const content=add(article,'div','','news-copy');
@@ -77,5 +78,7 @@ async function start(){
  impact.addEventListener('change',render);
  scope.addEventListener('change',render);
  render();
+ const target=document.getElementById(location.hash.slice(1));
+ if(target)target.scrollIntoView({block:'start'});
 }
 start().catch(()=>{const target=$('news-count');if(target)target.textContent='No se pudieron cargar las noticias. Recarga para volver a intentarlo.'});
