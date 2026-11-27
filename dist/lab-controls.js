@@ -64,7 +64,7 @@ function updatePadStatus(){
  }
  return pads.length>0;
 }
-let held='',next=0,timer,editing;
+let held='',next=0,timer,editing,heldAllyShortcut;
 
 function activateSearch(field){
  field.focus();
@@ -128,8 +128,17 @@ function scan(){
  if(document.hidden){held='';return}
  const pads=connectedPads();
  const pad=pads.find(isAlly)||pads[0];
- if(!pad){held='';return}
+ if(!pad){held='';heldAllyShortcut=undefined;return}
  const {buttons,axes}=pad;
+ const allyShortcut=buttons[10]?.pressed||buttons[11]?.pressed;
+ if(allyShortcut&&!heldAllyShortcut&&!picker?.open){
+  const chatTrigger=document.querySelector('.ally-ai-trigger[aria-expanded="false"]:not([hidden])');
+  if(chatTrigger){
+   document.documentElement.classList.add('pad-navigation');
+   chatTrigger.click();
+  }
+ }
+ heldAllyShortcut=allyShortcut;
  const scrollAxis=axes[3]||0;
  const tilt=Math.abs(scrollAxis);
  const deadZone=.2;
@@ -181,6 +190,7 @@ function syncGamepads(){
   timer=undefined;
   held='';
   editing=undefined;
+  heldAllyShortcut=undefined;
  }
 }
 window.addEventListener('gamepadconnected',syncGamepads);
