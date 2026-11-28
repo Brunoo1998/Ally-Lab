@@ -280,7 +280,8 @@ async function submit(message,mode='chat'){
   const currentGame=pageGuide().gameId;
   const context=[...new Set([...entries.slice().reverse()
     .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId)
-    .map(entry=>entry.cards[0].gameId),currentGame].filter(Boolean))].slice(0,2);
+    .map(entry=>entry.cards[0].gameId).slice(0,1),currentGame,...entries.slice().reverse()
+    .filter(entry=>entry.cards?.length===1&&entry.cards[0].gameId).map(entry=>entry.cards[0].gameId)].filter(Boolean))].slice(0,2);
   const user={user:value};entries.push(user);save();append(user);
   input.value='';setBusy(true);showMascot('think');
   const timeout=setTimeout(()=>controller.abort('timeout'),24000);
@@ -290,6 +291,7 @@ async function submit(message,mode='chat'){
       : '/api/ally-ai';
     const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({message:value,mode,context,memory}),signal:controller.signal});
+    if(res.status>=500)throw new Error('Servicio no disponible');
     const entry=await res.json();
     if(pending!==controller)return;
     const answer=res.ok?entry:{answer:entry.error||'No se pudo completar la consulta.'};

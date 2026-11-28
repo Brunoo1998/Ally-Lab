@@ -1,0 +1,23 @@
+name: Validación de Ally Lab
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Sintaxis JavaScript
+        run: |
+          for file in dist/app.js dist/capturas.js dist/lab-controls.js dist/ally-ai.js dist/sim-model.js; do node --check "$file"; done
+      - name: Simulador FPS y Ally AI
+        run: |
+          node tools/probar_simulador.mjs
+          node tools/probar_ally_ai.mjs
