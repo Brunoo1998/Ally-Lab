@@ -1,0 +1,2 @@
+## Guías HTML estáticas
+Cloudflare Pages debe ejecutar `node tools/generar_guias.mjs` en el build, con salida `dist`. El script regenera todas las guías con datos del catálogo, el índice y el sitemap. No añade llamadas de Pages Functions. En local ejecuta el mismo comando desde la raíz antes de probar `/guias/`. Las fichas dinámicas originales siguen disponibles y las guías contienen enlaces a ellas. Los resultados de FPS son los publicados en el catálogo, no mediciones nuevas. El posicionamiento en Google no está garantizado.

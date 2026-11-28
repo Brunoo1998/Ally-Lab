@@ -147,7 +147,7 @@ function header(game) {
     el('p','detail-hardware','ROG Xbox Ally X · Ryzen AI Z2 Extreme'),
     el('p','detail-date','Guía del '+prettyDate(game.published)));
   const fav=button('',()=>toggleFavorite(game,fav),'btn');paintFavorite(game,fav);
-  copy.append(fav);
+  copy.append(fav,anchor('Enlace permanente de la guía','/guias/'+encodeURIComponent(game.id)+'/','btn'));
   h.append(backdrop,cover(game,true),copy);
   return h;
 }
