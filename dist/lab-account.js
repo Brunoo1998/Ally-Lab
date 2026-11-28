@@ -9,10 +9,25 @@ let hint=read(hintKey,null),account=null,queue=read(queueKey,null),lastCheck=0,w
 if(typeof hint!=='string')hint=null;
 if(!queue||queue.owner!==hint||!Array.isArray(queue.ops))queue={owner:hint,ops:[]};
 queue.ops=queue.ops.filter(o=>validGame(o?.game)&&typeof o.enabled==='boolean').slice(0,500);
-const header=document.querySelector('.mast .bar')||document.querySelector('.global-search-page nav');
-const control=document.createElement('button');control.type='button';control.className='global-search-link ally-account-button';control.textContent=hint?'@'+hint:'Conectar cuenta';
+const header=document.getElementById('mast-quick-actions')||document.querySelector('.global-search-page nav')||document.querySelector('.mast .bar');
+const control=document.createElement('button');control.type='button';control.className='ally-account-button';
+control.setAttribute('aria-haspopup','dialog');control.setAttribute('aria-expanded','false');
+const profileIcon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+profileIcon.setAttribute('viewBox','0 0 24 24');profileIcon.setAttribute('aria-hidden','true');profileIcon.setAttribute('fill','none');profileIcon.setAttribute('stroke','currentColor');profileIcon.setAttribute('stroke-width','1.65');profileIcon.setAttribute('stroke-linecap','round');profileIcon.setAttribute('stroke-linejoin','round');
+const outline=document.createElementNS('http://www.w3.org/2000/svg','path');outline.setAttribute('d','M20 21v-2a7 7 0 0 0-7-7h-2a7 7 0 0 0-7 7v2M12 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z');profileIcon.append(outline);
+const name=document.createElement('span');name.className='ally-account-name';
+const statusDot=document.createElement('span');statusDot.className='ally-account-dot';statusDot.setAttribute('aria-hidden','true');
+control.append(profileIcon,name,statusDot);
 if(header)header.append(control);
-function label(text){control.textContent=text;control.title=text;}
+function label(text){
+ const connected=text.startsWith('@');
+ const state=connected?(text.includes(' · ')?'pending':account?'connected':'pending'):text==='Conectando…'?'pending':text==='Reintentar conexión'?'error':'guest';
+ control.dataset.state=state;
+ name.textContent=connected?text.split(' · ')[0]:state==='error'?'Reintentar':state==='pending'?'Conectando…':'Cuenta';
+ control.title=connected?text:'Cuenta Ally · '+text;
+ control.setAttribute('aria-label',connected?'Mi cuenta '+text:text);
+}
+label(hint?'@'+hint:'Conectar cuenta');
 function writeFavorites(ids){const value=[...new Set(ids.filter(validGame))].slice(0,500);save(localKey,value);window.dispatchEvent(new CustomEvent('ally-favorites-synced',{detail:value}));}
 function storeQueue(){save(queueKey,queue);}
 function adopt(value){
@@ -56,6 +71,7 @@ window.addEventListener('ally-favorite-changed',e=>{
  if(account)void flush();else void refresh(true);
 });
 const dialog=document.createElement('dialog');dialog.className='ally-account-dialog';dialog.setAttribute('aria-label','Cuenta Ally');document.body.append(dialog);
+dialog.addEventListener('close',()=>control.setAttribute('aria-expanded','false'));
 function openAccount(){
  dialog.replaceChildren();const h=document.createElement('h2');h.textContent=hint?'@'+hint:'Cuenta Ally';dialog.append(h);
  const p=document.createElement('p');p.textContent=account?'Tu perfil de Ally Community está conectado. Los favoritos se sincronizan entre dispositivos.':hint?'No se ha podido confirmar la conexión. Los cambios se conservan localmente y se reintentan cuando vuelvas a conectar.':'Conecta el perfil que ya utilizas en Ally Community.';dialog.append(p);
@@ -65,7 +81,7 @@ function openAccount(){
    make('Desconectar de Ally Lab',async()=>{if(queue.ops.length&&!confirm('Hay favoritos pendientes de sincronizar. ¿Desconectar igualmente?'))return;try{await request({action:'logout'});disconnect();dialog.close();}catch(e){p.textContent=e.message;}});
  }else make('Conectar con Ally Community',()=>{location.href=origin+endpoint+'?start=1';});
  const profile=document.createElement('a');profile.href='https://ally-community.pages.dev/';profile.textContent='Abrir Ally Community';dialog.append(profile);
- make('Cerrar',()=>dialog.close());dialog.showModal();
+ make('Cerrar',()=>dialog.close());control.setAttribute('aria-expanded','true');dialog.showModal();
 }
 control.onclick=async()=>{if(location.origin!==origin){location.href=origin+endpoint+'?start=1';return;}if(!hint)await refresh(true);if(!hint){location.href=endpoint+'?start=1';return;}openAccount();};
 async function complete(){
@@ -88,7 +104,7 @@ async function complete(){
    const p=document.createElement('p');p.textContent=e.message;dialog.append(p);
    const retry=document.createElement('button');retry.type='button';retry.textContent='Volver a conectar';retry.onclick=()=>location.assign(endpoint+'?start=1');dialog.append(retry);
    const close=document.createElement('button');close.type='button';close.textContent='Cerrar';close.onclick=()=>dialog.close();dialog.append(close);
-   if(!dialog.open)dialog.showModal();
+   if(!dialog.open){control.setAttribute('aria-expanded','true');dialog.showModal();}
  }
  return true;
 }
