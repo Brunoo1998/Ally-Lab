@@ -1,5 +1,5 @@
 import { unmountGameVideo } from './videos.js?v=41';
-import { mountCaptures } from './capturas.js?v=polish-1';
+import { mountCaptures } from './capturas.js?v=detail-preview-2';
 import { mountSim } from './simulador.js?v=ally-ai-2';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
@@ -157,14 +157,10 @@ function detailWorkspace(host,game,data,selected) {
   const navigation=el('nav','detail-navigation');navigation.setAttribute('aria-label','Vistas de la ficha');
   const content=el('div','detail-content');
   const panes=new Map(),buttons=new Map();
-  const views=[['settings','01','Ajustes'],['performance','02','Rendimiento'],['sim','03','Simulador FPS'],['media','04','Galería']];
-  let active='',simReady=false,mediaEpoch=0;
+  const views=[['settings','01','Ajustes'],['performance','02','Rendimiento'],['sim','03','Simulador FPS']];
+  let active='',simReady=false;
   function activate(key) {
     if(!panes.has(key)||active===key)return;
-    if(active==='media'){
-      unmountGameVideo();mediaEpoch++;
-      panes.get('media').replaceChildren();
-    }
     active=key;
     for(const [id,pane] of panes)pane.hidden=id!==key;
     for(const [id,control] of buttons)control.setAttribute('aria-pressed',String(id===key));
@@ -173,20 +169,7 @@ function detailWorkspace(host,game,data,selected) {
       try{mountSim(target,catalog.games,game,data,slug=>{location.hash='juego/'+slug+'?sim=1'});simReady=true;}
       catch{target.replaceChildren(box('No se pudo abrir el simulador','Vuelve a intentarlo.'));target.append(button('Reintentar',()=>{target.replaceChildren();active='';activate('sim');}));}
     }
-    if(key==='media'){
-      const target=panes.get(key),epoch=++mediaEpoch;
-      const gallery=panel('Galería del juego');gallery.classList.add('game-captures');gallery.hidden=true;
-      const status=el('p','info','Cargando capturas y vídeos…');status.setAttribute('role','status');
-      target.replaceChildren(status,gallery);
-      void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos')).then(()=>{
-        if(epoch!==mediaEpoch||!target.isConnected)return;
-        status.remove();
-        if(gallery.hidden)target.append(box('Galería no disponible','No hay capturas o vídeos disponibles en este momento.'));
-      }).catch(()=>{
-        if(epoch!==mediaEpoch||!target.isConnected)return;
-        status.textContent='No se ha podido cargar la galería.';
-      });
-    }
+
   }
   for(const [key,num,label] of views){
     const pane=el('section','detail-pane');pane.id='detail-'+key;pane.hidden=true;
@@ -334,8 +317,17 @@ async function detailView(game,selected,token,standalone){
   host.classList.toggle('lab-page',standalone);
   host.classList.toggle('detail-redesign',!standalone);
   const load=el('p','info','Cargando configuración…');load.setAttribute('role','status');
-  if(!standalone)host.append(header(game));
+  let gallery;
+  if(!standalone){
+    gallery=panel('Galería del juego');
+    gallery.classList.add('game-captures','detail-media');gallery.hidden=true;
+    host.append(header(game),gallery);
+  }
   host.append(load);
+  function loadGallery(){
+    if(!gallery||!gallery.isConnected)return;
+    void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'),{videoFirst:true}).catch(()=>{gallery.hidden=true;});
+  }
   try{
     const month=game.published.slice(0,7);
     if(!months.has(month))months.set(month,fetchJson(month).catch(err=>{months.delete(month);throw err;}));
@@ -349,11 +341,13 @@ async function detailView(game,selected,token,standalone){
     }
     const summary=detailSummary(game,data);load.replaceWith(summary);
     detailWorkspace(host,game,data,selected);
+    loadGallery();
   }catch{
     if(token!==routeId)return;
     const b=box('No se pudo cargar la ficha','Puedes volver a intentarlo.');
     b.append(button('Reintentar',()=>route()));
     if(load.isConnected)load.replaceWith(b);else host.append(b);
+    loadGallery();
   }
 }
 

@@ -2,7 +2,7 @@ import { gameVideo, playGameVideo, unmountGameVideo } from './videos.js?v=41';
 
 let catalog;
 
-export async function mountCaptures(section, game, loadCatalog, loadVideos) {
+export async function mountCaptures(section, game, loadCatalog, loadVideos, {videoFirst=false}={}) {
   catalog ??= loadCatalog().catch(() => {
     catalog = undefined;
     return {};
@@ -13,6 +13,7 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
   section.hidden = false;
 
   const stage = document.createElement('div');
+  stage.className = 'capture-stage';
   const main = document.createElement('img');
   main.className = 'capture-main';
   main.decoding = 'async';
@@ -28,7 +29,7 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
     button.setAttribute('aria-label', label);
     button.addEventListener('click', action);
     const image = document.createElement('img');
-    image.src = url;
+    if(url)image.src = url;
     image.loading = 'lazy';
     image.decoding = 'async';
     image.alt = '';
@@ -68,19 +69,30 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
     videoButton?.setAttribute('aria-pressed', 'false');
     stage.replaceChildren(main);
     main.alt = 'Captura ' + (index + 1) + ' de ' + game.title;
-    main.src = captures[index][1];
+    main.src = captures[index][1] || captures[index][0];
     buttons.forEach((button, position) => button.setAttribute('aria-pressed', String(position === index)));
   }
 
-  section.append(stage, strip);
-  if (captures.length) select(0);
-  else if (media && videoPoster) {
-    main.alt = 'Vista previa del vídeo de ' + game.title;
-    main.src = videoPoster;
-    stage.append(main);
-  } else if (media) {
-    const hint = document.createElement('p');
-    hint.textContent = 'Selecciona el vídeo para reproducirlo.';
-    stage.append(hint);
+  function previewVideo(){
+    const play = document.createElement('button');
+    play.type='button';play.className='capture-preview-play';
+    const label=media.kind==='gameplay'?'Reproducir gameplay':'Reproducir tráiler';
+    play.setAttribute('aria-label',label+' de '+game.title);
+    if(videoPoster){
+      const poster=document.createElement('img');
+      poster.className='capture-main';poster.alt='';poster.decoding='async';poster.loading='lazy';
+      poster.src=media.type==='youtube'?'https://i.ytimg.com/vi/'+media.id+'/hqdefault.jpg':videoPoster;
+      poster.addEventListener('error',()=>{if(poster.src!==new URL(videoPoster,location.href).href)poster.src=videoPoster;else poster.remove();});
+      play.append(poster);
+    }
+    const overlay=document.createElement('span');overlay.className='capture-preview-label';
+    overlay.textContent='▶  '+label;play.append(overlay);
+    play.addEventListener('click',selectVideo);
+    stage.replaceChildren(play);
+    videoButton.setAttribute('aria-pressed','true');
+    buttons.forEach(button=>button.setAttribute('aria-pressed','false'));
   }
+  section.append(stage, strip);
+  if(media&&(videoFirst||!captures.length))previewVideo();
+  else if(captures.length)select(0);
 }
