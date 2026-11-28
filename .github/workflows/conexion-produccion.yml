@@ -1,0 +1,20 @@
+name: Comprobar conexión publicada
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probar_conexion_produccion.mjs'
+      - '.github/workflows/conexion-produccion.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tools/probar_conexion_produccion.mjs
