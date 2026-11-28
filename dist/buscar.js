@@ -10,13 +10,13 @@ function rank(item,q){const t=fold(item.title),a=fold(item.extra),parts=q.split(
 const pick=(items,q)=>items.map(x=>({...x,score:rank(x,q)})).filter(x=>x.score).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,'es')).slice(0,12);
 const cache=new Map();
 async function local(path,signal){if(cache.has(path))return cache.get(path);const j=await get(path,signal);cache.set(path,j);return j;}
-let controller,version=0;
+let controller,version=0,retroCoverage=null;
 async function source(k,q,raw,signal){
  if(k==='pc'){const c=await local('/datos/catalogo.json',signal);return pick(c.games.filter(g=>safeId(g.id)).map(g=>card(g.title,'/#juego/'+g.id,'Configuraciones · '+(g.fps||'')+' FPS')),q);}
  if(k==='ports'){const c=await local('/datos/ports.json',signal);return pick(c.projects.flatMap(p=>[{group:p.group,game:p.game},...(p.includedGames||[])].filter(g=>g.group).map(g=>card(g.game||p.name,'/ports#'+encodeURIComponent(g.group)+'/'+encodeURIComponent(p.id),p.name+' · '+p.platform))),q);}
  if(k==='news'){const c=await local('/datos/news.json',signal);return pick(c.map(n=>card(n.title,'/news#noticia-'+encodeURIComponent(n.id),[n.date,n.source,n.summary].join(' · '))),q);}
  if(k==='free'){const sets=await Promise.allSettled([get('/datos/gratis.json',signal),get(remote+'gratis.json',signal),get(remote+'gratis-otras-tiendas.json',signal)]);if(sets.every(r=>r.status==='rejected'))throw Error('Ofertas no disponibles');const unique=new Map();for(const r of sets)if(r.status==='fulfilled')for(const o of r.value.offers||[])if(o.region==='ES'&&Date.parse(o.start)<=Date.now()&&Date.parse(o.end)>Date.now())unique.set(o.id,o);return pick([...unique.values()].map(o=>card(o.title,'/gratis#oferta='+encodeURIComponent(o.id)+'&tipo='+encodeURIComponent(o.kind||'keep'),o.platform+' · Hasta '+new Date(o.end).toLocaleDateString('es-ES'))),q);}
- if(k==='retro'){const index=await local('/datos/retro-busqueda.json',signal);return pick(index.flatMap(([key,name,titles])=>titles.map(title=>card(title,'/emulacion#consola/'+key+'?juego='+encodeURIComponent(title),name))),q);}
+ if(k==='retro'){const index=await local('/datos/retro-busqueda.json',signal);retroCoverage={full:index.filter(r=>r[3]==='full').length,total:index.length,titles:index.reduce((n,r)=>n+r[2].length,0)};return pick(index.flatMap(([key,name,titles])=>titles.map(title=>card(title,'/emulacion#consola/'+key+'?juego='+encodeURIComponent(title),name))),q);}
  if(k==='community'){const j=await get(community+'/api/public-search?q='+encodeURIComponent(raw),signal);return (j.rows||[]).filter(r=>Number.isSafeInteger(r.id)&&r.id>0).slice(0,12).map(r=>card(r.title,community+'/?post='+r.id,r.category||'Publicación pública'));}
  return [];
 }
@@ -24,7 +24,7 @@ function show(k,rows,error=false){
  const section=document.createElement('section'),h=document.createElement('h2');h.textContent=labels[k];section.append(h);
  if(error||!rows.length){const p=document.createElement('p');p.className='source-warning';p.textContent=error?'No se ha podido consultar esta sección.':'Sin coincidencias.';section.append(p);}
  for(const r of rows){const a=document.createElement('a');a.className='global-result';a.href=r.url;const title=document.createElement('strong');title.textContent=r.title;const extra=document.createElement('small');extra.textContent=r.extra;a.append(title,extra);section.append(a);}
- if(k==='retro'){const note=document.createElement('small');note.textContent='Índice local de títulos con carátula; puede no incluir todas las entradas Retro.';section.append(note);}
+ if(k==='retro'){const note=document.createElement('small');note.textContent=retroCoverage?retroCoverage.titles.toLocaleString('es-ES')+' títulos únicos por consola · '+retroCoverage.full+'/'+retroCoverage.total+' consolas con catálogo completo.'+(retroCoverage.full<retroCoverage.total?' Las demás se consultan con un índice parcial de carátulas.':' Incluye juegos sin carátula.'):'No se pudo comprobar la cobertura del índice Retro.';section.append(note);}
  if(k==='community'){const a=document.createElement('a');a.href=community+'/?q='+encodeURIComponent(term.value.trim());a.textContent='Ver más en Ally Community';section.append(a);}
  results.append(section);
 }
