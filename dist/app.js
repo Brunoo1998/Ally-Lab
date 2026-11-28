@@ -1,5 +1,5 @@
 import { unmountGameVideo } from './videos.js?v=41';
-import { mountCaptures } from './capturas.js?v=41';
+import { mountCaptures } from './capturas.js?v=polish-1';
 import { mountSim } from './simulador.js?v=ally-ai-2';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
@@ -248,12 +248,12 @@ function rating(game) {
 async function detailView(game,selected,token,standalone){
   const host=id('ficha');
   if(standalone)host.classList.add('lab-page');else host.classList.remove('lab-page');
-  const load=el('p','info','Cargando configuración…'); load.setAttribute('role','status'); if(!standalone){
-    const gallery=panel('Galería del juego');
+  const load=el('p','info','Cargando configuración…'); load.setAttribute('role','status'); let gallery; if(!standalone){
+    gallery=panel('Galería del juego');
     gallery.classList.add('game-captures');
     gallery.hidden=true;
     host.append(header(game),gallery);
-    void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'));
+
   }
   host.append(load);
   try{
@@ -272,10 +272,12 @@ async function detailView(game,selected,token,standalone){
     if(gameRating(game))side.append(rating(game));
     notes(side,'Rendimiento observado',data.notes);notes(side,'Ajustes adicionales',data.extras);
     columns.append(settings(game,data,selected),side); load.replaceWith(columns);
+    if(gallery)void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'));
     mountSim(id('ficha'),catalog.games,game,data,slug=>{location.hash='juego/'+slug+'?sim=1'});
 
   }catch {
     if(token!==routeId) return;
+    if(gallery)void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'));
     const b=box('No se pudo cargar la ficha','Puedes volver a intentarlo.');
     b.append(button('Reintentar',()=>route()));load.replaceWith(b);
   }
