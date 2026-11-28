@@ -1,6 +1,7 @@
 import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel,simulatorTarget} from './sim-model.js?v=ally-ai-2';
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=fps-studio-2';
 
+import {hardwareModels,modelLabel,hardwareChoice,saveHardware,modelKey} from './hardware.js';
 import {campoES,valorES} from './idioma.js?v=20261121';
 
 const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
@@ -74,8 +75,11 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  add(title,'h2','Simulador FPS');
  add(title,'p',game.title,'fps-game-title');
  const hardware=add(banner,'div',null,'fps-hardware');
- add(hardware,'strong','Xbox ROG Ally X');
- add(hardware,'span','AMD Ryzen Z2 Extreme');
+ const deviceName=add(hardware,'strong','Xbox ROG Ally X');
+ const deviceChip=add(hardware,'span','AMD Ryzen Z2 Extreme');
+ const hardwareSelect=add(hardware,'select');hardwareSelect.setAttribute('aria-label','Modelo de consola');
+ for(const [id,name] of hardwareModels){const opt=add(hardwareSelect,'option',name);opt.value=id;}
+ hardwareSelect.value=hardwareChoice();
  add(hardware,'span','SIMULACIÓN · NO TELEMETRÍA REAL','fps-engine-label');
  const layout=add(sim,'div',null,'fps-layout');
  const controls=add(layout,'section',null,'fps-panel fps-controls');
@@ -392,4 +396,29 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  }
  const params=new URLSearchParams(location.hash.split('?')[1]);
  apply(simulatorTarget(model,params)||model.initial);
+ const alternate=add(sim,'section',null,'fps-panel fps-hardware-alternate');
+ const alternativeTitle=add(alternate,'h3','Datos del modelo seleccionado');
+ const message=add(alternate,'p','No hay un modelo de estimación validado para esta consola. No se reutilizan los FPS de Xbox ROG Ally X.');
+ const communityLink=add(alternate,'a','Buscar o aportar pruebas en Ally Community');
+ communityLink.className='btn';
+ const reports=add(alternate,'div');
+ const check=button(alternate,'Consultar pruebas de usuarios','btn',async()=>{
+   const selected=hardwareSelect.value;check.disabled=true;reports.replaceChildren();add(reports,'p','Consultando…');
+   try{
+     const r=await fetch('https://ally-community.pages.dev/api/benchmarks?game='+encodeURIComponent(game.id),{credentials:'omit',signal:AbortSignal.timeout(8000)});
+     if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(selected!==hardwareSelect.value)return;
+     reports.replaceChildren();
+     const rows=(data.rows||[]).filter(x=>modelKey(x.model)===selected&&Number.isFinite(x.fps)&&Number.isSafeInteger(x.id));
+     if(!rows.length)add(reports,'p','No hay pruebas de usuarios disponibles para este modelo.');
+     for(const row of rows){const a=add(reports,'a',row.fps+' FPS · '+[row.resolution,row.tdp,row.quality,row.frameGeneration].filter(Boolean).join(' · '),'btn');a.href='https://ally-community.pages.dev/?post='+row.id;}
+   }catch{if(selected===hardwareSelect.value){reports.replaceChildren();add(reports,'p','No se han podido consultar las pruebas.');}}finally{check.disabled=false;}
+ });
+ function applyHardware(){
+   const selected=hardwareSelect.value,standard=selected==='xbox-x';
+   saveHardware(selected);deviceName.textContent=modelLabel(selected);deviceChip.textContent=standard?'AMD Ryzen Z2 Extreme':'Modelo sin estimaciones validadas';
+   for(const node of [...sim.children])if(node!==banner&&node!==alternate)node.hidden=!standard;
+   alternate.hidden=standard;alternativeTitle.textContent=modelLabel(selected)+' · Rendimiento de la comunidad';
+   reports.replaceChildren();communityLink.href='https://ally-community.pages.dev/?'+new URLSearchParams({game:game.id,title:game.title,share:'1',model:modelLabel(selected)});
+ }
+ hardwareSelect.onchange=applyHardware;applyHardware();
 }
