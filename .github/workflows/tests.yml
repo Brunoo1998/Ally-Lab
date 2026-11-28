@@ -29,4 +29,5 @@ jobs:
           node --check functions/api/lab-account.js
           node tools/probar_cuenta.mjs
           node tools/probar_indice_retro.mjs
+          node tools/probar_modelos.mjs
           node tools/generar_guias.mjs
