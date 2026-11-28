@@ -12,7 +12,7 @@ try{
    assert.ok(await page.locator('.mast nav[aria-label="Principal"]').isVisible());
    const sizes=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
    assert.ok(sizes.scroll<=sizes.width+2,'Desbordamiento en '+width+'px');
-   await page.goto(lab+'/buscar?q=zelda&scope=pc',{waitUntil:'domcontentloaded'});
+   await page.goto(lab+'/buscar?q=cyberpunk&scope=pc',{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>document.querySelector('#search-status')?.textContent?.includes('resultados mostrados'),{},{timeout:25000});
    assert.ok(await page.locator('#search-results .global-result').count()>0,'Resultados de búsqueda');
    await page.goto(forum+'/',{waitUntil:'domcontentloaded'});
