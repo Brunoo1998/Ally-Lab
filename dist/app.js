@@ -1,5 +1,5 @@
 import { unmountGameVideo } from './videos.js?v=41';
-import { mountCaptures } from './capturas.js?v=polish-1';
+import { mountCaptures } from './capturas.js?v=detail-preview-2';
 import { mountSim } from './simulador.js?v=ally-ai-2';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
@@ -128,11 +128,78 @@ function renderCatalog(next,replaceUrl=false) {
   if (next.page < pages) pager.append(anchor('Siguiente',catalogHash({...next,page:next.page+1}),'btn'));
 }
 function header(game) {
-  const h=el('header','game-head'), copy=el('div');
+  const h=el('header','game-head detail-hero'), copy=el('div','detail-identity');
+  const backdrop=el('img','detail-backdrop');backdrop.src=game.cover;backdrop.alt='';backdrop.setAttribute('aria-hidden','true');backdrop.onerror=()=>backdrop.remove();
   const title=el('h1','',game.title); title.id='game-title'; title.tabIndex=-1;
-  copy.append(el('span','hardware','ROG XBOX ALLY X · Z2 EXTREME'),title,el('p','','Ficha del '+prettyDate(game.published)));
-  h.append(cover(game,true),copy);
+  copy.append(el('span','detail-kicker','ALLY LAB / FICHA TÉCNICA'),title,
+    el('p','detail-hardware','ROG Xbox Ally X · Ryzen AI Z2 Extreme'),
+    el('p','detail-date','Guía del '+prettyDate(game.published)));
+  h.append(backdrop,cover(game,true),copy);
   return h;
+}
+function detailSummary(game,data) {
+  const grid=el('dl','detail-summary'),metrics=new Map(data.metrics),setup=new Map(data.setup.map(([k,v])=>[k.toUpperCase(),v]));
+  const avg=metrics.get('AVERAGE FPS');
+  const entries=[
+    ['FPS medios de la guía',avg?asFPS(avg):'Sin indicar','Rendimiento publicado','fps'],
+    ['TDP probado',units(metrics.get('TESTED TDP')||setup.get('TDP')||game.power)||'Sin indicar','Potencia de la APU','power'],
+    ['VRAM de la guía',units(setup.get('VRAM'))||'Sin indicar','Memoria gráfica','memory'],
+    ['Configuraciones',String(data.profiles.length),'Ajustes disponibles','profiles']
+  ];
+  for(const [label,value,help,kind] of entries){
+    const item=el('div','detail-stat detail-stat-'+kind);
+    item.append(el('dt','',label),el('dd','',value),el('span','detail-stat-note',help));grid.append(item);
+  }
+  return grid;
+}
+function detailWorkspace(host,game,data,selected) {
+  const workspace=el('div','detail-workspace');
+  const navigation=el('nav','detail-navigation');navigation.setAttribute('aria-label','Vistas de la ficha');
+  const content=el('div','detail-content');
+  const panes=new Map(),buttons=new Map();
+  const views=[['settings','01','Ajustes'],['performance','02','Rendimiento'],['sim','03','Simulador FPS']];
+  let active='',simReady=false;
+  function activate(key) {
+    if(!panes.has(key)||active===key)return;
+    active=key;
+    for(const [id,pane] of panes)pane.hidden=id!==key;
+    for(const [id,control] of buttons)control.setAttribute('aria-pressed',String(id===key));
+    if(key==='sim'&&!simReady){
+      const target=panes.get(key);
+      try{mountSim(target,catalog.games,game,data,slug=>{location.hash='juego/'+slug+'?sim=1'});simReady=true;}
+      catch{target.replaceChildren(box('No se pudo abrir el simulador','Vuelve a intentarlo.'));target.append(button('Reintentar',()=>{target.replaceChildren();active='';activate('sim');}));}
+    }
+
+  }
+  for(const [key,num,label] of views){
+    const pane=el('section','detail-pane');pane.id='detail-'+key;pane.hidden=true;
+    pane.setAttribute('aria-labelledby','detail-nav-'+key);
+    const control=button('',()=>activate(key),'detail-view-button');control.id='detail-nav-'+key;
+    control.setAttribute('aria-controls',pane.id);control.setAttribute('aria-pressed','false');
+    control.append(el('span','detail-view-number',num),el('span','',label));
+    navigation.append(control);content.append(pane);panes.set(key,pane);buttons.set(key,control);
+  }
+  const setup=panes.get('settings'),performance=panes.get('performance');
+  const settingGrid=el('div','detail-settings-grid');
+  const aside=el('aside','detail-aside');
+  const guidance=panel('Datos de la prueba');
+  const note=el('p','small','Los valores de la guía no garantizan el mismo rendimiento en todas las escenas o versiones del juego.');
+  guidance.append(note);
+  guidance.append(button('Ver rendimiento observado',()=>{activate('performance');buttons.get('performance').focus({preventScroll:true});},'btn detail-secondary'));
+  guidance.append(button('Abrir simulador FPS',()=>{activate('sim');buttons.get('sim').focus({preventScroll:true});},'btn detail-primary'));
+  aside.append(guidance);
+  if(gameRating(game))aside.append(rating(game));
+  settingGrid.append(settings(game,data,selected),aside);setup.append(settingGrid);
+  const evidence=el('div','detail-performance-grid'),observations=el('div','detail-observations');
+  notes(observations,'Rendimiento observado',data.notes);
+  notes(observations,'Ajustes adicionales',data.extras);
+  if(!observations.childElementCount)observations.append(box('Notas de rendimiento','La guía no incluye notas adicionales.'));
+  const test=specs(data,game);
+  try{const source=new URL(game.source);if(source.protocol==='https:')test.append(anchor('Consultar guía original ↗',source.href,'btn detail-secondary',true));}catch{}
+  evidence.append(observations,test);performance.append(evidence);
+  workspace.append(navigation,content);host.append(workspace);
+  activate('settings');
+  return workspace;
 }
 function panel(title) {
   const p=el('section','box'); p.append(el('h2','',title)); return p;
@@ -247,41 +314,43 @@ function rating(game) {
 
 async function detailView(game,selected,token,standalone){
   const host=id('ficha');
-  if(standalone)host.classList.add('lab-page');else host.classList.remove('lab-page');
-  const load=el('p','info','Cargando configuración…'); load.setAttribute('role','status'); let gallery; if(!standalone){
+  host.classList.toggle('lab-page',standalone);
+  host.classList.toggle('detail-redesign',!standalone);
+  const load=el('p','info','Cargando configuración…');load.setAttribute('role','status');
+  let gallery;
+  if(!standalone){
     gallery=panel('Galería del juego');
-    gallery.classList.add('game-captures');
-    gallery.hidden=true;
+    gallery.classList.add('game-captures','detail-media');gallery.hidden=true;
     host.append(header(game),gallery);
-
   }
   host.append(load);
+  function loadGallery(){
+    if(!gallery||!gallery.isConnected)return;
+    void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'),{videoFirst:true}).catch(()=>{gallery.hidden=true;});
+  }
   try{
     const month=game.published.slice(0,7);
-    if(!months.has(month)) months.set(month,fetchJson(month).catch(err=>{months.delete(month);throw err;}));
+    if(!months.has(month))months.set(month,fetchJson(month).catch(err=>{months.delete(month);throw err;}));
     const data=(await months.get(month))[game.id];
-    if(token!==routeId) return;
-    if(!data) throw new Error('Falta la ficha.');
+    if(token!==routeId)return;
+    if(!data)throw new Error('Falta la ficha.');
     if(standalone){
       load.remove();
       mountSim(host,catalog.games,game,data,slug=>{location.hash='juego/'+slug+'?sim=1'});
       return;
     }
-    const columns=el('div','columns'),side=el('aside','side');
-    side.append(specs(data,game));
-    if(gameRating(game))side.append(rating(game));
-    notes(side,'Rendimiento observado',data.notes);notes(side,'Ajustes adicionales',data.extras);
-    columns.append(settings(game,data,selected),side); load.replaceWith(columns);
-    if(gallery)void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'));
-    mountSim(id('ficha'),catalog.games,game,data,slug=>{location.hash='juego/'+slug+'?sim=1'});
-
-  }catch {
-    if(token!==routeId) return;
-    if(gallery)void mountCaptures(gallery,game,()=>fetchJson('capturas'),()=>fetchJson('videos'));
+    const summary=detailSummary(game,data);load.replaceWith(summary);
+    detailWorkspace(host,game,data,selected);
+    loadGallery();
+  }catch{
+    if(token!==routeId)return;
     const b=box('No se pudo cargar la ficha','Puedes volver a intentarlo.');
-    b.append(button('Reintentar',()=>route()));load.replaceWith(b);
+    b.append(button('Reintentar',()=>route()));
+    if(load.isConnected)load.replaceWith(b);else host.append(b);
+    loadGallery();
   }
 }
+
 function route(initial=false){
   if(!catalog)return;
   unmountGameVideo();
