@@ -103,7 +103,7 @@ function safeUrl(value,external=false){
   if(typeof value!=='string')return null;
   try{
     const url=new URL(value,location.href);
-    return url.origin===location.origin||external&&url.protocol==='https:'?url.href:null;
+    return url.origin===location.origin||url.origin==='https://ally-community.pages.dev'&&url.pathname==='/'||external&&url.protocol==='https:'?url.href:null;
   }catch{return null}
 }
 function link(parent,label,url){
@@ -206,7 +206,7 @@ function card(parent,value){
     for(const note of value.documented.notes||[])add(section,'p',note);
     link(section,'Abrir ajustes de la ficha',value.documented.url);
   }
-  link(item,({'Sección':'Abrir sección','Juego de PC':'Abrir ficha','Retro':'Abrir en Retro','Noticia':'Leer noticia','Port':'Abrir proyecto','Oferta activa':'Ver oferta'})[value.kind]||'Abrir en Ally Lab',value.url);
+  link(item,({'Sección':'Abrir sección','Juego de PC':'Abrir ficha','Retro':'Abrir en Retro','Noticia':'Leer noticia','Port':'Abrir proyecto','Oferta activa':'Ver oferta','Comunidad':'Abrir publicación o foro'})[value.kind]||'Abrir en Ally Lab',value.url);
   if(value.simulator&&!value.readings?.length)link(item,'Abrir simulador',value.simulator);
 }
 function append(entry){

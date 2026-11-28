@@ -57,4 +57,10 @@ const offline=await ask('Quiero jugar al ciberpunk a 60 fps',{},{
 });
 assert.equal(offline.availability,'database_unavailable');
 assert.equal(modelCalls,4);
-console.log('Memoria, filtros de rendimiento, navegación, cuota y caída D1: OK');
+const originalFetch=globalThis.fetch;
+try{
+ globalThis.fetch=async (url)=>{assert.match(String(url),/^https:\/\/ally-community\.pages\.dev\/api\/public-search\?q=/);return Response.json({rows:[{id:7,title:'Cyberpunk: solución',excerpt:'Ajustes',solution:'Prueba de usuario'}]});};
+ const community=await ask('Busca Cyberpunk en la comunidad');
+ assert.equal(community.mode,'search');assert.equal(community.cards[0].url,'https://ally-community.pages.dev/?post=7');assert.match(community.cards[0].description,/no verificada/);assert.equal(modelCalls,4);
+}finally{globalThis.fetch=originalFetch;}
+console.log('Memoria, filtros de rendimiento, navegación, cuota, caída D1 y foro público: OK');

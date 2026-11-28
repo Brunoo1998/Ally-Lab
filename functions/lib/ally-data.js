@@ -165,6 +165,23 @@ export async function retrieve(ctx, question, context, followup={}) {
     const [title,url]=pages[index];
     return {direct:true,cards:[publicCard(title,url,'Sección')]};
   }
+  // Solo se consulta el foro cuando el usuario pide contenido público de la comunidad.
+  // Los textos se muestran como referencias, nunca se pasan al modelo como instrucciones.
+  if(/\b(?:foro|community|comunidad)\b/.test(normalized)){
+    const terms=words(normalized).filter(w=>!['foro','community','comunidad','solucion','soluciones','problema','problemas','publicaciones','publicacion','usuarios','usuario','encuentra','encontrar','sobre','existe','alguna','alguno','hay','buscame','ayuda','arreglar'].includes(w)).slice(0,6);
+    if(!terms.length&&previous.length){
+      const catalog=await optional(data(ctx,'catalogo'));
+      const prior=catalog?.games?.find(g=>g.id===previous[0]);
+      if(prior)terms.push(...words(prior.title).slice(0,6));
+    }
+    const base='https://ally-community.pages.dev';
+    const term=terms.join(' ');
+    const browse=publicCard('Ally Community',base+'/?q='+id(term),'Comunidad');
+    if(!term)return {direct:true,cards:[browse],answer:'Puedes abrir el foro o indicar el juego o problema que buscas.'};
+    const payload=await optional(json(base+'/api/public-search?q='+id(term)));
+    const cards=(payload?.rows||[]).filter(r=>Number.isSafeInteger(r.id)&&r.id>0).slice(0,5).map(r=>publicCard(r.title,base+'/?post='+r.id,'Comunidad',{description:r.solution?'Solución aceptada por el autor del hilo (no verificada por Ally Lab): '+String(r.solution).slice(0,500):'Publicación de la comunidad: '+String(r.excerpt||'').slice(0,300)}));
+    return {direct:true,cards:cards.length?cards:[browse],incomplete:!payload,answer:cards.length?'He encontrado estas aportaciones públicas de Ally Community. Las soluciones son experiencias de usuarios, no mediciones verificadas.':payload?'No he encontrado publicaciones que coincidan. Puedes buscar o preguntar en el foro.':'El foro no ha respondido. Puedes abrirlo directamente.'};
+  }
   const consoleMatch=Object.entries(consoles).flatMap(([key,names])=>names.split('|').map(name=>[key,fold(name)]))
     .sort((a,b)=>b[1].length-a[1].length).find(([,name])=>(' '+normalized+' ').includes(' '+name+' '));
   const performance=(refer&&!open)||/\bfps\b|\b(?:720|900|1080)p\b|rendimiento|configuraci[oó]n|\b(?:tdp|fsr|calidad|vatios?|bateria)\b|\b\d{1,2}\s*w\b/i.test(question);

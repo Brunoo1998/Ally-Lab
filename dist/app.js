@@ -1,6 +1,7 @@
 import { unmountGameVideo } from './videos.js?v=41';
 import { mountCaptures } from './capturas.js?v=detail-preview-2';
-import { mountSim } from './simulador.js?v=ecosistema-1';
+import { mountSim } from './simulador.js?v=hardware-2';
+import {hardwareModels,modelKey,modelLabel,hardwareChoice} from './hardware.js';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
 const id = name => document.getElementById(name);
@@ -222,7 +223,11 @@ function benchmarkPanel(game){
   section.append(el('p','small','FPS comunicados por usuarios, no mediciones verificadas. Compara únicamente la misma consola, resolución y estado de Frame Generation.'));
   const actions=el('div','benchmark-actions'),link=new URL('https://ally-community.pages.dev/');
   link.search=new URLSearchParams({game:game.id,title:game.title});
-  const share=new URL(link);share.searchParams.set('share','1');share.searchParams.set('model','Xbox ROG Ally X');
+  const share=new URL(link);share.searchParams.set('share','1');share.searchParams.set('model',modelLabel(hardwareChoice()));
+  const filterLabel=el('label','benchmark-model','Modelo de consola ');
+  const filter=el('select');filter.setAttribute('aria-label','Filtrar aportaciones por consola');
+  for(const [key,name] of [['all','Todos los modelos'],...hardwareModels]){const opt=el('option','',name);opt.value=key;filter.append(opt);}
+  filter.value=hardwareChoice();filterLabel.append(filter);let loadedRows=null;
   const results=el('div','benchmark-results'),status=el('p','small','Consulta las aportaciones cuando quieras.');status.setAttribute('role','status');
   let busy=false;
   async function load(){
@@ -231,21 +236,26 @@ function benchmarkPanel(game){
       const response=await fetch('https://ally-community.pages.dev/api/benchmarks?game='+encodeURIComponent(game.id),{credentials:'omit',signal:AbortSignal.timeout(8000)});
       if(!response.ok)throw Error('No disponible');
       const data=await response.json();if(!Array.isArray(data.rows))throw Error('Respuesta inválida');
+      loadedRows=data.rows.slice(0,20);renderRows();
+      refresh.textContent='Actualizar aportaciones';
+    }catch{status.textContent='No se pudieron consultar las aportaciones. Puedes abrir el debate o reintentar.';}
+    finally{busy=false;refresh.disabled=false;}
+  }
+  function renderRows(){
       results.replaceChildren();
-      for(const row of data.rows.slice(0,20)){
+      for(const row of (loadedRows||[]).filter(r=>filter.value==='all'||modelKey(r.model)===filter.value)){
         if(!Number.isSafeInteger(row.id)||row.id<1||!Number.isFinite(row.fps)||row.fps<1||row.fps>360)continue;
         const card=el('article','benchmark-card');card.append(el('strong','benchmark-fps',row.fps.toLocaleString('es-ES')+' FPS'),el('p','',String(row.model||'Modelo sin indicar')));
         const info=[row.resolution,row.tdp,row.quality,row.scaling,row.frameGeneration?'FG: '+row.frameGeneration:''].filter(v=>typeof v==='string'&&v).join(' · ');
         card.append(el('p','small',info),anchor('Ver publicación','https://ally-community.pages.dev/?post='+row.id,'btn detail-secondary',true));results.append(card);
       }
-      status.textContent=results.childElementCount?results.childElementCount+' aportaciones públicas':'Todavía no hay resultados numéricos de la comunidad para este juego. ¡Comparte el tuyo!';
-      refresh.textContent='Actualizar aportaciones';
-    }catch{status.textContent='No se pudieron consultar las aportaciones. Puedes abrir el debate o reintentar.';}
-    finally{busy=false;refresh.disabled=false;}
+      status.textContent=results.childElementCount?results.childElementCount+' aportaciones públicas del modelo seleccionado':'No hay aportaciones numéricas de ese modelo entre los resultados consultados.';
   }
+  filter.onchange=()=>{share.searchParams.set('model',modelLabel(filter.value==='all'?hardwareChoice():filter.value));shareButton.href=share.href;if(loadedRows)renderRows();};
   const refresh=button('Ver aportaciones',load,'btn detail-secondary');
-  actions.append(refresh,anchor('Compartir una prueba',share.href,'btn detail-primary'),anchor('Debate del juego',link.href,'btn detail-secondary'));
-  section.append(actions,status,results);return section;
+  const shareButton=anchor('Compartir una prueba',share.href,'btn detail-primary');
+  actions.append(refresh,shareButton,anchor('Debate del juego',link.href,'btn detail-secondary'));
+  section.append(filterLabel,actions,status,results);return section;
 }
 function panel(title) {
   const p=el('section','box'); p.append(el('h2','',title)); return p;
