@@ -21,3 +21,5 @@ jobs:
         run: |
           node tools/probar_simulador.mjs
           node tools/probar_ally_ai.mjs
+          node --check dist/pwa.js
+          node --check dist/sw.js
