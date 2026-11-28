@@ -23,3 +23,4 @@ jobs:
           node tools/probar_ally_ai.mjs
           node --check dist/pwa.js
           node --check dist/sw.js
+          node tools/generar_guias.mjs
