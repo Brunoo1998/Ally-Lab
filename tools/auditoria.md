@@ -1,0 +1,2 @@
+# Auditoría pública y SEO
+Las páginas estáticas incorporan cabeceras contra incrustación, MIME sniffing y uso innecesario de sensores. Las guías y páginas de sección tienen URL canónica; las búsquedas internas no se indexan. `Auditoría funcional pública` en Actions permite comprobar las dos webs con peticiones HTTP y Chromium (sin cuentas de usuarios ni datos privados). Las pruebas automatizadas no sustituyen una revisión en hardware real ni una auditoría de seguridad independiente.

@@ -31,4 +31,6 @@ jobs:
           node tools/probar_cabecera.mjs
           node tools/probar_indice_retro.mjs
           node tools/probar_modelos.mjs
+          node --check tools/probar_publicacion.mjs
+          node --check tools/probar_navegador.mjs
           node tools/generar_guias.mjs
