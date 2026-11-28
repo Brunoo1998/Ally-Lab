@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {randomBytes} from 'node:crypto';
+const origin='https://ally-lab.pages.dev';
+const start=await fetch(origin+'/api/lab-account?start=1',{redirect:'manual',signal:AbortSignal.timeout(15000)});
+assert.equal(start.status,303);
+const state=new URL(start.headers.get('location')).searchParams.get('connectLab');
+assert.match(state,/^[a-f0-9]{64}$/);
+const cookie=start.headers.get('set-cookie').split(';')[0];
+const code=randomBytes(32).toString('hex');
+const response=await fetch(origin+'/api/lab-account',{method:'POST',headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({action:'redeem',state,code}),signal:AbortSignal.timeout(15000)});
+const result=await response.json();
+console.log('Producción: estado '+response.status+' · '+String(result.reason||'SIN-CODIGO'));
+assert.equal(result.reason,'AL-EXPIRED','La respuesta debe proceder del canje de Community');
+assert.equal(response.status,401);
+console.log('Comunicación real Lab → Community: OK; código ficticio rechazado correctamente.');
