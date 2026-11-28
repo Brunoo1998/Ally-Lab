@@ -2,7 +2,7 @@ import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPre
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=fps-studio-2';
 
 import {hardwareModels,modelLabel,hardwareChoice,saveHardware,modelKey} from './hardware.js';
-import {benchmarkSources,modelBenchmarks,measurementGroups,estimateGroup} from './model-benchmarks.js?v=1';
+import {benchmarkSources,modelBenchmarks,measurementGroups,estimateGroup} from './model-benchmarks.js?v=2';
 import {campoES,valorES} from './idioma.js?v=20261121';
 
 const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
