@@ -25,4 +25,7 @@ jobs:
           node --check dist/sw.js
           node --check dist/buscar.js
           node --check dist/buscar-launch.js
+          node --check dist/lab-account.js
+          node --check functions/api/lab-account.js
+          node tools/probar_cuenta.mjs
           node tools/generar_guias.mjs
