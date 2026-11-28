@@ -1,5 +1,5 @@
 import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPreset,resolutions,scaleLabel,simulatorTarget} from './sim-model.js?v=ally-ai-2';
-import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=48';
+import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=fps-studio-2';
 
 import {campoES,valorES} from './idioma.js?v=20261121';
 
@@ -59,15 +59,27 @@ function source(parent,url){
 
 export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const model=createModel(game,detail,verifiedPoints);
- const sim=add(host,'section',null,'sim fps-lab');
+ const sim=add(host,'section',null,'sim fps-lab fps-redesign fps-studio');
  sim.id='simulador';
  const banner=add(sim,'header',null,'fps-banner');
- const title=add(banner,'div');
+ const identity=add(banner,'div',null,'fps-identity');
+ if(game.cover){const art=add(banner,'img',null,'fps-banner-art');art.alt='';art.setAttribute('aria-hidden','true');art.src=game.cover;art.onerror=()=>art.remove();}
+ if(game.cover){
+  const cover=add(identity,'img',null,'fps-game-cover');
+  cover.alt='';cover.decoding='async';cover.src=game.cover;
+  cover.addEventListener('error',()=>cover.remove(),{once:true});
+ }
+ const title=add(identity,'div',null,'fps-hero-copy');
+ add(title,'span','ALLY LAB  /  PERFORMANCE STUDIO','fps-eyebrow');
  add(title,'h2','Simulador FPS');
- add(title,'p','Xbox ROG Ally X · AMD Ryzen Z2 Extreme');
+ add(title,'p',game.title,'fps-game-title');
+ const hardware=add(banner,'div',null,'fps-hardware');
+ add(hardware,'strong','Xbox ROG Ally X');
+ add(hardware,'span','AMD Ryzen Z2 Extreme');
+ add(hardware,'span','SIMULACIÓN · NO TELEMETRÍA REAL','fps-engine-label');
  const layout=add(sim,'div',null,'fps-layout');
  const controls=add(layout,'section',null,'fps-panel fps-controls');
- heading(controls,'Configuración');
+ heading(controls,'Ajustes de simulación','Selecciona una referencia y personaliza los valores.');
  const form=add(controls,'div',null,'fps-fields');
  function field(title,action,iconType,parent=form){
   const wrap=add(parent,'label');
@@ -102,7 +114,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const powerCaption=add(powerControl,'span','Ajustar TDP');
  powerControl.classList.add('fps-wide-field');
  const slider=add(powerControl,'input');slider.type='range';slider.min=7;slider.max=35;
- slider.oninput=()=>{w.value=slider.value;manual()};
+ slider.oninput=()=>{w.value=slider.value;manual(true)};
+ slider.onchange=()=>{if(secondaryTimer)flushSecondary()};
  const scale=field(names.scale,manual,'scale'),gen=field(names.gen,manual,'gen');
  const individual=add(controls,'fieldset',null,'fps-individual');
  add(individual,'legend','Ajustes gráficos individuales');
@@ -111,39 +124,66 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const notes=add(controls,'details',null,'fps-values');
  add(notes,'summary','Ajustes de partida de la ficha');
  const rows=add(notes,'dl',null,'fps-value-list');
- const buttons=add(controls,'div',null,'fps-actions');
- const status=add(controls,'p',null,'fps-status');
+ const buttons=add(form,'div',null,'fps-actions fps-wide-field');
+ const status=add(form,'p',null,'fps-status fps-wide-field');
+ form.insertBefore(buttons,res.parentElement);
+ form.insertBefore(status,res.parentElement);
  status.setAttribute('role','status');
  const output=add(layout,'div',null,'fps-output');
- const primary=add(output,'section',null,'fps-panel fps-primary');
+ const primary=add(sim,'section',null,'fps-panel fps-primary');
+ sim.insertBefore(primary,layout);
  const gauge=add(primary,'div',null,'fps-gauge');
+ add(gauge,'span','RENDIMIENTO DE LA SELECCIÓN','fps-eyebrow');
  const dial=add(gauge,'div',null,'fps-dial');
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 240 240');svg.setAttribute('aria-hidden','true');svg.classList.add('fps-instrument');dial.append(svg);
+ function svgPart(tag,attrs){const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);svg.append(n);return n;}
+ const point=(r,angle)=>[120+r*Math.cos(angle*Math.PI/180),120+r*Math.sin(angle*Math.PI/180)];
+ const arc='M 49.29 190.71 A 100 100 0 1 1 190.71 190.71';
+ svgPart('path',{d:arc,class:'fps-arc-track',pathLength:100});
+ const arcValue=svgPart('path',{d:arc,class:'fps-arc-value',pathLength:100,'stroke-dasharray':'0 100'});
+ for(let i=0;i<=30;i++){const angle=135+i*9;const [x1,y1]=point(i%5===0?83:88,angle),[x2,y2]=point(92,angle);svgPart('line',{x1,y1,x2,y2,class:i%5===0?'fps-tick fps-tick-major':'fps-tick'});}
+ const marker=svgPart('line',{class:'fps-goal-marker',x1:0,y1:0,x2:0,y2:0});
+ const scaleMarks=add(gauge,'div',null,'fps-scale-marks');
+ add(scaleMarks,'span','0');const scaleMid=add(scaleMarks,'span','60');const scaleMax=add(scaleMarks,'span','120');
  const reading=add(dial,'div',null,'fps-reading');
  reading.setAttribute('aria-live','polite');
  const numeric=add(reading,'strong');
  const unit=add(reading,'span','FPS');
+ const readingKind=add(gauge,'p','','fps-gauge-kind');
  const diagnostic=add(primary,'div',null,'fps-diagnostic');
+ add(diagnostic,'span','RESULTADO DE LA CONFIGURACIÓN','fps-eyebrow');
  const type=add(diagnostic,'p',null,'fps-type');
  const headline=add(diagnostic,'h3');
  const context=add(diagnostic,'p');
  const provenance=add(diagnostic,'p',null,'fps-source');
- const goals=add(diagnostic,'div',null,'fps-segments');
+ add(diagnostic,'span','Objetivo de rendimiento','fps-goal-label');
+ const goals=add(diagnostic,'div',null,'fps-segments fps-goals');
  goals.setAttribute('role','group');goals.setAttribute('aria-label','Objetivo de FPS');
- const goalButtons=[30,60,120].map(n=>button(goals,n+' FPS','',()=>{goal=n;renderPrimary()}));
- const stats=add(output,'dl',null,'fps-stats');
+ const goalButtons=[30,60,120].map(n=>button(goals,n+' FPS','',()=>{goal=n;renderPrimary();drawChart()}));
+ const telemetry=add(primary,'dl',null,'fps-telemetry');
+ function tele(label){const row=add(telemetry,'div',null,'fps-telemetry-row');add(row,'dt',label);return add(row,'dd','—');}
+ const rangeValue=tele('Rango de referencia');
+ const goalValue=tele('Objetivo seleccionado');
+ const confidenceValue=tele('Confianza del dato');
+ const countValue=tele('Mediciones del juego');
+ const goalTrack=add(primary,'div',null,'fps-goal-track');goalTrack.setAttribute('aria-hidden','true');
+ const goalFill=add(goalTrack,'div',null,'fps-goal-fill');
+ const stats=add(sim,'dl',null,'fps-stats');
+ sim.insertBefore(stats,layout);
  const statNodes=[['fps','Rendimiento'],['r',names.r],['w','Potencia (TDP)'],['q',names.q],['scale',names.scale],['gen',names.gen],['source','Fiabilidad']].map(([key,label])=>{
   const panel=add(stats,'div',null,'fps-stat');
   const labelNode=add(panel,'dt',null,'fps-field-label');icon(labelNode,key);labelNode.append(label);
   return add(panel,'dd');
  });
- const linePanel=add(output,'section',null,'fps-panel');
+ const linePanel=add(output,'section',null,'fps-panel fps-chart-panel');
  const analysisHead=heading(linePanel,'Curva de rendimiento','Cambia una variable y mantiene los demás ajustes.');
  const axes=add(analysisHead,'div',null,'fps-segments');
  axes.setAttribute('role','group');axes.setAttribute('aria-label','Variable de la gráfica');
- const axisButtons=Object.entries(axisOptions).map(([id,[label]])=>button(axes,label,'',()=>{axis=id;drawChart()}));
+ const axisButtons=Object.entries(axisOptions).map(([id,[label]])=>button(axes,label,'',()=>{axis=id;flushSecondary()}));
  const chart=add(linePanel,'div',null,'fps-line');
  const caption=add(linePanel,'p',null,'fps-point-detail');
- const legend=add(linePanel,'p','● Medición publicada　◇ Modelo　┆ Objetivos de 30 y 60 FPS','fps-legend');
+ const legend=add(linePanel,'p','● Medición publicada　◇ Modelo　┆ Objetivo seleccionado','fps-legend');
  const compare=add(output,'section',null,'fps-panel fps-compare');
  heading(compare,'Comparar configuraciones');
  const comparisonActions=add(compare,'div',null,'fps-segments');
@@ -175,7 +215,12 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    button(picks,label,'',()=>{apply(anchor);profile.focus()});
   }
  }
- let current,result,goal=60,axis='w';
+ let current,result,goal=60,axis='w',secondaryTimer=0;
+ function flushSecondary(){
+  clearTimeout(secondaryTimer);secondaryTimer=0;
+  if(!sim.isConnected)return;
+  drawChart();renderComparison();
+ }
  const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value,...Object.fromEntries(Object.entries(overrides).map(([id,node])=>[id,node.value]))});
  const display=(key,value,profile)=>setting(key,value,model.profiles[profile]?.rows);
  const evaluations=(key,items)=>items.map(id=>({id,label:setting(key,id),value:model.evaluate({...current,[key]:id})}));
@@ -201,34 +246,45 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   }
   manual();
  }
- function manual(){
+ function manual(defer=false){
   status.textContent='';
   current=read();
   result=model.evaluate(current);
   const base=model.profiles[current.profile];
+  const adjustable=model.options(current.profile).adjustable;
   for(const [id,node] of Object.entries(overrides)){
    if(node.parentElement.hidden)continue;
-   const documented=current.q===base.q?model.options(current.profile).adjustable[id]:null;
+   const documented=current.q===base.q?adjustable[id]:null;
    const inherited=documented||(qualities.includes(current.q)?current.q:null);
    node.options[0].textContent=documented?'Ficha: '+labels[documented]:inherited?'Heredar: '+labels[inherited]:'Automático (referencia Media)';
   }
   slider.disabled=!current.w;
   if(current.w)slider.value=current.w;
+  slider.style.setProperty('--power-progress',current.w?(current.w-7)/28*100+'%':'0%');
   powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
   renderPrimary();
-  drawChart();
-  renderComparison();
+  if(defer===true){clearTimeout(secondaryTimer);secondaryTimer=setTimeout(flushSecondary,120);}
+  else flushSecondary();
  }
  function renderPrimary(){
   const value=headlineFPS(result);
   numeric.textContent=result?value:'—';
-  unit.textContent=kinds[current.gen];
-  const max=Math.max(120,goal,result?.center||0);
-  dial.style.setProperty('--fill',Math.min(360,(result?.center||0)/max*360)+'deg');
-  dial.style.setProperty('--threshold',goal/max*360+'deg');
+  unit.textContent='FPS';readingKind.textContent=kinds[current.gen];
+  const max=Math.max(120,Math.ceil(Math.max(goal,result?.high??result?.center??0)/30)*30);
+  const fraction=Math.max(0,Math.min(1,(result?.center||0)/max));
+  arcValue.setAttribute('stroke-dasharray',fraction*100+' 100');
+  const ang=135+270*goal/max;const [x1,y1]=point(95,ang),[x2,y2]=point(112,ang);
+  for(const [k,v] of Object.entries({x1,y1,x2,y2}))marker.setAttribute(k,v);
+  scaleMid.textContent=formatNumber.format(max/2);scaleMax.textContent=formatNumber.format(max);
+  rangeValue.textContent=result?formatFPS(result)+' FPS':'Sin datos';
+  goalValue.textContent=goal+' FPS';confidenceValue.textContent=result?.confidence||'Sin referencia';
+  countValue.textContent=String(model.anchors.length);
+  primary.dataset.evidence=!result?'none':result.type==='Medición publicada'?'measured':result.type==='Interpolación'?'interpolated':'estimated';
+  goalFill.style.width=Math.min(100,(result?.center||0)/goal*100)+'%';
   type.textContent=result?result.type+' · Confianza '+result.confidence.toLowerCase():'Datos insuficientes';
   const supportsGoal=result&&result.low>=goal;
   const couldReach=result&&(result.high===null||result.high>=goal);
+  primary.dataset.goalState=!result?'none':supportsGoal?'reached':couldReach?'uncertain':'below';
   headline.textContent=!result?'Sin referencia para esta selección':supportsGoal?(result.confidence==='Baja'?'El modelo sitúa la selección sobre '+goal+' FPS':'Dentro del objetivo de '+goal+' FPS'):couldReach?'Objetivo de '+goal+' FPS incierto':'Por debajo de '+goal+' FPS';
   context.textContent=!result?'Prueba una configuración documentada o consulta los ajustes de la ficha.'
    :[estimatedRange(result)?'Rango orientativo: '+formatFPS(result)+' FPS.':'',result.why,result.limit==='>'?'La prueba publica un mínimo, representado como umbral.':result.high!==result.low&&result.type==='Medición publicada'?'Intervalo observado en la prueba.':'',
@@ -244,7 +300,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    :axis==='r'?resolutions:qualities;
   const series=evaluations(axis,values);
   legend.hidden=!series.some(p=>p.value);
-  renderLine(chart,caption,series,...axisOptions[axis],current[axis]);
+  renderLine(chart,caption,series,...axisOptions[axis],current[axis],goal);
   axisButtons.forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(axisOptions)[i]===axis)));
  }
  function renderComparison(){
@@ -321,7 +377,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    changed.length?'Cambios: '+changed.join(', ')+'.':'La selección ya coincide.'].join(' ');
  }
  for(const [id,label] of [['speed','Rendimiento'],['quality','Calidad'],['battery','Ahorro de batería'],['60','Optimizar para 60 FPS']]){
-  button(buttons,label,id==='60'?'fps-optimize':'',()=>recommend(id));
+  const control=button(buttons,label,id==='60'?'fps-optimize':'',()=>recommend(id));
+  control.dataset.profileMode=id;
  }
  const params=new URLSearchParams(location.hash.split('?')[1]);
  apply(simulatorTarget(model,params)||model.initial);
