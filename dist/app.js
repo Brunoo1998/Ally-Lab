@@ -1,6 +1,6 @@
 import { unmountGameVideo } from './videos.js?v=41';
 import { mountCaptures } from './capturas.js?v=detail-preview-2';
-import { mountSim } from './simulador.js?v=hardware-2';
+import { mountSim } from './simulador.js?v=hardware-3';
 import {hardwareModels,modelKey,modelLabel,hardwareChoice} from './hardware.js';
 import { campoES, valorES } from './idioma.js?v=20261121';
 

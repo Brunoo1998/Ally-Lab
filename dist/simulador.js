@@ -2,6 +2,7 @@ import {createModel,kinds,labels,publicSource,qualities,qualityFields,qualityPre
 import {add,button,formatFPS,formatNumber,renderBars,renderLine} from './sim-chart.js?v=fps-studio-2';
 
 import {hardwareModels,modelLabel,hardwareChoice,saveHardware,modelKey} from './hardware.js';
+import {benchmarkSources,modelBenchmarks,measurementGroups,estimateGroup} from './model-benchmarks.js?v=1';
 import {campoES,valorES} from './idioma.js?v=20261121';
 
 const names={r:'Resolución',w:'TDP',q:'Calidad',scale:'Reescalado',gen:'Frame Generation'};
@@ -398,7 +399,39 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  apply(simulatorTarget(model,params)||model.initial);
  const alternate=add(sim,'section',null,'fps-panel fps-hardware-alternate');
  const alternativeTitle=add(alternate,'h3','Datos del modelo seleccionado');
- const message=add(alternate,'p','No hay un modelo de estimación validado para esta consola. No se reutilizan los FPS de Xbox ROG Ally X.');
+ const altGameLabel=add(alternate,'label','Juego ');
+ const altGame=add(altGameLabel,'select');altGame.setAttribute('aria-label','Juego del modelo seleccionado');
+ setOptions(altGame,games.slice().sort((a,b)=>a.title.localeCompare(b.title,'es')).map(g=>[g.id,g.title]));altGame.value=game.id;altGame.onchange=()=>choose(altGame.value);
+ const message=add(alternate,'p','Referencias específicas del modelo. No se reutilizan los FPS de Xbox ROG Ally X.');
+ const measured=add(alternate,'section',null,'fps-model-measured');
+ function renderMeasured(selected){
+   measured.replaceChildren();
+   const rows=modelBenchmarks(game.id,selected);
+   if(!rows.length){add(measured,'p','Datos editoriales insuficientes para este juego y modelo. Puedes aportar una prueba en la comunidad.');return;}
+   heading(measured,'Mediciones publicadas',''+rows.length+' referencias. Son pruebas externas, no telemetría de tu dispositivo.');
+   const groups=measurementGroups(rows);
+   const label=add(measured,'label','Configuración de prueba ');
+   const select=add(label,'select');select.setAttribute('aria-label','Configuración de prueba externa');
+   groups.forEach((g,i)=>{const r=g[0],option=add(select,'option',r.res+'p · '+r.quality+' · '+benchmarkSources[r.src].name+' · '+r.power);option.value=i;});
+   const result=add(measured,'div',null,'fps-model-result');
+   function render(){
+     result.replaceChildren();const group=groups[Number(select.value)]||groups[0],row=group[0],reference=benchmarkSources[row.src];
+     add(result,'p','Reescalado: '+row.scale+' · FG: '+row.fg+' · Alimentación: '+row.power);
+     const controls=add(result,'div',null,'fps-model-points');
+     for(const r of group){const item=add(controls,'div',null,'benchmark-card');add(item,'strong',r.fps.toLocaleString('es-ES')+' FPS','benchmark-fps');add(item,'p',r.tdp===null?'TDP no especificado':r.tdp+' W nominales');}
+     const points=group.filter(r=>r.interpolate);
+     if(points.length>=2){
+       const l=add(result,'label','Potencia nominal entre referencias (W) ');
+       const input=add(l,'input');input.type='range';input.min=String(points[0].tdp);input.max=String(points.at(-1).tdp);input.step='1';input.value=String(points[0].tdp);
+       const value=add(result,'p','');value.setAttribute('role','status');
+       const show=()=>{const r=estimateGroup(group,input.valueAsNumber);value.textContent=input.value+' W · '+(r?r.fps.toLocaleString('es-ES')+' FPS · '+r.type:'Datos insuficientes');};
+       input.oninput=show;show();
+     }
+     add(result,'p',reference.note);
+     const a=add(result,'a','Consultar fuente: '+reference.name);a.href=reference.url;a.target='_blank';a.rel='noopener noreferrer';
+   }
+   select.onchange=render;render();
+ }
  const communityLink=add(alternate,'a','Buscar o aportar pruebas en Ally Community');
  communityLink.className='btn';
  const reports=add(alternate,'div');
@@ -415,10 +448,10 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  });
  function applyHardware(){
    const selected=hardwareSelect.value,standard=selected==='xbox-x';
-   saveHardware(selected);deviceName.textContent=modelLabel(selected);deviceChip.textContent=standard?'AMD Ryzen Z2 Extreme':'Modelo sin estimaciones validadas';
+   saveHardware(selected);deviceName.textContent=modelLabel(selected);deviceChip.textContent=standard?'AMD Ryzen AI Z2 Extreme':'Referencias específicas del modelo';
    for(const node of [...sim.children])if(node!==banner&&node!==alternate)node.hidden=!standard;
    alternate.hidden=standard;alternativeTitle.textContent=modelLabel(selected)+' · Rendimiento de la comunidad';
-   reports.replaceChildren();communityLink.href='https://ally-community.pages.dev/?'+new URLSearchParams({game:game.id,title:game.title,share:'1',model:modelLabel(selected)});
+   renderMeasured(selected);reports.replaceChildren();communityLink.href='https://ally-community.pages.dev/?'+new URLSearchParams({game:game.id,title:game.title,share:'1',model:modelLabel(selected)});
  }
  hardwareSelect.onchange=applyHardware;applyHardware();
 }

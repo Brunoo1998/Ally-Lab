@@ -281,3 +281,5 @@
 @media(prefers-reduced-motion:reduce){.fps-studio .fps-arc-value,.fps-studio .fps-goal-fill{transition:none!important}}
 
 .fps-studio > [hidden]{display:none!important}.fps-hardware select,.benchmark-model select{display:block;max-width:100%;margin-top:.4rem;padding:.45rem;background:#151821;color:#eee;border:1px solid #44465b;border-radius:8px}.fps-hardware-alternate .btn{display:inline-flex;margin:.5rem .3rem .5rem 0}.benchmark-model{display:block;margin:.75rem 0}
+
+.fps-model-measured{margin:1rem 0;padding:1rem;border:1px solid #32364a;border-radius:12px;background:#11141e}.fps-model-measured label,.fps-hardware-alternate>label{display:block;margin:.75rem 0}.fps-model-measured select,.fps-hardware-alternate>label select{display:block;max-width:100%;margin-top:.4rem;padding:.5rem;border:1px solid #44465b;border-radius:8px;color:#eee;background:#151821}.fps-model-points{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:.6rem}.fps-model-measured input[type=range]{display:block;width:100%;accent-color:#b6ff36}
