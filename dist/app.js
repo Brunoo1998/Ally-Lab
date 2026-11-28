@@ -35,8 +35,16 @@ function toggleFavorite(game,control){
   if(favorites.has(game.id))favorites.delete(game.id);else favorites.add(game.id);
   try{localStorage.setItem('ally-lab:favorites',JSON.stringify([...favorites]));}catch{}
   paintFavorite(game,control);
+  window.dispatchEvent(new CustomEvent('ally-favorite-changed',{detail:{game:game.id,enabled:favorites.has(game.id)}}));
 }
 function paintFavorite(game,control){const saved=favorites.has(game.id);control.textContent=saved?'★ Quitar de favoritos':'☆ Guardar en favoritos';control.setAttribute('aria-pressed',String(saved));}
+function syncFavorites(value){
+ if(!Array.isArray(value))return;favorites=new Set(value.filter(v=>typeof v==='string'));
+ for(const control of document.querySelectorAll('[data-favorite-game]'))paintFavorite({id:control.dataset.favoriteGame},control);
+ if(catalog&&!inDetail&&state.favorites)renderCatalog({...state},true);
+}
+window.addEventListener('ally-favorites-synced',e=>syncFavorites(e.detail));
+window.addEventListener('storage',e=>{if(e.key==='ally-lab:favorites')try{syncFavorites(JSON.parse(e.newValue||'[]'));}catch{}});
 let original = false;
 try { original = localStorage.getItem('ally-lab-etiquetas') === 'original'; } catch {}
 
@@ -147,7 +155,7 @@ function header(game) {
   copy.append(el('span','detail-kicker','ALLY LAB / FICHA TÉCNICA'),title,
     el('p','detail-hardware','ROG Xbox Ally X · Ryzen AI Z2 Extreme'),
     el('p','detail-date','Guía del '+prettyDate(game.published)));
-  const fav=button('',()=>toggleFavorite(game,fav),'btn');paintFavorite(game,fav);
+  const fav=button('',()=>toggleFavorite(game,fav),'btn');fav.dataset.favoriteGame=game.id;paintFavorite(game,fav);
   copy.append(fav,anchor('Enlace permanente de la guía','/guias/'+encodeURIComponent(game.id)+'/','btn'));
   h.append(backdrop,cover(game,true),copy);
   return h;
