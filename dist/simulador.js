@@ -198,6 +198,16 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const pin=button(comparisonActions,'Guardar para comparar','',()=>store({...current}));
  const remove=button(comparisonActions,'Quitar comparación','',()=>{store(null);pin.focus()});
  const comparison=add(compare,'div',null,'fps-comparison');
+ const battery=add(output,'section',null,'fps-panel');
+ heading(battery,'Autonomía orientativa','Estimación por consumo total, no una medición de batería.');
+ const wattsLabel=add(battery,'label','Consumo adicional al TDP de la APU (W)');
+ const overhead=add(wattsLabel,'input');overhead.type='number';overhead.min='0';overhead.max='50';overhead.step='1';overhead.value='8';overhead.setAttribute('aria-label','Consumo adicional en vatios');
+ const capacityLabel=add(battery,'label','Energía utilizable de batería (Wh)');
+ const capacity=add(capacityLabel,'input');capacity.type='number';capacity.min='1';capacity.max='80';capacity.step='1';capacity.value='72';capacity.setAttribute('aria-label','Energía utilizable en vatios hora');
+ const runtime=add(battery,'p','Selecciona un TDP.','fps-point-detail');runtime.setAttribute('role','status');
+ add(battery,'p','Ejemplo editable: 72 Wh utilizables de una batería nominal de 80 Wh y 8 W adicionales como hipótesis, no como dato medido. El brillo, los periféricos y las pérdidas cambian el consumo. Si conoces el consumo total real, ajusta la diferencia respecto al TDP.');
+ function renderBattery(){const w=Number(current?.w),extra=overhead.valueAsNumber,energy=capacity.valueAsNumber;if(!(w>0)||!Number.isFinite(extra)||extra<0||extra>50||!Number.isFinite(energy)||energy<1||energy>80){runtime.textContent='Introduce valores válidos y selecciona un TDP.';return;}const total=w+extra,mins=Math.round(60*energy/total);runtime.textContent='Consumo supuesto: '+total+' W · Autonomía orientativa: '+Math.floor(mins/60)+' h '+mins%60+' min';}
+ overhead.addEventListener('input',renderBattery);capacity.addEventListener('input',renderBattery);
  const methods=add(sim,'details',null,'fps-methods');
  add(methods,'summary','Metodología, límites y pruebas');
  add(methods,'p','El TDP indica la potencia configurada de la APU. La fiabilidad describe la calidad de la referencia, y el rango orientativo no es un intervalo estadístico.');
@@ -262,7 +272,7 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   if(current.w)slider.value=current.w;
   slider.style.setProperty('--power-progress',current.w?(current.w-7)/28*100+'%':'0%');
   powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
-  renderPrimary();
+  renderPrimary();renderBattery();
   if(defer===true){clearTimeout(secondaryTimer);secondaryTimer=setTimeout(flushSecondary,120);}
   else flushSecondary();
  }

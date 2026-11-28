@@ -1,0 +1,19 @@
+{
+  "name": "Ally Lab",
+  "short_name": "Ally Lab",
+  "lang": "es",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080a10",
+  "theme_color": "#080a10",
+  "icons": [
+    {
+      "src": "/assets/ally-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

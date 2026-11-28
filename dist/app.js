@@ -1,6 +1,6 @@
 import { unmountGameVideo } from './videos.js?v=41';
 import { mountCaptures } from './capturas.js?v=detail-preview-2';
-import { mountSim } from './simulador.js?v=fps-studio-2';
+import { mountSim } from './simulador.js?v=ecosistema-1';
 import { campoES, valorES } from './idioma.js?v=20261121';
 
 const id = name => document.getElementById(name);
@@ -28,6 +28,14 @@ const dataVersion = new URL(import.meta.url).search;
 let catalog;
 let state = { query:'', order:'recientes', page:1 };
 let lastHash = '#juegos', lastCard = '', savedScroll = 0, inDetail = false, routeId = 0;
+let favorites=new Set();
+try{const saved=JSON.parse(localStorage.getItem('ally-lab:favorites')||'[]');if(Array.isArray(saved))favorites=new Set(saved.filter(v=>typeof v==='string'));}catch{}
+function toggleFavorite(game,control){
+  if(favorites.has(game.id))favorites.delete(game.id);else favorites.add(game.id);
+  try{localStorage.setItem('ally-lab:favorites',JSON.stringify([...favorites]));}catch{}
+  paintFavorite(game,control);
+}
+function paintFavorite(game,control){const saved=favorites.has(game.id);control.textContent=saved?'★ Quitar de favoritos':'☆ Guardar en favoritos';control.setAttribute('aria-pressed',String(saved));}
 let original = false;
 try { original = localStorage.getItem('ally-lab-etiquetas') === 'original'; } catch {}
 
@@ -41,6 +49,7 @@ function catalogHash(s) {
   if (s.query) params.set('q',s.query);
   if (s.order !== 'recientes') params.set('orden',s.order);
   if (s.page > 1) params.set('pagina',s.page);
+  if(s.favorites)params.set('favoritos','1');
   return '#juegos' + (params.size ? '?' + params : '');
 }
 const gameRating = game => Number.isFinite(game.editorialRating) && game.editorialRating>0 && game.editorialRating<=5;
@@ -96,6 +105,9 @@ function button(text,handle,cls='btn') {
 function renderCatalog(next,replaceUrl=false) {
   const tokens = fold(next.query).split(' ').filter(Boolean);
   let games = tokens.length ? catalog.games.filter(g=>tokens.every(k=>g.key.includes(k))) : catalog.games;
+  if(next.favorites)games=games.filter(g=>favorites.has(g.id));
+  id('favorites-filter').setAttribute('aria-pressed',String(!!next.favorites));
+  id('favorites-filter').textContent=next.favorites?'★ Solo favoritos':'☆ Favoritos';
   if (next.order !== 'recientes') {
     const direction = next.order === 'az' ? 1:-1;
     games = games.slice().sort((a,b)=>direction*sortTitles.compare(a.title,b.title));
@@ -111,7 +123,7 @@ function renderCatalog(next,replaceUrl=false) {
   const grid=id('grid'); grid.replaceChildren(...list.map(card));
   const pager=id('pager'); pager.replaceChildren();
   if (!list.length) {
-    const b=box('No hay coincidencias','Prueba a escribir otra parte del título.');
+    const b=box('No hay coincidencias',next.favorites?'Guarda juegos desde sus fichas para verlos aquí.':'Prueba a escribir otra parte del título.');
     b.append(button('Borrar búsqueda',()=>{renderCatalog({...state,query:'',page:1},true); id('q').focus();}));
     grid.append(b);
   }
@@ -134,6 +146,8 @@ function header(game) {
   copy.append(el('span','detail-kicker','ALLY LAB / FICHA TÉCNICA'),title,
     el('p','detail-hardware','ROG Xbox Ally X · Ryzen AI Z2 Extreme'),
     el('p','detail-date','Guía del '+prettyDate(game.published)));
+  const fav=button('',()=>toggleFavorite(game,fav),'btn');paintFavorite(game,fav);
+  copy.append(fav);
   h.append(backdrop,cover(game,true),copy);
   return h;
 }
@@ -377,7 +391,7 @@ function route(initial=false){
   }
   document.title='Ally Lab · Catálogo de juegos';
   const lastPage=state.page,order=params.get('orden'),page=Number(params.get('pagina'));
-  renderCatalog({query:params.get('q')||'',order:['az','za'].includes(order)?order:'recientes',page:Number.isSafeInteger(page)&&page>0?page:1});
+  renderCatalog({query:params.get('q')||'',order:['az','za'].includes(order)?order:'recientes',favorites:params.get('favoritos')==='1',page:Number.isSafeInteger(page)&&page>0?page:1});
   if(wasDetail) {
     window.scrollTo(0,savedScroll);
     const focus=Array.from(id('grid').children).find(a=>a.hash==='#juego/'+lastCard);
@@ -385,6 +399,7 @@ function route(initial=false){
   }
   else if(!initial && state.page!==lastPage){id('library-heading').scrollIntoView();id('library-heading').focus({preventScroll:true});}
 }
+id('favorites-filter').addEventListener('click',()=>{if(catalog)renderCatalog({...state,favorites:!state.favorites,page:1},true);});
 id('q').addEventListener('input',()=>{if(catalog)renderCatalog({...state,query:id('q').value,page:1},true);});
 id('orden').addEventListener('change',()=>{if(catalog)renderCatalog({...state,order:id('orden').value,page:1},true);});
 window.addEventListener('hashchange',()=>route());
