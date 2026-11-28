@@ -30,7 +30,7 @@ function disconnect(){
 }
 async function request(data){
  const r=await fetch(endpoint,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(14000),...(data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
- const value=await r.json();if(!r.ok)throw Error(value.error||'Cuenta no disponible');return value;
+ const value=await r.json();if(!r.ok)throw Error((value.error||'Cuenta no disponible')+(value.reason?' ('+value.reason+')':''));return value;
 }
 async function refresh(force=false){
  if(checking||working||!force&&Date.now()-lastCheck<60000)return;
@@ -82,7 +82,14 @@ async function complete(){
      try{adopt(await request({action:'merge',games:local}));}catch{label('@'+hint+' · importación pendiente');}
    }
    label('@'+hint);
- }catch(e){label('Reintentar conexión');alert(e.message);}
+ }catch(e){
+   label('Reintentar conexión');
+   dialog.replaceChildren();const h=document.createElement('h2');h.textContent='No se ha podido conectar';dialog.append(h);
+   const p=document.createElement('p');p.textContent=e.message;dialog.append(p);
+   const retry=document.createElement('button');retry.type='button';retry.textContent='Volver a conectar';retry.onclick=()=>location.assign(endpoint+'?start=1');dialog.append(retry);
+   const close=document.createElement('button');close.type='button';close.textContent='Cerrar';close.onclick=()=>dialog.close();dialog.append(close);
+   if(!dialog.open)dialog.showModal();
+ }
  return true;
 }
 if(location.origin===origin){
