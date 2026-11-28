@@ -22,3 +22,19 @@ for(const path of ['/api/admin/settings','/api/chat/999999']){
 }
 const account=await (await get(lab+'/api/lab-account')).json();assert.equal(account.linked,false);
 console.log('Producción: sitemap '+urls.length+' URLs, '+index.length+' consolas, API pública y rutas privadas comprobadas.');
+
+for(const base of [lab,forum]){
+ const r=await get(base+'/');
+ assert.equal(r.headers.get('x-content-type-options'),'nosniff');
+ assert.match(r.headers.get('content-security-policy')||'',/frame-ancestors 'none'/);
+ assert.match(r.headers.get('permissions-policy')||'',/camera=\(\)/);
+}
+const searchPage=await get(lab+'/buscar');
+assert.match((searchPage.headers.get('x-robots-tag')||'')+' '+await searchPage.text(),/noindex/i);
+for(const [origin,path] of [[lab,'/api/lab-account'],[forum,'/api/profile/avatar']]){
+ const r=await fetch(origin+path,{method:'POST',headers:{Origin:'https://audit.invalid','Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(10000)});
+ assert.equal(r.status,403,path+' debe rechazar origen ajeno');
+}
+const guest=await get(lab+'/api/lab-account');
+assert.match(guest.headers.get('cache-control')||'',/no-store/);
+console.log('Seguridad HTTP: cabeceras estáticas, noindex, rechazo de origen ajeno y cache de cuenta OK.');
