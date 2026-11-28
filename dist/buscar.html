@@ -1,1 +1,78 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080a10"><title>Buscar en Ally Lab</title><link rel="stylesheet" href="/buscar.css?v=compact-profile-1"><link rel="icon" href="/assets/ally-mark.svg"><script type="module" src="/buscar.js?v=retro-2"></script><link rel="manifest" href="/manifest.webmanifest"><script src="/pwa.js" defer></script><script type="module" src="/lab-account.js?v=3"></script><link rel="canonical" href="https://ally-lab.pages.dev/buscar"><meta name="robots" content="noindex,follow"></head><body class="global-search-page"><main id="contenido"><nav><a href="/">← Ally Lab</a><a href="https://ally-community.pages.dev/">Comunidad</a></nav><header><p class="search-kicker">ALLY LAB / EXPLORAR</p><h1>Buscador universal</h1><p>Juegos de PC, ports, noticias, ofertas, Retro y publicaciones de la comunidad.</p></header><form id="global-search"><label for="term">¿Qué buscas?</label><div class="search-controls"><input type="search" id="term" name="q" maxlength="100" placeholder="Zelda, Cyberpunk, drivers…" required><button>Buscar</button></div><label for="scope">Sección</label><select id="scope" name="scope"><option value="all">Todas</option><option value="pc">Juegos de PC</option><option value="ports">Ports y recompilaciones</option><option value="news">Noticias</option><option value="free">Juegos gratis</option><option value="retro">Retro</option><option value="community">Comunidad</option></select></form><p id="search-status" role="status" aria-live="polite">Escribe una búsqueda para empezar.</p><div id="search-results"></div></main></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080a10">
+<title>Buscador universal · Ally Lab</title>
+<link rel="stylesheet" href="/style.css?v=42"><link rel="stylesheet" href="/lab.css?v=82"><link rel="stylesheet" href="/dashboard.css?v=82"><link rel="stylesheet" href="/mobile-nav.css?v=community-2"><link rel="stylesheet" href="/buscar.css?v=compact-profile-1"><link rel="stylesheet" href="/ally-ai.css?v=9">
+<link rel="icon" href="/assets/ally-mark.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest">
+<script type="module" src="/buscar.js?v=retro-2"></script><script type="module" src="/lab-controls.js?v=polish-1"></script><script type="module" src="/ally-ai.js?v=community-2"></script><script type="module" src="/lab-account.js?v=3"></script><script src="/pwa.js" defer></script>
+<link rel="canonical" href="https://ally-lab.pages.dev/buscar"><meta name="robots" content="noindex,follow">
+<style>
+/* Search-specific layout; shared design tokens and navigation come from Ally Lab. */
+.search-lab-page{min-height:100vh;display:flex;flex-direction:column}
+.search-lab-page .search-main{flex:1;min-width:0;padding-block:clamp(1rem,3vw,2.4rem)}
+.search-lab-page .search-current{display:flex;align-items:center;gap:.55rem;color:var(--ink);background:#251d3c;border-color:var(--violet);box-shadow:inset 0 -2px var(--lime)}
+.search-current svg{width:1.15rem;height:1.15rem;flex:none;color:var(--lime)}
+.search-lab-page .search-hero{position:relative;overflow:hidden;isolation:isolate;border:1px solid #4d3973;border-radius:22px;padding:clamp(1.15rem,4vw,2.75rem);background:radial-gradient(ellipse at 91% 0%,#442b72 0,transparent 65%),linear-gradient(120deg,var(--surface),#0e101a);margin-bottom:1.35rem}
+.search-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(90deg,transparent 0 46px,#b7a6ff0b 47px 48px);pointer-events:none}
+.search-lab-page .search-kicker{display:flex;align-items:center;gap:.5rem;color:var(--lime);font:700 .72rem/1.3 var(--heading);letter-spacing:.13em;margin:0 0 .65rem}
+.search-kicker::before{content:"";width:.45rem;height:.45rem;background:var(--lime);border-radius:2px;box-shadow:0 0 12px #b6ff3655}
+.search-hero h1{font-size:clamp(2rem,5vw,3.8rem);line-height:1.05;margin:0 0 .65rem;overflow-wrap:anywhere}
+.search-hero h1 em{font-style:normal;color:#c7aaff}
+.search-hero>p:last-child{color:#ddd9eb;margin:0;max-width:65ch}
+.search-lab-page #global-search{display:grid;grid-template-columns:minmax(0,1fr) minmax(12rem,.32fr);align-items:end;gap:1rem;padding:clamp(.85rem,2.5vw,1.35rem);background:var(--surface);border:1px solid var(--line);border-radius:15px}
+.search-field,.search-scope{min-width:0;display:grid;gap:.45rem}
+.search-lab-page #global-search label{font-size:.84rem;font-weight:650;color:var(--muted)}
+.search-lab-page .search-controls{display:flex;gap:.65rem;min-width:0}
+.search-lab-page .query-box{display:flex;align-items:center;gap:.6rem;flex:1;min-width:0;background:#0e111a;border:1px solid #48445d;border-radius:10px;padding:0 .8rem}
+.query-box svg{width:1.2rem;height:1.2rem;flex:none;color:#c1a5ff}
+.search-lab-page .query-box:focus-within{border-color:var(--violet);box-shadow:0 0 0 2px #8b5cf630}
+.search-lab-page #term{width:100%;min-width:0;min-height:48px;background:transparent;border:0;color:var(--ink);padding:.6rem 0}
+.search-lab-page #term::placeholder{color:var(--muted)}
+.search-lab-page #scope{width:100%;min-height:50px;background-color:#0e111a;border:1px solid #48445d;border-radius:10px;color:var(--ink);padding-left:.8rem}
+.search-lab-page .search-submit{min-height:50px;flex:none;background:var(--lime);color:#111709;border:1px solid var(--lime);border-radius:10px;font-weight:750;padding-inline:1.3rem}
+.search-lab-page .search-submit:hover{background:#d1ff80;border-color:#d1ff80}
+.search-lab-page .search-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin:1.65rem 0 .85rem}
+.search-summary h2{font-size:clamp(1.3rem,2.5vw,1.75rem)}
+.search-lab-page #search-status{margin:0;color:var(--muted);font-size:.9rem}
+.search-lab-page #search-results{display:grid;gap:1rem}
+.search-lab-page #search-results>section{min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;padding:clamp(.8rem,2vw,1.25rem);background:var(--surface);border:1px solid var(--line);border-radius:15px}
+#search-results>section>h2,#search-results>section>p,#search-results>section>small,#search-results>section>a:not(.global-result){grid-column:1/-1}
+.search-lab-page #search-results h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;letter-spacing:-.02em;margin:0 0 .3rem}
+#search-results h2::before{content:"";width:4px;height:1.25rem;border-radius:4px;background:var(--violet)}
+.search-lab-page .global-result{position:relative;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.3rem;min-height:72px;margin:0;padding:.85rem 2.3rem .85rem .9rem;background:#0e111a;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none;transition:border-color .18s,background .18s,transform .18s}
+.search-lab-page .global-result::after{content:"›";position:absolute;right:.8rem;top:50%;transform:translateY(-50%);font-size:1.65rem;color:#c7aaff}
+.search-lab-page .global-result strong{font-size:.98rem;line-height:1.35;font-weight:700}
+.search-lab-page .global-result small,#search-results>section>small{color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
+.search-lab-page #search-results>section>a:not(.global-result){color:var(--lime);font-size:.88rem;min-height:44px;display:inline-flex;align-items:center;width:fit-content}
+.search-lab-page .source-warning{margin:.25rem 0;color:var(--muted);font-size:.9rem}
+.search-lab-page .search-empty{display:none;color:var(--muted);text-align:center;padding:1.7rem;border:1px dashed var(--line);border-radius:13px;margin:0}
+#search-results:empty+.search-empty{display:block}
+@media(hover:hover){.search-lab-page .global-result:hover{background:#201a30;border-color:var(--violet);transform:translateY(-2px)}}
+@media(max-width:680px){.search-lab-page #global-search{grid-template-columns:minmax(0,1fr);gap:.8rem}.search-lab-page #search-results>section{grid-template-columns:minmax(0,1fr)}.search-lab-page .search-submit{padding-inline:.85rem}.search-lab-page .search-hero{border-radius:15px}}
+@media(max-width:340px){.search-lab-page .search-controls{flex-wrap:wrap}.search-lab-page .query-box,.search-lab-page .search-submit{flex:1 1 100%}}
+@media(prefers-reduced-motion:reduce){.search-lab-page .global-result{transition:none}.search-lab-page .global-result:hover{transform:none}}
+</style>
+</head>
+<body class="search-lab-page"><a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="mast"><div class="wrap bar"><a class="brand" href="/#juegos" aria-label="Ally Lab, inicio"><img src="./assets/ally-mark.svg" width="40" height="40" alt=""><span>ALLY <em>LAB</em></span></a><a class="community-link" href="https://ally-community.pages.dev/"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg#news"></use></svg><span>Comunidad</span></a><div class="mast-quick-actions" id="mast-quick-actions"><a class="global-search-link search-current" href="/buscar.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4" stroke-linecap="round"/></svg> Buscador universal</a></div><div id="pad-status" class="pad-status" hidden>
+<span class="pad-status-label" role="status"></span>
+<ul class="pad-legend" aria-label="Controles del mando">
+<li><kbd>A</kbd> Aceptar</li>
+
+
+<li><kbd>Y</kbd><kbd class="pad-generic" aria-label="Triángulo">△</kbd> Buscar</li>
+<li><kbd>L3</kbd><kbd>R3</kbd> Ally AI</li>
+</ul>
+</div><nav aria-label="Principal"><a href="/#juegos"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#games"></use></svg><span>Juegos</span></a><a href="/#simulador"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#fps"></use></svg><span>Simulador FPS</span></a><a href="./ports.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#ports"></use></svg><span>Ports y Recompilaciones</span></a><a href="./news.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#news"></use></svg><span>Noticias</span></a><a href="./gratis.html"><svg class="nav-icon" aria-hidden="true" focusable="false"><use href="./assets/nav-icons.svg#free"></use></svg><span>Juegos gratis</span></a><a href="./emulacion.html"><svg class="nav-icon" aria-hidden="true"><use href="./assets/nav-icons.svg?v=71#retro"></use></svg><span>Retro</span></a></nav><span class="model-tag">Z2 EXTREME</span></div></header>
+<main id="contenido" class="wrap search-main" tabindex="-1">
+<header class="search-hero"><p class="search-kicker">ALLY LAB / EXPLORAR</p><h1>Buscador <em>universal</em></h1><p>Encuentra juegos de PC, ports, noticias, ofertas, Retro y publicaciones de la comunidad desde un único lugar.</p></header>
+<form id="global-search" role="search" aria-label="Buscar en Ally Lab">
+<div class="search-field"><label for="term">¿Qué buscas?</label><div class="search-controls"><div class="query-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4" stroke-linecap="round"/></svg><input type="search" id="term" name="q" maxlength="100" placeholder="Zelda, Cyberpunk, drivers…" required autocomplete="off"></div><button class="btn search-submit" type="submit">Buscar</button></div></div>
+<div class="search-scope"><label for="scope">Sección</label><select id="scope" name="scope"><option value="all">Todas las secciones</option><option value="pc">Juegos de PC</option><option value="ports">Ports y recompilaciones</option><option value="news">Noticias</option><option value="free">Juegos gratis</option><option value="retro">Retro</option><option value="community">Comunidad</option></select></div>
+</form>
+<div class="search-summary"><h2>Resultados de búsqueda</h2><p id="search-status" role="status" aria-live="polite">Escribe una búsqueda para empezar.</p></div>
+<div id="search-results"></div><p class="search-empty" aria-hidden="true">Los resultados aparecerán aquí, organizados por sección.</p>
+</main>
+<footer class="wrap foot"><span class="foot-brand"><img src="/assets/ally-mark.svg" width="24" height="24" alt=""> ALLY LAB</span><a href="/#juegos">Volver a juegos</a><a href="https://ally-community.pages.dev/">Ally Community</a></footer>
+</body></html>
