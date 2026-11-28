@@ -1,4 +1,20 @@
 {
-  "checked": "2026-11-27T08:57:58.958Z",
-  "offers": []
+  "checked": "2026-11-28T09:09:08.921Z",
+  "offers": [
+    {
+      "id": "gog:dead-age-2:2026-11-27T14:05:00Z",
+      "title": "Dead Age 2",
+      "platform": "GOG",
+      "description": "RPG de supervivencia con gestión de recursos y combates por turnos. Inicia sesión con una cuenta gratuita de GOG y reclama el juego desde el banner de Black Friday para conservarlo en tu biblioteca.",
+      "start": "2026-11-27T14:05:00Z",
+      "end": "2026-11-30T14:00:59Z",
+      "added": "2026-11-28T09:09:08.921Z",
+      "seenActive": true,
+      "region": "ES",
+      "url": "https://www.gog.com/es/",
+      "original": null,
+      "cover": "https://images.gog-statics.com/598e417b19d737ce12af0e2c5136cd420d502d760d3cceac7d2cb71afb4e37c9.jpg",
+      "source": "https://www.gog.com/en/news/gog_black_friday_claim_your_free_copy_of_dead_age_2"
+    }
+  ]
 }
