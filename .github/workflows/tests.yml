@@ -16,7 +16,7 @@ jobs:
           node-version: '24'
       - name: Sintaxis JavaScript
         run: |
-          for file in dist/app.js dist/capturas.js dist/lab-controls.js dist/ally-ai.js dist/sim-model.js; do node --check "$file"; done
+          for file in dist/app.js dist/capturas.js dist/lab-controls.js dist/ally-ai.js dist/sim-model.js dist/simulador.js dist/sim-chart.js dist/ports.js; do node --check "$file"; done
       - name: Simulador FPS y Ally AI
         run: |
           node tools/probar_simulador.mjs

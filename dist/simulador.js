@@ -59,15 +59,25 @@ function source(parent,url){
 
 export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const model=createModel(game,detail,verifiedPoints);
- const sim=add(host,'section',null,'sim fps-lab');
+ const sim=add(host,'section',null,'sim fps-lab fps-redesign');
  sim.id='simulador';
  const banner=add(sim,'header',null,'fps-banner');
- const title=add(banner,'div');
+ const identity=add(banner,'div',null,'fps-identity');
+ if(game.cover){
+  const cover=add(identity,'img',null,'fps-game-cover');
+  cover.alt='';cover.decoding='async';cover.src=game.cover;
+  cover.addEventListener('error',()=>cover.remove(),{once:true});
+ }
+ const title=add(identity,'div',null,'fps-hero-copy');
+ add(title,'span','ALLY LAB / SIMULADOR FPS','fps-eyebrow');
  add(title,'h2','Simulador FPS');
- add(title,'p','Xbox ROG Ally X · AMD Ryzen Z2 Extreme');
+ add(title,'p',game.title,'fps-game-title');
+ const hardware=add(banner,'div',null,'fps-hardware');
+ add(hardware,'strong','Xbox ROG Ally X');
+ add(hardware,'span','AMD Ryzen Z2 Extreme');
  const layout=add(sim,'div',null,'fps-layout');
  const controls=add(layout,'section',null,'fps-panel fps-controls');
- heading(controls,'Configuración');
+ heading(controls,'Ajustes de simulación','Selecciona una referencia y personaliza los valores.');
  const form=add(controls,'div',null,'fps-fields');
  function field(title,action,iconType,parent=form){
   const wrap=add(parent,'label');
@@ -102,7 +112,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const powerCaption=add(powerControl,'span','Ajustar TDP');
  powerControl.classList.add('fps-wide-field');
  const slider=add(powerControl,'input');slider.type='range';slider.min=7;slider.max=35;
- slider.oninput=()=>{w.value=slider.value;manual()};
+ slider.oninput=()=>{w.value=slider.value;manual(true)};
+ slider.onchange=()=>{if(secondaryTimer)flushSecondary()};
  const scale=field(names.scale,manual,'scale'),gen=field(names.gen,manual,'gen');
  const individual=add(controls,'fieldset',null,'fps-individual');
  add(individual,'legend','Ajustes gráficos individuales');
@@ -111,11 +122,14 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const notes=add(controls,'details',null,'fps-values');
  add(notes,'summary','Ajustes de partida de la ficha');
  const rows=add(notes,'dl',null,'fps-value-list');
- const buttons=add(controls,'div',null,'fps-actions');
- const status=add(controls,'p',null,'fps-status');
+ const buttons=add(form,'div',null,'fps-actions fps-wide-field');
+ const status=add(form,'p',null,'fps-status fps-wide-field');
+ form.insertBefore(buttons,res.parentElement);
+ form.insertBefore(status,res.parentElement);
  status.setAttribute('role','status');
  const output=add(layout,'div',null,'fps-output');
- const primary=add(output,'section',null,'fps-panel fps-primary');
+ const primary=add(sim,'section',null,'fps-panel fps-primary');
+ sim.insertBefore(primary,layout);
  const gauge=add(primary,'div',null,'fps-gauge');
  const dial=add(gauge,'div',null,'fps-dial');
  const reading=add(dial,'div',null,'fps-reading');
@@ -123,24 +137,27 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
  const numeric=add(reading,'strong');
  const unit=add(reading,'span','FPS');
  const diagnostic=add(primary,'div',null,'fps-diagnostic');
+ add(diagnostic,'span','RESULTADO DE LA CONFIGURACIÓN','fps-eyebrow');
  const type=add(diagnostic,'p',null,'fps-type');
  const headline=add(diagnostic,'h3');
  const context=add(diagnostic,'p');
  const provenance=add(diagnostic,'p',null,'fps-source');
- const goals=add(diagnostic,'div',null,'fps-segments');
+ add(diagnostic,'span','Objetivo de rendimiento','fps-goal-label');
+ const goals=add(diagnostic,'div',null,'fps-segments fps-goals');
  goals.setAttribute('role','group');goals.setAttribute('aria-label','Objetivo de FPS');
  const goalButtons=[30,60,120].map(n=>button(goals,n+' FPS','',()=>{goal=n;renderPrimary()}));
- const stats=add(output,'dl',null,'fps-stats');
+ const stats=add(sim,'dl',null,'fps-stats');
+ sim.insertBefore(stats,layout);
  const statNodes=[['fps','Rendimiento'],['r',names.r],['w','Potencia (TDP)'],['q',names.q],['scale',names.scale],['gen',names.gen],['source','Fiabilidad']].map(([key,label])=>{
   const panel=add(stats,'div',null,'fps-stat');
   const labelNode=add(panel,'dt',null,'fps-field-label');icon(labelNode,key);labelNode.append(label);
   return add(panel,'dd');
  });
- const linePanel=add(output,'section',null,'fps-panel');
+ const linePanel=add(output,'section',null,'fps-panel fps-chart-panel');
  const analysisHead=heading(linePanel,'Curva de rendimiento','Cambia una variable y mantiene los demás ajustes.');
  const axes=add(analysisHead,'div',null,'fps-segments');
  axes.setAttribute('role','group');axes.setAttribute('aria-label','Variable de la gráfica');
- const axisButtons=Object.entries(axisOptions).map(([id,[label]])=>button(axes,label,'',()=>{axis=id;drawChart()}));
+ const axisButtons=Object.entries(axisOptions).map(([id,[label]])=>button(axes,label,'',()=>{axis=id;flushSecondary()}));
  const chart=add(linePanel,'div',null,'fps-line');
  const caption=add(linePanel,'p',null,'fps-point-detail');
  const legend=add(linePanel,'p','● Medición publicada　◇ Modelo　┆ Objetivos de 30 y 60 FPS','fps-legend');
@@ -175,7 +192,12 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
    button(picks,label,'',()=>{apply(anchor);profile.focus()});
   }
  }
- let current,result,goal=60,axis='w';
+ let current,result,goal=60,axis='w',secondaryTimer=0;
+ function flushSecondary(){
+  clearTimeout(secondaryTimer);secondaryTimer=0;
+  if(!sim.isConnected)return;
+  drawChart();renderComparison();
+ }
  const read=()=>({profile:+profile.value,r:+res.value,w:+w.value,q:q.value,scale:scale.value,gen:gen.value,...Object.fromEntries(Object.entries(overrides).map(([id,node])=>[id,node.value]))});
  const display=(key,value,profile)=>setting(key,value,model.profiles[profile]?.rows);
  const evaluations=(key,items)=>items.map(id=>({id,label:setting(key,id),value:model.evaluate({...current,[key]:id})}));
@@ -201,14 +223,15 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   }
   manual();
  }
- function manual(){
+ function manual(defer=false){
   status.textContent='';
   current=read();
   result=model.evaluate(current);
   const base=model.profiles[current.profile];
+  const adjustable=model.options(current.profile).adjustable;
   for(const [id,node] of Object.entries(overrides)){
    if(node.parentElement.hidden)continue;
-   const documented=current.q===base.q?model.options(current.profile).adjustable[id]:null;
+   const documented=current.q===base.q?adjustable[id]:null;
    const inherited=documented||(qualities.includes(current.q)?current.q:null);
    node.options[0].textContent=documented?'Ficha: '+labels[documented]:inherited?'Heredar: '+labels[inherited]:'Automático (referencia Media)';
   }
@@ -216,8 +239,8 @@ export function mountSim(host,games,game,detail,choose,verifiedPoints=null){
   if(current.w)slider.value=current.w;
   powerCaption.textContent=current.w?'Ajustar TDP · '+setting('w',current.w):'Selecciona una potencia';
   renderPrimary();
-  drawChart();
-  renderComparison();
+  if(defer===true){clearTimeout(secondaryTimer);secondaryTimer=setTimeout(flushSecondary,120);}
+  else flushSecondary();
  }
  function renderPrimary(){
   const value=headlineFPS(result);

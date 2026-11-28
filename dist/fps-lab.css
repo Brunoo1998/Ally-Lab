@@ -145,3 +145,58 @@
 .fps-individual{min-width:0;margin:1rem 0;padding:.75rem;border:1px solid #44465d;border-radius:.65rem}
 .fps-individual legend{padding:0 .35rem;font-weight:650}
 .fps-individual label[hidden]{display:none}
+
+/* Panel FPS renovado — mismo modelo y fuentes, nueva jerarquía visual. */
+.fps-lab.fps-redesign{--fps-edge:#3b4259;--fps-surface:#171b28;--fps-radius:14px;padding:clamp(.85rem,2vw,1.4rem);background:radial-gradient(ellipse at 80% 0%,#24193c 0%,transparent 46%),#10131c;border:1px solid #47405e}
+.fps-redesign .fps-banner{position:relative;overflow:hidden;isolation:isolate;min-height:128px;margin:0 0 1rem;padding:clamp(.85rem,2.3vw,1.4rem);border:1px solid #645084;border-radius:14px;background:radial-gradient(ellipse at 78% 25%,#3a2865 0%,transparent 60%),linear-gradient(115deg,#20243b,#141827 65%);gap:1rem}
+.fps-redesign .fps-banner:after{content:"";position:absolute;inset:auto 0 0;height:2px;background:linear-gradient(90deg,#b6ff36,#a686f7 58%,transparent);pointer-events:none}
+.fps-redesign .fps-identity{display:flex;align-items:center;gap:clamp(.7rem,2vw,1.2rem);min-width:0}
+.fps-redesign .fps-game-cover{width:clamp(60px,9vw,86px);aspect-ratio:2/3;object-fit:cover;flex:none;border:1px solid #8c78bb;border-radius:8px;box-shadow:0 8px 20px #0007}
+.fps-redesign .fps-hero-copy{min-width:0}
+.fps-redesign .fps-eyebrow{display:block;color:#c4ff7b;font-size:.69rem;font-weight:800;letter-spacing:.11em;line-height:1.4}
+.fps-redesign .fps-banner h2{font-size:clamp(1.9rem,4.2vw,3.25rem);line-height:1.02;margin:.35rem 0 .2rem}
+.fps-redesign .fps-game-title{font-weight:650;color:#ded6f9;font-size:clamp(.9rem,1.7vw,1.15rem);overflow-wrap:anywhere}
+.fps-redesign .fps-hardware{display:grid;gap:.18rem;flex:0 1 auto;padding:.75rem .85rem;border:1px solid #71618c;border-radius:9px;background:#171728bb;font-size:.77rem;color:#c8c0df;text-align:right}
+.fps-redesign .fps-hardware strong{font-size:.9rem;color:#f5f0ff}
+.fps-redesign .fps-primary{grid-template-columns:minmax(200px,.8fr) minmax(0,1.3fr);gap:clamp(1rem,3vw,2.5rem);padding:clamp(1rem,2.6vw,1.8rem);margin:0 0 .75rem;background:radial-gradient(ellipse at 21% 48%,#403063 0%,#211d36 36%,transparent 63%),#151a27;border-color:#6a588e}
+.fps-redesign .fps-dial{width:min(100%,15rem);box-shadow:0 0 40px #8b5cf644;transition:--fill .16s linear}
+.fps-redesign .fps-reading strong{font-size:clamp(2.2rem,5.6vw,4rem);letter-spacing:-.065em;color:#f7f8ff}
+.fps-redesign .fps-reading span{font-weight:650;max-width:17ch;justify-self:center}
+.fps-redesign .fps-diagnostic{gap:.58rem;align-content:center}
+.fps-redesign .fps-diagnostic h3{font-size:clamp(1.25rem,2.5vw,1.85rem);line-height:1.2}
+.fps-redesign .fps-diagnostic .fps-type{width:fit-content;max-width:100%;border:1px solid #77649e;border-radius:6px;padding:.33rem .55rem;background:#2b2342;color:#e0d4fb;font-size:.75rem;overflow-wrap:anywhere}
+.fps-redesign .fps-goal-label{font-size:.75rem;font-weight:700;color:#bfc5d9;margin-top:.2rem}
+.fps-redesign .fps-goals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:25rem;gap:.5rem}
+.fps-redesign .fps-goals button[aria-pressed=true]{background:#31412b;color:#d5ff9a;border-color:#94d452;font-weight:750}
+.fps-redesign .fps-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin:0 0 1rem}
+.fps-redesign .fps-stat{padding:.8rem .85rem;background:linear-gradient(150deg,#23273a,#171b28);border-color:#444960;border-top:2px solid #7163a2;border-radius:9px}
+.fps-redesign .fps-stat:first-child{border-top-color:#b6ff36;background:linear-gradient(145deg,#29372b,#171b28)}
+.fps-redesign .fps-stat:first-child dd{color:#cfff96;font-size:1.1rem}
+.fps-redesign .fps-stat:last-child{grid-column:span 2}
+.fps-redesign .fps-stat dd{font-family:var(--heading,system-ui);font-size:.98rem;line-height:1.35}
+.fps-redesign .fps-layout{grid-template-columns:minmax(275px,.92fr) minmax(0,1.28fr);gap:1rem}
+.fps-redesign .fps-panel{background-color:#171b28;border-color:#41475d;box-shadow:0 5px 16px #0002}
+.fps-redesign .fps-controls,.fps-redesign .fps-chart-panel,.fps-redesign .fps-compare{background:linear-gradient(145deg,#202437,#151a26 64%)}
+.fps-redesign .fps-panel-head h3{font-family:var(--heading,system-ui);font-size:1.35rem}
+.fps-redesign .fps-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.fps-redesign .fps-fields select{min-width:0;text-overflow:ellipsis;border-color:#50566c;background-color:#10141f;border-radius:8px}
+.fps-redesign .fps-field-label{font-weight:650;color:#d9dcee;align-items:flex-start;line-height:1.4}
+.fps-redesign .fps-icon{margin-top:.12rem;color:#bfabff;stroke:#bfabff}
+.fps-redesign .fps-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;padding:.65rem;border:1px solid #41485e;border-radius:10px;background:#111520;gap:.4rem}
+.fps-redesign .fps-actions button{font-size:.76rem;overflow-wrap:anywhere;padding:.5rem .35rem}
+.fps-redesign .fps-actions .fps-optimize{grid-column:1/-1;min-height:48px;font-size:.89rem}
+.fps-redesign .fps-status:empty{display:none}
+.fps-redesign .fps-status:not(:empty){margin:0;padding:.65rem .75rem;background:#202d25;border:1px solid #526f43;border-radius:8px;color:#dcf3c4}
+.fps-redesign .fps-slider{padding:.75rem;border:1px solid #484f64;border-radius:9px;background:#141925}
+.fps-redesign .fps-slider input{min-height:32px}
+.fps-redesign .fps-individual{background:#151925;border-color:#464b62}
+.fps-redesign .fps-chart-panel .fps-segments{margin-top:.3rem;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.fps-redesign .fps-plot{height:clamp(185px,22vw,300px)}
+.fps-redesign .fps-point-detail{padding:.65rem .75rem;background:#131724;border:1px solid #41485e;border-radius:8px;min-height:3rem}
+.fps-redesign .fps-compare .fps-segments button{flex:1 1 10rem}
+.fps-redesign .fps-methods{padding:.2rem .8rem;border:1px solid #3b4259;background:#151925;border-radius:8px}
+@media(max-width:900px){.fps-redesign .fps-layout{grid-template-columns:minmax(240px,.95fr) minmax(0,1.05fr)}.fps-redesign .fps-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.fps-redesign .fps-stat:last-child{grid-column:auto}}
+@media(max-width:720px){.fps-redesign .fps-layout{grid-template-columns:minmax(0,1fr)}.fps-redesign .fps-primary{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}.fps-redesign .fps-dial{max-width:12rem}.fps-redesign .fps-hardware{display:none}.fps-redesign .fps-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fps-redesign .fps-stat:last-child{grid-column:1/-1}}
+@media(max-width:490px){.fps-redesign .fps-primary{grid-template-columns:minmax(0,1fr);text-align:center;gap:.75rem}.fps-redesign .fps-goals{width:100%;margin-inline:auto}.fps-redesign .fps-diagnostic .fps-type{margin-inline:auto}.fps-redesign .fps-banner{min-height:0}.fps-redesign .fps-game-cover{width:58px}.fps-redesign .fps-banner h2{font-size:1.85rem}.fps-redesign .fps-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.fps-redesign .fps-actions button:nth-child(3){grid-column:1/-1}.fps-redesign .fps-stat{padding:.65rem}.fps-redesign .fps-stat dd{font-size:.85rem}.fps-redesign .fps-fields{gap:.55rem}.fps-redesign .fps-panel{padding:.85rem}}
+@media(max-width:340px){.fps-redesign .fps-fields{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.fps-redesign *,.fps-redesign *::before,.fps-redesign *::after{transition:none!important;animation:none!important}}
