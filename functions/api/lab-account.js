@@ -16,9 +16,11 @@ async function read(request){
 }
 async function remote(action,key,data){
  try{
-   const response=await fetch(community+'/api/lab-link/'+action,{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(data),redirect:'error',signal:AbortSignal.timeout(7000)});
-   return {status:response.status,data:await response.json()};
- }catch{return {status:503,data:{}};}
+   const response=await fetch(community+'/api/lab-link/'+action,{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json','Origin':origin,'Accept':'application/json','User-Agent':'AllyLab-Account/1.1'},body:JSON.stringify(data),redirect:'manual',signal:AbortSignal.timeout(7000)});
+   if(!response.headers.get('Content-Type')?.toLowerCase().includes('application/json'))return {status:503,data:{},failure:'route'};
+   let payload;try{payload=await response.json();}catch{return {status:503,data:{},failure:'format'};}
+   return {status:response.status,data:payload};
+ }catch{return {status:503,data:{},failure:'network'};}
 }
 function cleanState(data){
  if(typeof data?.username!=='string'||!/^[A-Za-z0-9_]{3,20}$/.test(data.username)||!Array.isArray(data.favorites)||data.favorites.length>500||!data.favorites.every(game))return null;
@@ -49,10 +51,21 @@ export async function onRequestPost({request}){
    const state=cookie(request,stateName);
    if(!hex(data.code)||!hex(data.state)||!state||state!==data.state)return json({error:'Conexión no válida. Inicia el proceso desde Ally Lab.'},403);
    const grant=await remote('redeem',data.code,{state});
-   if(grant.status!==200||!hex(grant.data.token)||!Number.isSafeInteger(grant.data.expires)||grant.data.expires<=Math.floor(Date.now()/1000))return json({error:'La autorización no está disponible. Vuelve a conectar tu cuenta.'},grant.status===503?503:401);
-   const r=await remote('state',grant.data.token,{});
-   const profile=r.status===200?cleanState(r.data):null;
-   if(!profile){await remote('logout',grant.data.token,{});return json({error:'No se pudo comprobar la cuenta.'},503);}
+   if(grant.status!==200){
+     if(grant.status===401)return json({error:'La autorización ha caducado o ya se utilizó. Inicia una conexión nueva.',reason:'AL-EXPIRED'},401);
+     if(grant.status===429)return json({error:'Se ha alcanzado el límite de conexiones. Revisa las conexiones desde tu perfil del foro.',reason:'AL-LIMIT'},429);
+     if(grant.status===403)return json({error:'El servicio de Ally Community ha rechazado la conexión.',reason:'AL-ORIGIN'},503);
+     return json({error:'No se ha podido comunicar con el servicio de cuentas. Vuelve a conectar tu cuenta.',reason:grant.failure==='route'?'AL-ROUTE':grant.failure==='network'?'AL-NETWORK':'AL-SERVICE'},503);
+   }
+   if(!hex(grant.data?.token)||!Number.isSafeInteger(grant.data.expires)||grant.data.expires<=Math.floor(Date.now()/1000))return json({error:'Respuesta de autorización inválida.',reason:'AL-RESPONSE'},503);
+   // Las versiones nuevas entregan el perfil en la misma respuesta. Mantener
+   // compatibilidad con el backend anterior durante el despliegue.
+   let profile=cleanState(grant.data);
+   if(!profile){
+     const r=await remote('state',grant.data.token,{});
+     profile=r.status===200?cleanState(r.data):null;
+   }
+   if(!profile){await remote('logout',grant.data.token,{});return json({error:'No se pudo comprobar la cuenta.',reason:'AL-PROFILE'},503);}
    const age=Math.min(2592000,grant.data.expires-Math.floor(Date.now()/1000));
    return json(profile,200,[setCookie(linkName,grant.data.token,age),setCookie(stateName,'',0)]);
  }
