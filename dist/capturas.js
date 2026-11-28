@@ -37,7 +37,7 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
     return button;
   }
 
-  let videoButton;
+  let videoButton, videoPoster;
   function selectVideo() {
     buttons.forEach(button => button.setAttribute('aria-pressed', 'false'));
     videoButton.setAttribute('aria-pressed', 'true');
@@ -48,6 +48,7 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
     const poster = media.type === 'youtube'
       ? 'https://i.ytimg.com/vi/' + media.id + '/mqdefault.jpg'
       : captures[0]?.[0] ?? game.cover;
+    videoPoster = poster;
     const label = media.kind === 'gameplay' ? 'Reproducir gameplay' : 'Reproducir tráiler';
     videoButton = thumbnail(poster, label, selectVideo);
     videoButton.classList.add('capture-video');
@@ -73,4 +74,13 @@ export async function mountCaptures(section, game, loadCatalog, loadVideos) {
 
   section.append(stage, strip);
   if (captures.length) select(0);
+  else if (media && videoPoster) {
+    main.alt = 'Vista previa del vídeo de ' + game.title;
+    main.src = videoPoster;
+    stage.append(main);
+  } else if (media) {
+    const hint = document.createElement('p');
+    hint.textContent = 'Selecciona el vídeo para reproducirlo.';
+    stage.append(hint);
+  }
 }

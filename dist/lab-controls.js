@@ -195,7 +195,8 @@ document.addEventListener('keydown',event=>{
 document.addEventListener('pointerdown',()=>document.documentElement.classList.remove('pad-navigation'));
 function syncGamepads(){
  if(updatePadStatus()){
-  if(!timer)timer=setInterval(scan,42);
+  if(!document.hidden){if(!timer)timer=setInterval(scan,42);}
+  else {clearInterval(timer);timer=undefined;held='';editing=undefined;heldAllyShortcut=undefined;}
  }else{
   clearInterval(timer);
   timer=undefined;
@@ -206,4 +207,5 @@ function syncGamepads(){
 }
 window.addEventListener('gamepadconnected',syncGamepads);
 window.addEventListener('gamepaddisconnected',syncGamepads);
+document.addEventListener('visibilitychange',syncGamepads);
 syncGamepads();
