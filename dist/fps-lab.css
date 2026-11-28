@@ -200,3 +200,82 @@
 @media(max-width:490px){.fps-redesign .fps-primary{grid-template-columns:minmax(0,1fr);text-align:center;gap:.75rem}.fps-redesign .fps-goals{width:100%;margin-inline:auto}.fps-redesign .fps-diagnostic .fps-type{margin-inline:auto}.fps-redesign .fps-banner{min-height:0}.fps-redesign .fps-game-cover{width:58px}.fps-redesign .fps-banner h2{font-size:1.85rem}.fps-redesign .fps-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.fps-redesign .fps-actions button:nth-child(3){grid-column:1/-1}.fps-redesign .fps-stat{padding:.65rem}.fps-redesign .fps-stat dd{font-size:.85rem}.fps-redesign .fps-fields{gap:.55rem}.fps-redesign .fps-panel{padding:.85rem}}
 @media(max-width:340px){.fps-redesign .fps-fields{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.fps-redesign *,.fps-redesign *::before,.fps-redesign *::after{transition:none!important;animation:none!important}}
+
+/* PERFORMANCE STUDIO — instrumentos técnicos, datos reales del modelo, sin telemetría inventada. */
+.fps-lab.fps-studio{--fps-lime:#baff45;--fps-violet:#b99cff;--fps-edge:#30394b;--fps-muted:#aeb9cc;--fps-surface:#111925;--fps-radius:12px;--studio-mono:ui-monospace,SFMono-Regular,Consolas,monospace;background:linear-gradient(150deg,#14182a,#0b111b 48%,#101725);border-color:#414965}
+.fps-studio .fps-banner{min-height:112px;border-radius:10px;background:linear-gradient(100deg,#151e2b,#201a35);border-color:#4a4966}
+.fps-studio .fps-banner-art{position:absolute;z-index:-1;right:0;top:-65%;width:65%;height:220%;object-fit:cover;opacity:.2;mask-image:linear-gradient(90deg,transparent,#000);filter:saturate(.8)}
+.fps-studio .fps-banner h2{font-weight:750;letter-spacing:-.045em;font-size:clamp(2rem,4.4vw,3.5rem)}
+.fps-studio .fps-eyebrow{font-family:var(--studio-mono);letter-spacing:.11em;font-weight:700;font-size:.65rem}
+.fps-studio .fps-engine-label{color:#baff45;font-family:var(--studio-mono);font-size:.6rem;letter-spacing:.03em}
+.fps-studio .fps-hardware{background:#101720da;text-align:left;border-color:#48536a}
+.fps-studio .fps-primary{position:relative;display:grid;grid-template-columns:minmax(180px,1fr) minmax(190px,1.15fr) minmax(145px,.7fr);gap:clamp(.8rem,2vw,1.55rem);padding:clamp(1rem,2vw,1.6rem);border:1px solid #505573;border-radius:12px;background:radial-gradient(ellipse at 17% 44%,#262945,transparent 55%),repeating-linear-gradient(0deg,#ffffff03 0 1px,transparent 1px 25px),repeating-linear-gradient(90deg,#ffffff03 0 1px,transparent 1px 25px),#101722;align-items:center;overflow:hidden}
+.fps-studio .fps-gauge{gap:.25rem;padding:0;align-self:center;min-width:0}
+.fps-studio .fps-gauge>.fps-eyebrow{color:#b4bed6;text-align:center;font-size:.63rem}
+.fps-studio .fps-dial{width:min(100%,15.5rem);max-width:none;background:none;border-radius:0;box-shadow:none;transition:none;isolation:isolate;aspect-ratio:1}
+.fps-studio .fps-dial:before,.fps-studio .fps-dial:after{display:none}
+.fps-studio .fps-instrument{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fps-studio .fps-arc-track,.fps-studio .fps-arc-value{fill:none;stroke:#354157;stroke-width:12;stroke-linecap:round}
+.fps-studio .fps-arc-value{stroke:#baff45;transition:stroke-dasharray .2s ease-out;filter:drop-shadow(0 0 4px #baff4555)}
+.fps-studio .fps-primary[data-evidence=estimated] .fps-arc-value{stroke:#b99cff;filter:drop-shadow(0 0 4px #b99cff55)}
+.fps-studio .fps-primary[data-evidence=interpolated] .fps-arc-value{stroke:#b99cff}
+.fps-studio .fps-tick{stroke:#54617a;stroke-width:1.2}
+.fps-studio .fps-tick-major{stroke:#a3aec4;stroke-width:1.8}
+.fps-studio .fps-goal-marker{stroke:#f3f8ff;stroke-width:2.6;stroke-linecap:round}
+.fps-studio .fps-reading{gap:.1rem;transform:translateY(-3%);max-width:90%}
+.fps-studio .fps-reading strong{font-family:var(--heading,system-ui);font-size:clamp(1.9rem,4.8vw,3.8rem);font-weight:700;letter-spacing:-.07em;font-variant-numeric:tabular-nums}
+.fps-studio .fps-reading span{font-family:var(--studio-mono);letter-spacing:.18em;font-size:.9rem;font-weight:700;color:#baff45}
+.fps-studio .fps-scale-marks{display:flex;justify-content:space-between;width:78%;margin-top:-2.3rem;font:600 .72rem var(--studio-mono);color:#b3bfd3;pointer-events:none}
+.fps-studio .fps-gauge-kind{margin-top:.65rem;text-align:center;color:#d8def2;font-size:.75rem}
+.fps-studio .fps-diagnostic{gap:.65rem}
+.fps-studio .fps-diagnostic h3{font-size:clamp(1.18rem,2.1vw,1.65rem);letter-spacing:-.035em}
+.fps-studio .fps-type{font-family:var(--studio-mono);font-size:.68rem!important;border-color:#695895!important;background:#271f3b!important}
+.fps-studio [data-evidence=measured] .fps-type{border-color:#719c4c!important;background:#233523!important;color:#d5ffa1!important}
+.fps-studio .fps-goals button{font-family:var(--studio-mono);font-size:.77rem}
+.fps-studio .fps-telemetry{display:grid;gap:.45rem;min-width:0;align-self:stretch;align-content:center}
+.fps-studio .fps-telemetry-row{padding:.65rem .75rem;border:1px solid #39465b;border-left:2px solid #8470bc;background:#101722d9;border-radius:6px;min-width:0}
+.fps-studio .fps-telemetry-row dt{font-size:.66rem;color:#aebacf;font-weight:600}
+.fps-studio .fps-telemetry-row dd{margin:.22rem 0 0;font:700 clamp(.8rem,1.7vw,1.05rem) var(--studio-mono);color:#eaf0ff;overflow-wrap:anywhere}
+.fps-studio .fps-telemetry-row:nth-child(2){border-left-color:#baff45}
+.fps-studio .fps-goal-track{grid-column:1/-1;height:3px;background:#354157;border-radius:2px;overflow:hidden}
+.fps-studio .fps-goal-fill{height:100%;background:#a88aef;transition:width .2s ease-out}
+.fps-studio [data-goal-state=reached] .fps-goal-fill{background:#baff45}
+.fps-studio .fps-stats{grid-template-columns:repeat(7,minmax(0,1fr));gap:.45rem}
+.fps-studio .fps-stat{padding:.65rem .55rem;background:linear-gradient(150deg,#20283b,#121a27);border:1px solid #3d4960;border-top:2px solid #7365a1;border-radius:7px}
+.fps-studio .fps-stat:last-child{grid-column:auto}
+.fps-studio .fps-stat dt{font-size:.65rem;min-height:1.35rem}
+.fps-studio .fps-stat dd{font:650 .85rem/1.35 var(--studio-mono);overflow-wrap:anywhere}
+.fps-studio .fps-stat:first-child{border-top-color:#baff45}
+.fps-studio .fps-layout{grid-template-columns:minmax(270px,.82fr) minmax(0,1.35fr)}
+.fps-studio .fps-panel{border-radius:10px}
+.fps-studio .fps-controls,.fps-studio .fps-chart-panel,.fps-studio .fps-compare{background:linear-gradient(145deg,#1c2639,#111925 65%);border-color:#3d4960}
+.fps-studio .fps-panel-head{padding-bottom:.65rem;border-bottom:1px solid #344056}
+.fps-studio .fps-panel-head h3{font-size:1.25rem;letter-spacing:-.025em}
+.fps-studio .fps-fields select{background-color:#0c1421;border-color:#44536c;border-radius:6px}
+.fps-studio .fps-actions{border-radius:7px;background:#0b131f;border-color:#3a465c}
+.fps-studio .fps-actions button[data-profile-mode=speed]{border-top:2px solid #baff45}
+.fps-studio .fps-actions button[data-profile-mode=quality]{border-top:2px solid #b99cff}
+.fps-studio .fps-actions button[data-profile-mode=battery]{border-top:2px solid #75c6c0}
+.fps-studio .fps-slider{background:#0d1723;border-color:#42516a}
+.fps-studio .fps-slider input{appearance:none;background:transparent;min-height:32px;cursor:pointer}
+.fps-studio .fps-slider input::-webkit-slider-runnable-track{height:7px;border-radius:5px;background:linear-gradient(90deg,#baff45 var(--power-progress,0%),#3a475f 0)}
+.fps-studio .fps-slider input::-webkit-slider-thumb{appearance:none;width:22px;height:22px;margin-top:-7.5px;border:2px solid #e2ffb6;border-radius:50%;background:#baff45;box-shadow:0 0 0 4px #baff4525}
+.fps-studio .fps-slider input::-moz-range-track{height:7px;border-radius:5px;background:#3a475f}
+.fps-studio .fps-slider input::-moz-range-progress{height:7px;background:#baff45}
+.fps-studio .fps-slider input::-moz-range-thumb{width:20px;height:20px;border:2px solid #e2ffb6;border-radius:50%;background:#baff45}
+.fps-studio .fps-plot{background:linear-gradient(180deg,#101928,#0c1420);height:clamp(180px,21vw,295px);border:1px solid #354158;border-radius:4px}
+.fps-studio .fps-gridline{stroke:#344057;stroke-opacity:.7}
+.fps-studio .fps-grid-vertical{stroke-dasharray:2 5;stroke-opacity:.5}
+.fps-studio .fps-chart-area{fill:#9e89e8;opacity:.065;pointer-events:none}
+.fps-studio .fps-target{stroke:#baff45;stroke-opacity:.8}
+.fps-studio .fps-curve{stroke-width:2.5}
+.fps-studio .fps-curve.fps-modelled{stroke-dasharray:4 4}
+.fps-studio .fps-point.is-current:before{box-shadow:0 0 0 2px #101722,0 0 0 4px #e1ebff}
+.fps-studio .fps-axis-x,.fps-studio .fps-axis-y{font-family:var(--studio-mono);font-size:.68rem}
+.fps-studio .fps-point-detail{background:#0c1521;border-radius:6px;color:#dce6f7}
+.fps-studio .fps-snapshot{background:#0e1724;border-radius:7px}
+.fps-studio .fps-snapshot strong{font-family:var(--studio-mono)}
+@media(max-width:1000px){.fps-studio .fps-primary{grid-template-columns:minmax(165px,.9fr) minmax(0,1.2fr)}.fps-studio .fps-telemetry{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))}.fps-studio .fps-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.fps-studio .fps-stat:last-child{grid-column:span 2}}
+@media(max-width:760px){.fps-studio .fps-layout{grid-template-columns:minmax(0,1fr)}.fps-studio .fps-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fps-studio .fps-stat:last-child{grid-column:1/-1}.fps-studio .fps-telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:490px){.fps-studio .fps-primary{grid-template-columns:minmax(0,1fr);text-align:center;gap:.85rem}.fps-studio .fps-dial{width:min(100%,13rem)}.fps-studio .fps-scale-marks{width:10rem;margin-top:-1.8rem}.fps-studio .fps-telemetry{text-align:left}.fps-studio .fps-reading strong{font-size:2.75rem}.fps-studio .fps-telemetry-row{padding:.55rem}.fps-studio .fps-stat dd{font-size:.8rem}.fps-studio .fps-banner h2{font-size:1.8rem}.fps-studio .fps-engine-label{display:none}}
+@media(prefers-reduced-motion:reduce){.fps-studio .fps-arc-value,.fps-studio .fps-goal-fill{transition:none!important}}

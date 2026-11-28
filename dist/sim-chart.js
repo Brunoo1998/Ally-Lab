@@ -31,14 +31,14 @@ function graphic(parent,tag,attributes){
  return node;
 }
 
-export function renderLine(host,caption,series,metric,axisLabel,active){
+export function renderLine(host,caption,series,metric,axisLabel,active,goal=60){
  host.replaceChildren();
  const available=series.filter(({value})=>value);
  caption.textContent='';
  if(!available.length){
   add(host,'p','Datos insuficientes para trazar esta variación con los ajustes seleccionados.','fps-empty');
  }else{
-  const max=Math.ceil(Math.max(60,...available.map(({value})=>value.high??value.low))/30)*30;
+  const max=Math.ceil(Math.max(60,goal,...available.map(({value})=>value.high??value.low))/30)*30;
   const division=Math.max(30,Math.ceil(max/120)*30);
   const box=add(host,'div',null,'fps-plot');
   const svg=graphic(box,'svg',{viewBox:'0 0 100 100',preserveAspectRatio:'none','aria-hidden':'true'});
@@ -46,20 +46,22 @@ export function renderLine(host,caption,series,metric,axisLabel,active){
   const first=numeric?series[0].id:0,last=numeric?series[series.length-1].id:series.length-1;
   const x=i=>first===last?50:4+((numeric?series[i].id:i)-first)*92/(last-first);
   const y=n=>96-n*92/max;
-  const grid=new Set([0,30,60,max]);
+  const grid=new Set([0,goal,max]);
   for(let n=division;n<max;n+=division)grid.add(n);
   for(const n of [...grid].sort((a,b)=>a-b)){
-   graphic(svg,'line',{x1:0,x2:100,y1:y(n),y2:y(n),class:n===30||n===60?'fps-target':'fps-gridline'});
+   graphic(svg,'line',{x1:0,x2:100,y1:y(n),y2:y(n),class:n===goal?'fps-target':'fps-gridline'});
    const tick=add(box,'span',String(n),'fps-axis-y');
    tick.style.top=y(n)+'%';
   }
+  for(let i=0;i<series.length;i++){const pos=x(i);graphic(svg,'line',{x1:pos,x2:pos,y1:4,y2:96,class:'fps-gridline fps-grid-vertical'});}
   for(let i=1;i<series.length;i++){
    const before=series[i-1].value,after=series[i].value;
    if(!before||!after||before.limit||after.limit)continue;
    const start=x(i-1),end=x(i);
-   const y0=y(before.center),y1=y(after.center),mid=(start+end)/2;
-   const curve='M '+start+' '+y0+' C '+mid+' '+y0+', '+mid+' '+y1+', '+end+' '+y1;
-   graphic(svg,'path',{d:curve,class:before.confidence==='Alta'&&after.confidence==='Alta'?'fps-curve':'fps-curve fps-modelled'});
+   const y0=y(before.center),y1=y(after.center);
+   const curve='M '+start+' '+y0+' L '+end+' '+y1;
+   graphic(svg,'path',{d:'M '+start+' 96 L '+start+' '+y0+' L '+end+' '+y1+' L '+end+' 96 Z',class:'fps-chart-area'});
+   graphic(svg,'path',{d:curve,class:before.type==='Medición publicada'&&after.type==='Medición publicada'?'fps-curve':'fps-curve fps-modelled'});
   }
   const focusPoint=(point,item)=>{
    for(const node of box.querySelectorAll('button'))node.setAttribute('aria-pressed',String(node===point));
@@ -83,6 +85,7 @@ export function renderLine(host,caption,series,metric,axisLabel,active){
    point.style.left=pos+'%';
    point.style.top=y(value.center)+'%';
    point.setAttribute('aria-label',label+', '+formatFPS(value)+' FPS, '+value.type);
+   if(item.id===active)point.classList.add('is-current');
    point.onpointerenter=()=>focusPoint(point,item);
    point.onfocus=()=>focusPoint(point,item);
    if(!selected||item.id===active)selected=[point,item];
